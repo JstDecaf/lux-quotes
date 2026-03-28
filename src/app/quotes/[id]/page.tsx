@@ -22,6 +22,7 @@ export default async function QuoteDetailPage({
       fxRate: schema.quotes.fxRate,
       defaultMargin: schema.quotes.defaultMargin,
       gstRate: schema.quotes.gstRate,
+      defaultResellerMargin: schema.quotes.defaultResellerMargin,
       depositPct: schema.quotes.depositPct,
       secondTranchePct: schema.quotes.secondTranchePct,
       screenSize: schema.quotes.screenSize,

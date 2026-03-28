@@ -15,6 +15,7 @@ interface LineItem {
   qty: number;
   usdUnitPrice: number | null;
   marginOverride: number | null;
+  resellerMarginOverride: number | null;
   isLocal: boolean;
   audLocalCost: number | null;
   isFree: boolean;
@@ -30,7 +31,10 @@ interface QuoteData {
   status: string;
   fxRate: number;
   defaultMargin: number;
+  defaultResellerMargin: number;
   gstRate: number;
+  depositPct: number;
+  secondTranchePct: number;
   notes: string | null;
   screenSize: string | null;
   panelConfig: string | null;
@@ -78,14 +82,17 @@ export function QuoteEditor({
   const settings: QuoteSettings = {
     fxRate: quote.fxRate,
     defaultMargin: quote.defaultMargin,
+    defaultResellerMargin: quote.defaultResellerMargin,
     gstRate: quote.gstRate,
+    depositPct: quote.depositPct,
+    secondTranchePct: quote.secondTranchePct,
   };
 
-  // Calculate totals client-side
   const itemInputs: LineItemInput[] = items.map((item) => ({
     qty: item.qty,
     usdUnitPrice: item.usdUnitPrice ?? 0,
     marginOverride: item.marginOverride,
+    resellerMarginOverride: item.resellerMarginOverride,
     isLocal: item.isLocal,
     audLocalCost: item.audLocalCost ?? 0,
     isFree: item.isFree,
@@ -98,6 +105,7 @@ export function QuoteEditor({
       qty: item.qty,
       usdUnitPrice: item.usdUnitPrice ?? 0,
       marginOverride: item.marginOverride,
+      resellerMarginOverride: item.resellerMarginOverride,
       isLocal: item.isLocal,
       audLocalCost: item.audLocalCost ?? 0,
       isFree: item.isFree,
@@ -105,7 +113,6 @@ export function QuoteEditor({
     return calculateLineItem(input, settings);
   });
 
-  // Debounced save for line items
   const saveItems = useCallback(
     (updatedItems: LineItem[]) => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -125,7 +132,6 @@ export function QuoteEditor({
     [quote.id]
   );
 
-  // Save quote settings
   const saveQuoteSettings = useCallback(
     (updates: Partial<QuoteData>) => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -145,7 +151,6 @@ export function QuoteEditor({
     [quote.id]
   );
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -193,6 +198,8 @@ export function QuoteEditor({
   };
 
   const statusInfo = STATUS_OPTIONS.find((s) => s.value === quote.status) ?? STATUS_OPTIONS[0];
+
+  const balancePct = 1 - quote.depositPct - quote.secondTranchePct;
 
   return (
     <div>
@@ -242,7 +249,8 @@ export function QuoteEditor({
 
       {/* Summary Card */}
       <div className="bg-white rounded-lg border p-5 mb-6">
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        {/* Settings Row */}
+        <div className="grid grid-cols-6 gap-3 mb-6">
           <div>
             <label className="block text-xs text-gray-500 mb-1">FX Rate (USD/AUD)</label>
             <input
@@ -254,13 +262,23 @@ export function QuoteEditor({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Default Margin %</label>
+            <label className="block text-xs text-gray-500 mb-1">LUX Margin %</label>
             <input
               type="number"
               step="0.1"
               className="w-full border rounded px-3 py-2 text-sm"
               value={(quote.defaultMargin * 100).toFixed(1)}
               onChange={(e) => updateQuoteField("defaultMargin", (parseFloat(e.target.value) || 0) / 100)}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Reseller Margin %</label>
+            <input
+              type="number"
+              step="0.1"
+              className="w-full border rounded px-3 py-2 text-sm"
+              value={(quote.defaultResellerMargin * 100).toFixed(1)}
+              onChange={(e) => updateQuoteField("defaultResellerMargin", (parseFloat(e.target.value) || 0) / 100)}
             />
           </div>
           <div>
@@ -273,9 +291,30 @@ export function QuoteEditor({
               onChange={(e) => updateQuoteField("gstRate", (parseFloat(e.target.value) || 0) / 100)}
             />
           </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Deposit %</label>
+            <input
+              type="number"
+              step="1"
+              className="w-full border rounded px-3 py-2 text-sm"
+              value={(quote.depositPct * 100).toFixed(0)}
+              onChange={(e) => updateQuoteField("depositPct", (parseFloat(e.target.value) || 0) / 100)}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">2nd Tranche %</label>
+            <input
+              type="number"
+              step="1"
+              className="w-full border rounded px-3 py-2 text-sm"
+              value={(quote.secondTranchePct * 100).toFixed(0)}
+              onChange={(e) => updateQuoteField("secondTranchePct", (parseFloat(e.target.value) || 0) / 100)}
+            />
+          </div>
         </div>
 
-        {/* Totals */}
+        {/* LUX Totals */}
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">LUX Pricing</h3>
         <div className="grid grid-cols-4 gap-3 mb-4">
           <div className="bg-gray-50 rounded p-3">
             <p className="text-xs text-gray-500">Total USD</p>
@@ -286,26 +325,60 @@ export function QuoteEditor({
             <p className="text-lg font-bold">{fmt(totals.totalAudCost)}</p>
           </div>
           <div className="bg-gray-50 rounded p-3">
-            <p className="text-xs text-gray-500">Total AUD Sell ex-GST</p>
+            <p className="text-xs text-gray-500">LUX Sell ex-GST</p>
             <p className="text-lg font-bold">{fmt(totals.totalAudSellExGst)}</p>
           </div>
           <div className="bg-gray-50 rounded p-3">
-            <p className="text-xs text-gray-500">Total GST</p>
-            <p className="text-lg font-bold">{fmt(totals.totalGst)}</p>
+            <p className="text-xs text-gray-500">LUX Sell inc-GST</p>
+            <p className="text-lg font-bold">{fmt(totals.totalAudSellIncGst)}</p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-gray-50 rounded p-3">
-            <p className="text-xs text-gray-500">Total AUD inc-GST</p>
-            <p className="text-xl font-bold text-[#0D1B2A]">{fmt(totals.totalAudSellIncGst)}</p>
-          </div>
-          <div className="bg-gray-50 rounded p-3">
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-green-50 rounded p-3">
             <p className="text-xs text-gray-500">Gross Profit</p>
             <p className="text-xl font-bold text-green-600">{fmt(totals.totalGrossProfit)}</p>
           </div>
           <div className="bg-gray-50 rounded p-3">
             <p className="text-xs text-gray-500">Overall Margin</p>
             <p className="text-xl font-bold">{fmtPct(totals.overallMargin)}</p>
+          </div>
+          <div className="bg-gray-50 rounded p-3">
+            <p className="text-xs text-gray-500">Total GST (LUX)</p>
+            <p className="text-xl font-bold">{fmt(totals.totalGst)}</p>
+          </div>
+        </div>
+
+        {/* Reseller Totals */}
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Reseller Pricing (Client-Facing)</h3>
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-blue-50 rounded p-3">
+            <p className="text-xs text-gray-500">Reseller Sell ex-GST</p>
+            <p className="text-lg font-bold text-blue-700">{fmt(totals.totalResellerSellExGst)}</p>
+          </div>
+          <div className="bg-blue-50 rounded p-3">
+            <p className="text-xs text-gray-500">Reseller GST</p>
+            <p className="text-lg font-bold text-blue-700">{fmt(totals.totalResellerGst)}</p>
+          </div>
+          <div className="bg-blue-50 rounded p-3">
+            <p className="text-xs text-gray-500">Reseller Sell inc-GST</p>
+            <p className="text-xl font-bold text-blue-800">{fmt(totals.totalResellerSellIncGst)}</p>
+          </div>
+        </div>
+
+        {/* Deposit Schedule */}
+        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Schedule</h3>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-purple-50 rounded p-3">
+            <p className="text-xs text-gray-500">Deposit ({(quote.depositPct * 100).toFixed(0)}%)</p>
+            <p className="text-lg font-bold text-purple-700">{fmt(totals.depositAmount)}</p>
+          </div>
+          <div className="bg-purple-50 rounded p-3">
+            <p className="text-xs text-gray-500">2nd Payment ({(quote.secondTranchePct * 100).toFixed(0)}%)</p>
+            <p className="text-lg font-bold text-purple-700">{fmt(totals.secondTrancheAmount)}</p>
+          </div>
+          <div className="bg-purple-50 rounded p-3">
+            <p className="text-xs text-gray-500">Balance ({(balancePct * 100).toFixed(0)}%)</p>
+            <p className="text-lg font-bold text-purple-700">{fmt(totals.balanceAmount)}</p>
           </div>
         </div>
 
@@ -343,11 +416,15 @@ export function QuoteEditor({
                 <th className="px-2 py-2 text-right w-24">USD Unit</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/5">USD Sub</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/5">AUD Cost</th>
-                <th className="px-2 py-2 text-right w-20">Margin%</th>
-                <th className="px-2 py-2 text-right w-24 bg-white/5">Sell exGST</th>
-                <th className="px-2 py-2 text-right w-20 bg-white/5">GST</th>
-                <th className="px-2 py-2 text-right w-24 bg-white/5">Sell incGST</th>
+                <th className="px-2 py-2 text-right w-20">LUX M%</th>
+                <th className="px-2 py-2 text-right w-24 bg-white/5">LUX exGST</th>
+                <th className="px-2 py-2 text-right w-20 bg-white/5">LUX GST</th>
+                <th className="px-2 py-2 text-right w-24 bg-white/5">LUX incGST</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/5">Profit</th>
+                <th className="px-2 py-2 text-right w-20 bg-blue-500/20">Res M%</th>
+                <th className="px-2 py-2 text-right w-24 bg-blue-500/20">Res exGST</th>
+                <th className="px-2 py-2 text-right w-20 bg-blue-500/20">Res GST</th>
+                <th className="px-2 py-2 text-right w-24 bg-blue-500/20">Res incGST</th>
                 <th className="px-2 py-2 w-8"></th>
               </tr>
             </thead>
@@ -443,6 +520,29 @@ export function QuoteEditor({
                     <td className={`px-2 py-1 text-right bg-gray-50 text-gray-600 ${isFree ? "line-through" : ""}`}>
                       {fmt(calc.grossProfit)}
                     </td>
+                    {/* Reseller columns */}
+                    <td className="px-2 py-1 bg-blue-50/50">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="w-full bg-transparent border border-transparent hover:border-blue-200 focus:border-blue-400 focus:outline-none rounded px-1 py-0.5 text-right"
+                        placeholder={fmtPct(settings.defaultResellerMargin)}
+                        value={item.resellerMarginOverride != null ? (item.resellerMarginOverride * 100).toFixed(1) : ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          updateItem(idx, "resellerMarginOverride", v === "" ? null : (parseFloat(v) || 0) / 100);
+                        }}
+                      />
+                    </td>
+                    <td className={`px-2 py-1 text-right bg-blue-50/50 text-blue-700 ${isFree ? "line-through" : ""}`}>
+                      {fmt(calc.resellerSellExGst)}
+                    </td>
+                    <td className={`px-2 py-1 text-right bg-blue-50/50 text-blue-700 ${isFree ? "line-through" : ""}`}>
+                      {fmt(calc.resellerGst)}
+                    </td>
+                    <td className={`px-2 py-1 text-right bg-blue-50/50 text-blue-700 ${isFree ? "line-through" : ""}`}>
+                      {fmt(calc.resellerSellIncGst)}
+                    </td>
                     <td className="px-2 py-1">
                       <button
                         onClick={() => deleteItem(idx)}
@@ -468,6 +568,10 @@ export function QuoteEditor({
                 <td className="px-2 py-2 text-right">{fmt(totals.totalGst)}</td>
                 <td className="px-2 py-2 text-right">{fmt(totals.totalAudSellIncGst)}</td>
                 <td className="px-2 py-2 text-right text-green-600">{fmt(totals.totalGrossProfit)}</td>
+                <td className="px-2 py-2 text-right"></td>
+                <td className="px-2 py-2 text-right text-blue-700">{fmt(totals.totalResellerSellExGst)}</td>
+                <td className="px-2 py-2 text-right text-blue-700">{fmt(totals.totalResellerGst)}</td>
+                <td className="px-2 py-2 text-right text-blue-800 font-extrabold">{fmt(totals.totalResellerSellIncGst)}</td>
                 <td></td>
               </tr>
             </tbody>
@@ -495,10 +599,9 @@ export function QuoteEditor({
             + Add Frame Build
           </button>
 
-          {/* Toggle controls for selected items */}
           <div className="ml-auto flex gap-2 text-xs text-gray-500">
             <label className="flex items-center gap-1">
-              <span>Tip: Click margins to override per-item</span>
+              <span>Tip: Leave margin blank to use quote default</span>
             </label>
           </div>
         </div>

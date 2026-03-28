@@ -8,11 +8,19 @@ export function recalcQuoteTotals(quoteId: number) {
 
   const items = db.select().from(schema.quoteLineItems).where(eq(schema.quoteLineItems.quoteId, quoteId)).all();
 
-  const settings = { fxRate: quote.fxRate, defaultMargin: quote.defaultMargin, gstRate: quote.gstRate };
+  const settings = {
+    fxRate: quote.fxRate,
+    defaultMargin: quote.defaultMargin,
+    defaultResellerMargin: quote.defaultResellerMargin,
+    gstRate: quote.gstRate,
+    depositPct: quote.depositPct,
+    secondTranchePct: quote.secondTranchePct,
+  };
   const inputs = items.map(item => ({
     qty: item.qty,
     usdUnitPrice: item.usdUnitPrice ?? 0,
     marginOverride: item.marginOverride,
+    resellerMarginOverride: item.resellerMarginOverride,
     isLocal: item.isLocal,
     audLocalCost: item.audLocalCost ?? 0,
     isFree: item.isFree,

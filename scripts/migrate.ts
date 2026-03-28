@@ -113,6 +113,27 @@ CREATE TABLE IF NOT EXISTS quote_history (
 `;
 
 sqlite.exec(ddl);
+
+// Migrations - add columns if they don't exist
+const migrations = [
+  `ALTER TABLE quotes ADD COLUMN default_reseller_margin REAL NOT NULL DEFAULT 0.30`,
+  `ALTER TABLE quote_line_items ADD COLUMN reseller_margin_override REAL`,
+];
+
+for (const migration of migrations) {
+  try {
+    sqlite.exec(migration);
+    console.log("Migration applied:", migration.slice(0, 60) + "...");
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("duplicate column")) {
+      // Column already exists, skip
+    } else {
+      throw e;
+    }
+  }
+}
+
 console.log("Database created at:", dbPath);
 console.log("Tables created successfully.");
 sqlite.close();
