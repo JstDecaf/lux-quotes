@@ -214,15 +214,15 @@ export function QuoteEditor({
       </div>
 
       {/* Quote Title Row */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
         <span className="text-sm font-mono text-gray-500">{quote.quoteNumber}</span>
         <input
-          className="text-2xl font-archivo font-bold text-[#0D1B2A] bg-transparent border-b border-transparent hover:border-gray-300 focus:border-[#DB412B] focus:outline-none px-1 flex-1"
+          className="text-xl sm:text-2xl font-archivo font-bold text-[#0D1B2A] bg-transparent border-b border-transparent hover:border-gray-300 focus:border-[#DB412B] focus:outline-none px-1 flex-1 min-w-0"
           value={quote.name}
           onChange={(e) => updateQuoteField("name", e.target.value)}
         />
         <select
-          className="text-sm px-3 py-1.5 rounded-full font-medium border-0 cursor-pointer"
+          className="text-sm px-3 py-1.5 rounded-full font-medium border-0 cursor-pointer self-start sm:self-auto"
           style={{ backgroundColor: statusInfo.color + "20", color: statusInfo.color }}
           value={quote.status}
           onChange={(e) => updateQuoteField("status", e.target.value)}
@@ -234,7 +234,7 @@ export function QuoteEditor({
       </div>
 
       {/* Client & Project links */}
-      <div className="flex gap-4 mb-6 text-sm text-gray-600">
+      <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 sm:mb-6 text-sm text-gray-600">
         {quote.clientName && (
           <a href={`/clients/${quote.clientId}`} className="hover:text-[#DB412B]">
             Client: <span className="font-medium">{quote.clientName}</span>
@@ -250,7 +250,7 @@ export function QuoteEditor({
       {/* Summary Card */}
       <div className="bg-white rounded-lg border p-5 mb-6">
         {/* Settings Row */}
-        <div className="grid grid-cols-6 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
           <div>
             <label className="block text-xs text-gray-500 mb-1">FX Rate (USD/AUD)</label>
             <input
@@ -315,7 +315,7 @@ export function QuoteEditor({
 
         {/* LUX Totals */}
         <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">LUX Pricing</h3>
-        <div className="grid grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           <div className="bg-gray-50 rounded p-3">
             <p className="text-xs text-gray-500">Total USD</p>
             <p className="text-lg font-bold">US${totals.totalUsd.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
@@ -333,7 +333,7 @@ export function QuoteEditor({
             <p className="text-lg font-bold">{fmt(totals.totalAudSellIncGst)}</p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
           <div className="bg-green-50 rounded p-3">
             <p className="text-xs text-gray-500">Gross Profit</p>
             <p className="text-xl font-bold text-green-600">{fmt(totals.totalGrossProfit)}</p>
@@ -350,7 +350,7 @@ export function QuoteEditor({
 
         {/* Reseller Totals */}
         <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Reseller Pricing (Client-Facing)</h3>
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           <div className="bg-blue-50 rounded p-3">
             <p className="text-xs text-gray-500">Reseller Sell ex-GST</p>
             <p className="text-lg font-bold text-blue-700">{fmt(totals.totalResellerSellExGst)}</p>
@@ -363,11 +363,15 @@ export function QuoteEditor({
             <p className="text-xs text-gray-500">Reseller Sell inc-GST</p>
             <p className="text-xl font-bold text-blue-800">{fmt(totals.totalResellerSellIncGst)}</p>
           </div>
+          <div className="bg-blue-50 rounded p-3">
+            <p className="text-xs text-gray-500">Reseller Profit</p>
+            <p className="text-xl font-bold text-blue-700">{fmt(totals.totalResellerProfit)}</p>
+          </div>
         </div>
 
         {/* Deposit Schedule */}
         <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Schedule</h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="bg-purple-50 rounded p-3">
             <p className="text-xs text-gray-500">Deposit ({(quote.depositPct * 100).toFixed(0)}%)</p>
             <p className="text-lg font-bold text-purple-700">{fmt(totals.depositAmount)}</p>
@@ -384,7 +388,7 @@ export function QuoteEditor({
 
         {/* Screen specs */}
         {(quote.screenSize || quote.panelConfig || quote.totalResolution) && (
-          <div className="mt-4 pt-4 border-t flex gap-6 text-sm text-gray-600">
+          <div className="mt-4 pt-4 border-t flex flex-wrap gap-3 sm:gap-6 text-sm text-gray-600">
             {quote.screenSize && <span>Screen: {quote.screenSize}</span>}
             {quote.panelConfig && <span>Panels: {quote.panelConfig}</span>}
             {quote.totalResolution && <span>Resolution: {quote.totalResolution}</span>}
@@ -410,7 +414,7 @@ export function QuoteEditor({
             <thead>
               <tr className="bg-[#0D1B2A] text-white text-xs">
                 <th className="px-2 py-2 text-left w-8">#</th>
-                <th className="px-2 py-2 text-left min-w-[180px]">Item Name</th>
+                <th className="px-2 py-2 text-left min-w-[180px] sticky left-0 bg-[#0D1B2A] z-10">Item Name</th>
                 <th className="px-2 py-2 text-left w-16">Unit</th>
                 <th className="px-2 py-2 text-right w-16">Qty</th>
                 <th className="px-2 py-2 text-right w-24">USD Unit</th>
@@ -425,6 +429,7 @@ export function QuoteEditor({
                 <th className="px-2 py-2 text-right w-24 bg-blue-500/20">Res exGST</th>
                 <th className="px-2 py-2 text-right w-20 bg-blue-500/20">Res GST</th>
                 <th className="px-2 py-2 text-right w-24 bg-blue-500/20">Res incGST</th>
+                <th className="px-2 py-2 text-right w-24 bg-blue-500/20">Res Profit</th>
                 <th className="px-2 py-2 w-8"></th>
               </tr>
             </thead>
@@ -442,7 +447,7 @@ export function QuoteEditor({
                 return (
                   <tr key={item.id} className={`${rowBg} border-b border-gray-100 hover:bg-gray-50/50`}>
                     <td className="px-2 py-1 text-gray-400 text-xs">{item.sortOrder}</td>
-                    <td className="px-2 py-1">
+                    <td className={`px-2 py-1 sticky left-0 z-10 ${rowBg} border-r border-gray-200`}>
                       <input
                         className={`w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-blue-400 focus:outline-none rounded px-1 py-0.5 ${isFree ? "line-through text-gray-400" : ""}`}
                         value={item.itemName}
@@ -543,6 +548,9 @@ export function QuoteEditor({
                     <td className={`px-2 py-1 text-right bg-blue-50/50 text-blue-700 ${isFree ? "line-through" : ""}`}>
                       {fmt(calc.resellerSellIncGst)}
                     </td>
+                    <td className={`px-2 py-1 text-right bg-blue-50/50 text-blue-700 ${isFree ? "line-through" : ""}`}>
+                      {fmt(calc.resellerProfit)}
+                    </td>
                     <td className="px-2 py-1">
                       <button
                         onClick={() => deleteItem(idx)}
@@ -572,6 +580,7 @@ export function QuoteEditor({
                 <td className="px-2 py-2 text-right text-blue-700">{fmt(totals.totalResellerSellExGst)}</td>
                 <td className="px-2 py-2 text-right text-blue-700">{fmt(totals.totalResellerGst)}</td>
                 <td className="px-2 py-2 text-right text-blue-800 font-extrabold">{fmt(totals.totalResellerSellIncGst)}</td>
+                <td className="px-2 py-2 text-right text-blue-700">{fmt(totals.totalResellerProfit)}</td>
                 <td></td>
               </tr>
             </tbody>
@@ -579,27 +588,27 @@ export function QuoteEditor({
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-2 p-3 border-t bg-gray-50">
+        <div className="flex flex-wrap gap-2 p-3 border-t bg-gray-50">
           <button
             onClick={() => addItem()}
-            className="px-3 py-1.5 text-sm bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42] transition-colors"
+            className="px-3 py-2 sm:py-1.5 text-sm bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42] transition-colors"
           >
             + Add Item
           </button>
           <button
             onClick={() => addItem({ itemName: "Freight", isLocal: true, unit: "JOB" })}
-            className="px-3 py-1.5 text-sm bg-amber-100 text-amber-800 rounded hover:bg-amber-200 transition-colors"
+            className="px-3 py-2 sm:py-1.5 text-sm bg-amber-100 text-amber-800 rounded hover:bg-amber-200 transition-colors"
           >
-            + Add Freight
+            + Freight
           </button>
           <button
             onClick={() => addItem({ itemName: "Frame Build & Install", isLocal: true, unit: "JOB" })}
-            className="px-3 py-1.5 text-sm bg-amber-100 text-amber-800 rounded hover:bg-amber-200 transition-colors"
+            className="px-3 py-2 sm:py-1.5 text-sm bg-amber-100 text-amber-800 rounded hover:bg-amber-200 transition-colors"
           >
-            + Add Frame Build
+            + Frame Build
           </button>
 
-          <div className="ml-auto flex gap-2 text-xs text-gray-500">
+          <div className="hidden sm:flex ml-auto gap-2 text-xs text-gray-500">
             <label className="flex items-center gap-1">
               <span>Tip: Leave margin blank to use quote default</span>
             </label>

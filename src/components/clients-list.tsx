@@ -47,8 +47,8 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-archivo text-2xl font-bold text-gray-900">Clients</h1>
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h1 className="font-archivo text-xl sm:text-2xl font-bold text-gray-900">Clients</h1>
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-[#DB412B] text-white rounded-lg hover:bg-[#c23823] transition-colors text-sm font-medium"
@@ -60,7 +60,7 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
       {showForm && (
         <div className="bg-white rounded-lg border p-4 mb-6">
           <h2 className="font-medium text-sm mb-3">Add New Client</h2>
-          <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Company Name *</label>
               <input
@@ -113,7 +113,8 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
         </div>
       )}
 
-      <div className="bg-white rounded-lg border overflow-hidden">
+      {/* Desktop Table */}
+      <div className="hidden sm:block bg-white rounded-lg border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
@@ -146,6 +147,30 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="sm:hidden space-y-2">
+        {clients.length === 0 ? (
+          <div className="bg-white rounded-lg border p-6 text-center text-gray-400 text-sm">
+            No clients yet. Add your first client to get started.
+          </div>
+        ) : (
+          clients.map((c) => (
+            <div
+              key={c.id}
+              onClick={() => router.push(`/clients/${c.id}`)}
+              className="bg-white rounded-lg border p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            >
+              <p className="font-medium text-gray-900">{c.name}</p>
+              {c.contactName && <p className="text-sm text-gray-600 mt-1">{c.contactName}</p>}
+              <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-500">
+                {c.contactEmail && <span>{c.contactEmail}</span>}
+                {c.contactPhone && <span>{c.contactPhone}</span>}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

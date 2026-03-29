@@ -29,24 +29,38 @@ export const projects = sqliteTable("projects", {
 export const products = sqliteTable("products", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
-  brand: text("brand").default("Leyard V-Team"),
+  brand: text("brand").default("Leyard"),
+  subBrand: text("sub_brand").default("Standard"),
   category: text("category"),
-  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  status: text("status").notNull().default("Active"),
+  description: text("description"),
+  applications: text("applications"), // JSON array
+  imageUrl: text("image_url"),
+  driveFolder: text("drive_folder"),
+  ...timestamps,
 });
 
 export const productVariants = sqliteTable("product_variants", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
-  pixelPitch: real("pixel_pitch"),
+  name: text("name").notNull(),
+  pixelPitch: text("pixel_pitch"),
+  pricePerSqmUsd: real("price_per_sqm_usd"),
   cabinetSize: text("cabinet_size"),
-  brightness: integer("brightness"),
-  refreshRate: integer("refresh_rate"),
-  ledType: text("led_type"),
+  cabinetResolution: text("cabinet_resolution"),
+  pixelConfig: text("pixel_config"),
+  brightness: text("brightness"),
+  contrastRatio: text("contrast_ratio"),
+  refreshRate: text("refresh_rate"),
+  viewingAngle: text("viewing_angle"),
+  weight: text("weight"),
+  powerAvg: text("power_avg"),
+  powerMax: text("power_max"),
   ipRating: text("ip_rating"),
-  controllerModel: text("controller_model"),
-  installationType: text("installation_type"),
+  operatingTemp: text("operating_temp"),
+  gob: integer("gob", { mode: "boolean" }).notNull().default(false),
   notes: text("notes"),
-  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  ...timestamps,
 });
 
 export const quotes = sqliteTable("quotes", {
@@ -91,6 +105,17 @@ export const quoteLineItems = sqliteTable("quote_line_items", {
   audLocalCost: real("aud_local_cost").default(0),
   isFree: integer("is_free", { mode: "boolean" }).notNull().default(false),
   productVariantId: integer("product_variant_id").references(() => productVariants.id),
+  ...timestamps,
+});
+
+export const productDocuments = sqliteTable("product_documents", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  type: text("type").notNull().default("link"), // brochure, manual, spec_sheet, video, link
+  url: text("url").notNull(),
+  fileType: text("file_type"), // pdf, xlsx, mp4, web
+  notes: text("notes"),
   ...timestamps,
 });
 

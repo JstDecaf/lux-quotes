@@ -27,6 +27,7 @@ export interface LineItemCalculated {
   resellerSellExGst: number;
   resellerGst: number;
   resellerSellIncGst: number;
+  resellerProfit: number;
 }
 
 export function calculateLineItem(
@@ -44,6 +45,7 @@ export function calculateLineItem(
       resellerSellExGst: 0,
       resellerGst: 0,
       resellerSellIncGst: 0,
+      resellerProfit: 0,
     };
   }
 
@@ -69,6 +71,7 @@ export function calculateLineItem(
     : audSellExGst;
   const resellerGst = resellerSellExGst * settings.gstRate;
   const resellerSellIncGst = resellerSellExGst + resellerGst;
+  const resellerProfit = resellerSellExGst - audSellExGst;
 
   return {
     usdSubtotal,
@@ -80,6 +83,7 @@ export function calculateLineItem(
     resellerSellExGst,
     resellerGst,
     resellerSellIncGst,
+    resellerProfit,
   };
 }
 
@@ -94,6 +98,7 @@ export interface QuoteTotals {
   totalResellerSellExGst: number;
   totalResellerGst: number;
   totalResellerSellIncGst: number;
+  totalResellerProfit: number;
   depositAmount: number;
   secondTrancheAmount: number;
   balanceAmount: number;
@@ -112,6 +117,7 @@ export function calculateQuoteTotals(
   let totalResellerSellExGst = 0;
   let totalResellerGst = 0;
   let totalResellerSellIncGst = 0;
+  let totalResellerProfit = 0;
 
   for (const item of items) {
     const calc = calculateLineItem(item, settings);
@@ -124,6 +130,7 @@ export function calculateQuoteTotals(
     totalResellerSellExGst += calc.resellerSellExGst;
     totalResellerGst += calc.resellerGst;
     totalResellerSellIncGst += calc.resellerSellIncGst;
+    totalResellerProfit += calc.resellerProfit;
   }
 
   const overallMargin =
@@ -145,6 +152,7 @@ export function calculateQuoteTotals(
     totalResellerSellExGst,
     totalResellerGst,
     totalResellerSellIncGst,
+    totalResellerProfit,
     depositAmount,
     secondTrancheAmount,
     balanceAmount,

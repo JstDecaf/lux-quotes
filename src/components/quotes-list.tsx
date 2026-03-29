@@ -59,11 +59,11 @@ export function QuotesList({ quotes, projects }: { quotes: Quote[]; projects: Pr
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-archivo text-2xl font-bold text-gray-900">Quotes</h1>
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h1 className="font-archivo text-xl sm:text-2xl font-bold text-gray-900">Quotes</h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-[#DB412B] text-white rounded-lg hover:bg-[#c23823] transition-colors text-sm font-medium"
+          className="px-3 sm:px-4 py-2 bg-[#DB412B] text-white rounded-lg hover:bg-[#c23823] transition-colors text-sm font-medium"
         >
           + New Quote
         </button>
@@ -73,7 +73,7 @@ export function QuotesList({ quotes, projects }: { quotes: Quote[]; projects: Pr
       {showForm && (
         <div className="bg-white rounded-lg border p-4 mb-6">
           <h2 className="font-medium text-sm mb-3">Create New Quote</h2>
-          <div className="flex gap-3 items-end">
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
             <div className="flex-1">
               <label className="block text-xs text-gray-500 mb-1">Quote Name</label>
               <input
@@ -98,25 +98,27 @@ export function QuotesList({ quotes, projects }: { quotes: Quote[]; projects: Pr
                 ))}
               </select>
             </div>
-            <button
-              onClick={createQuote}
-              disabled={!newName.trim() || !newProjectId}
-              className="px-4 py-2 bg-[#0D1B2A] text-white rounded text-sm hover:bg-[#1a2d42] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Create
-            </button>
-            <button
-              onClick={() => setShowForm(false)}
-              className="px-4 py-2 text-gray-500 text-sm hover:text-gray-700"
-            >
-              Cancel
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={createQuote}
+                disabled={!newName.trim() || !newProjectId}
+                className="px-4 py-2 bg-[#0D1B2A] text-white rounded text-sm hover:bg-[#1a2d42] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Create
+              </button>
+              <button
+                onClick={() => setShowForm(false)}
+                className="px-4 py-2 text-gray-500 text-sm hover:text-gray-700"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-1 mb-4">
+      <div className="flex flex-wrap gap-1 mb-4">
         {STATUS_OPTIONS.map((s) => (
           <button
             key={s.value}
@@ -132,8 +134,8 @@ export function QuotesList({ quotes, projects }: { quotes: Quote[]; projects: Pr
         ))}
       </div>
 
-      {/* Quotes Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      {/* Desktop Table */}
+      <div className="hidden md:block bg-white rounded-lg border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
@@ -187,6 +189,49 @@ export function QuotesList({ quotes, projects }: { quotes: Quote[]; projects: Pr
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-2">
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-lg border p-6 text-center text-gray-400 text-sm">
+            No quotes found. Create your first quote to get started.
+          </div>
+        ) : (
+          filtered.map((q) => {
+            const statusInfo = STATUS_OPTIONS.find((s) => s.value === q.status);
+            return (
+              <div
+                key={q.id}
+                onClick={() => router.push(`/quotes/${q.id}`)}
+                className="bg-white rounded-lg border p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 truncate">{q.name}</p>
+                    <p className="text-xs text-gray-500">{q.clientName ?? "No client"} · {q.projectName ?? "No project"}</p>
+                  </div>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-xs font-medium ml-2 flex-shrink-0"
+                    style={{
+                      backgroundColor: (statusInfo?.color ?? "#9CA3AF") + "20",
+                      color: statusInfo?.color ?? "#9CA3AF",
+                    }}
+                  >
+                    {statusInfo?.label ?? q.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-mono text-xs text-gray-400">{q.quoteNumber}</span>
+                  <div className="text-right">
+                    <span className="font-bold">{fmt(q.cachedTotalAudSellIncGst)}</span>
+                    <span className="text-green-600 text-xs ml-2">+{fmt(q.cachedTotalGrossProfit)}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
