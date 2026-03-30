@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { products, productVariants, productDocuments } from "@/../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
