@@ -137,10 +137,10 @@ export function calculateQuoteTotals(
   const overallMargin =
     totalAudSellExGst > 0 ? totalGrossProfit / totalAudSellExGst : 0;
 
-  // Deposit calculations based on reseller sell inc-GST (client-facing total)
-  const depositAmount = totalResellerSellIncGst * settings.depositPct;
-  const secondTrancheAmount = totalResellerSellIncGst * settings.secondTranchePct;
-  const balanceAmount = totalResellerSellIncGst - depositAmount - secondTrancheAmount;
+  // Deposit calculations based on LUX sell inc-GST (what LUX collects from the reseller)
+  const depositAmount = totalAudSellIncGst * settings.depositPct;
+  const secondTrancheAmount = totalAudSellIncGst * settings.secondTranchePct;
+  const balanceAmount = totalAudSellIncGst - depositAmount - secondTrancheAmount;
 
   return {
     totalUsd,
