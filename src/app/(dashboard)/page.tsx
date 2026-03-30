@@ -38,7 +38,8 @@ export default async function Dashboard() {
   const clientCount = (await db.select({ id: schema.clients.id }).from(schema.clients).all()).length;
 
   // Aggregate by status
-  const byStatus = allQuotes.reduce((acc: Record<string, { count: number; value: number; profit: number }>, q) => {
+  type QuoteRow = typeof allQuotes[number];
+  const byStatus = allQuotes.reduce((acc: Record<string, { count: number; value: number; profit: number }>, q: QuoteRow) => {
     const s = q.status ?? "draft";
     if (!acc[s]) acc[s] = { count: 0, value: 0, profit: 0 };
     acc[s].count++;
@@ -58,7 +59,8 @@ export default async function Dashboard() {
   const recent = allQuotes.slice(0, 8);
 
   // Pipeline bar widths
-  const totalValue = Object.values(byStatus).reduce((s, v) => s + v.value, 0);
+  const statusEntries = Object.entries(byStatus) as [string, { count: number; value: number; profit: number }][];
+  const totalValue = statusEntries.reduce((s, [, v]) => s + v.value, 0);
   const pct = (v: number) => totalValue > 0 ? `${((v / totalValue) * 100).toFixed(1)}%` : "0%";
 
   return (
@@ -144,7 +146,7 @@ export default async function Dashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {recent.map((q) => (
+              {recent.map((q: QuoteRow) => (
                 <tr key={q.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-5 py-3">
                     <Link href={`/quotes/${q.id}`} className="font-medium text-[#DB412B] hover:underline">
