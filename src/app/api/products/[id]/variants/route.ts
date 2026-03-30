@@ -5,7 +5,7 @@ import { eq, asc } from "drizzle-orm";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const variants = db.select().from(productVariants)
+  const variants = await db.select().from(productVariants)
     .where(eq(productVariants.productId, Number(id)))
     .orderBy(asc(productVariants.pixelPitch)).all();
   return NextResponse.json(variants);
@@ -14,7 +14,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
-  const result = db.insert(productVariants).values({
+  const [result] = await db.insert(productVariants).values({
     productId: Number(id),
     name: body.name,
     pixelPitch: body.pixelPitch,
@@ -32,14 +32,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     ipRating: body.ipRating,
     operatingTemp: body.operatingTemp,
     gob: body.gob || false,
-  }).run();
-  return NextResponse.json({ id: result.lastInsertRowid }, { status: 201 });
+  }).returning();
+  return NextResponse.json({ id: result.id }, { status: 201 });
 }
 
 export async function PUT(req: Request) {
   const body = await req.json();
   if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
-  db.update(productVariants).set({
+  await db.update(productVariants).set({
     name: body.name,
     pixelPitch: body.pixelPitch,
     pricePerSqmUsd: body.pricePerSqmUsd,

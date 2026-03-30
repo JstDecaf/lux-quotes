@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string; variantId: string }> }
 ) {
   const { variantId } = await params;
-  const variant = db.select().from(productVariants).where(eq(productVariants.id, Number(variantId))).get();
+  const variant = await db.select().from(productVariants).where(eq(productVariants.id, Number(variantId))).get();
   if (!variant) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(variant);
 }
@@ -20,7 +20,7 @@ export async function PUT(
   const { variantId } = await params;
   const body = await req.json();
 
-  db.update(productVariants).set({
+  await db.update(productVariants).set({
     name: body.name,
     pixelPitch: body.pixelPitch,
     pricePerSqmUsd: body.pricePerSqmUsd,
@@ -48,6 +48,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; variantId: string }> }
 ) {
   const { variantId } = await params;
-  db.delete(productVariants).where(eq(productVariants.id, Number(variantId))).run();
+  await db.delete(productVariants).where(eq(productVariants.id, Number(variantId))).run();
   return NextResponse.json({ ok: true });
 }

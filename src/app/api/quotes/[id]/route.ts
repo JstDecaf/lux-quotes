@@ -9,7 +9,7 @@ export async function GET(
   const { id } = await params;
   const quoteId = parseInt(id);
 
-  const quote = db
+  const quote = await db
     .select({
       id: schema.quotes.id,
       projectId: schema.quotes.projectId,
@@ -49,7 +49,7 @@ export async function GET(
     return Response.json({ error: "Quote not found" }, { status: 404 });
   }
 
-  const lineItems = db
+  const lineItems = await db
     .select()
     .from(schema.quoteLineItems)
     .where(eq(schema.quoteLineItems.quoteId, quoteId))
@@ -70,23 +70,22 @@ export async function PUT(
   // Remove fields that shouldn't be directly set
   const { lineItems: _li, id: _id, clientName: _cn, projectName: _pn, clientId: _ci, ...updates } = body;
 
-  const result = db.update(schema.quotes)
+  const [result] = await db.update(schema.quotes)
     .set({
       ...updates,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(schema.quotes.id, quoteId))
-    .returning()
-    .get();
+    .returning();
 
   if (!result) {
     return Response.json({ error: "Quote not found" }, { status: 404 });
   }
 
   // Recalculate cached totals
-  recalcQuoteTotals(quoteId);
+  await recalcQuoteTotals(quoteId);
 
-  const updated = db.select().from(schema.quotes).where(eq(schema.quotes.id, quoteId)).get();
+  const updated = await db.select().from(schema.quotes).where(eq(schema.quotes.id, quoteId)).get();
   return Response.json(updated);
 }
 
@@ -97,6 +96,6 @@ export async function DELETE(
   const { id } = await params;
   const quoteId = parseInt(id);
 
-  db.delete(schema.quotes).where(eq(schema.quotes.id, quoteId)).run();
+  await db.delete(schema.quotes).where(eq(schema.quotes.id, quoteId)).run();
   return Response.json({ ok: true });
 }

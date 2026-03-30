@@ -9,7 +9,7 @@ export async function GET(
   const { id } = await params;
   const quoteId = parseInt(id);
 
-  const items = db
+  const items = await db
     .select()
     .from(schema.quoteLineItems)
     .where(eq(schema.quoteLineItems.quoteId, quoteId))
@@ -27,7 +27,7 @@ export async function POST(
   const quoteId = parseInt(id);
   const body = await request.json();
 
-  const result = db.insert(schema.quoteLineItems).values({
+  const [result] = await db.insert(schema.quoteLineItems).values({
     quoteId,
     itemName: body.itemName ?? "New Item",
     description: body.description ?? null,
@@ -39,9 +39,9 @@ export async function POST(
     audLocalCost: body.audLocalCost ?? 0,
     isFree: body.isFree ?? false,
     sortOrder: body.sortOrder ?? 0,
-  }).returning().get();
+  }).returning();
 
-  recalcQuoteTotals(quoteId);
+  await recalcQuoteTotals(quoteId);
 
   return Response.json(result, { status: 201 });
 }
@@ -63,7 +63,7 @@ export async function PUT(
     if (!itemId) continue;
 
     const { id: _id, quoteId: _qid, createdAt: _ca, ...updates } = item;
-    db.update(schema.quoteLineItems)
+    await db.update(schema.quoteLineItems)
       .set({
         ...updates,
         updatedAt: new Date().toISOString(),
@@ -72,9 +72,9 @@ export async function PUT(
       .run();
   }
 
-  recalcQuoteTotals(quoteId);
+  await recalcQuoteTotals(quoteId);
 
-  const items = db
+  const items = await db
     .select()
     .from(schema.quoteLineItems)
     .where(eq(schema.quoteLineItems.quoteId, quoteId))

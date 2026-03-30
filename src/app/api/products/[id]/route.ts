@@ -5,14 +5,14 @@ import { eq, asc } from "drizzle-orm";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = db.select().from(products).where(eq(products.id, Number(id))).get();
+  const product = await db.select().from(products).where(eq(products.id, Number(id))).get();
   if (!product) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const variants = db.select().from(productVariants)
+  const variants = await db.select().from(productVariants)
     .where(eq(productVariants.productId, Number(id)))
     .orderBy(asc(productVariants.pixelPitch)).all();
 
-  const documents = db.select().from(productDocuments)
+  const documents = await db.select().from(productDocuments)
     .where(eq(productDocuments.productId, Number(id)))
     .orderBy(asc(productDocuments.type)).all();
 
@@ -27,7 +27,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const body = await req.json();
-  db.update(products).set({
+  await db.update(products).set({
     name: body.name,
     brand: body.brand,
     subBrand: body.subBrand,
@@ -44,6 +44,6 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  db.delete(products).where(eq(products.id, Number(id))).run();
+  await db.delete(products).where(eq(products.id, Number(id))).run();
   return NextResponse.json({ ok: true });
 }

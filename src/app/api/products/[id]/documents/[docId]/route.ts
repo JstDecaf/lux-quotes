@@ -9,7 +9,7 @@ export async function PUT(
 ) {
   const { docId } = await params;
   const body = await req.json();
-  db.update(productDocuments).set({
+  await db.update(productDocuments).set({
     name: body.name,
     type: body.type,
     url: body.url,
@@ -25,6 +25,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; docId: string }> }
 ) {
   const { docId } = await params;
-  db.delete(productDocuments).where(eq(productDocuments.id, Number(docId))).run();
+  await db.delete(productDocuments).where(eq(productDocuments.id, Number(docId))).run();
   return NextResponse.json({ ok: true });
 }

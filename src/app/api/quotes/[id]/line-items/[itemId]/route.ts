@@ -13,20 +13,19 @@ export async function PUT(
 
   const { id: _id, quoteId: _qid, createdAt: _ca, ...updates } = body;
 
-  const result = db.update(schema.quoteLineItems)
+  const [result] = await db.update(schema.quoteLineItems)
     .set({
       ...updates,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(schema.quoteLineItems.id, lineItemId))
-    .returning()
-    .get();
+    .returning();
 
   if (!result) {
     return Response.json({ error: "Line item not found" }, { status: 404 });
   }
 
-  recalcQuoteTotals(quoteId);
+  await recalcQuoteTotals(quoteId);
 
   return Response.json(result);
 }
@@ -39,8 +38,8 @@ export async function DELETE(
   const quoteId = parseInt(id);
   const lineItemId = parseInt(itemId);
 
-  db.delete(schema.quoteLineItems).where(eq(schema.quoteLineItems.id, lineItemId)).run();
-  recalcQuoteTotals(quoteId);
+  await db.delete(schema.quoteLineItems).where(eq(schema.quoteLineItems.id, lineItemId)).run();
+  await recalcQuoteTotals(quoteId);
 
   return Response.json({ ok: true });
 }

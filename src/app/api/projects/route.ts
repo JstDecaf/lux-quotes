@@ -21,11 +21,11 @@ export async function GET(request: NextRequest) {
     .orderBy(asc(schema.projects.name));
 
   if (clientId) {
-    const projects = query.where(eq(schema.projects.clientId, parseInt(clientId))).all();
+    const projects = await query.where(eq(schema.projects.clientId, parseInt(clientId))).all();
     return Response.json(projects);
   }
 
-  const projects = query.all();
+  const projects = await query.all();
   return Response.json(projects);
 }
 
@@ -37,12 +37,12 @@ export async function POST(request: Request) {
     return Response.json({ error: "clientId and name are required" }, { status: 400 });
   }
 
-  const result = db.insert(schema.projects).values({
+  const [result] = await db.insert(schema.projects).values({
     clientId,
     name,
     description: description ?? null,
     status: status ?? "active",
-  }).returning().get();
+  }).returning();
 
   return Response.json(result, { status: 201 });
 }

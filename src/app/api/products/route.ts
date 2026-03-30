@@ -4,28 +4,28 @@ import { products, productVariants } from "@/../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
 
 export async function GET() {
-  const rows = db
+  const rows = await db
     .select()
     .from(products)
     .orderBy(asc(products.name))
     .all();
 
-  const withVariants = rows.map((p: typeof rows[number]) => {
-    const variants = db
+  const withVariants = await Promise.all(rows.map(async (p: typeof rows[number]) => {
+    const variants = await db
       .select()
       .from(productVariants)
       .where(eq(productVariants.productId, p.id))
       .orderBy(asc(productVariants.pixelPitch))
       .all();
     return { ...p, variants, applications: p.applications ? JSON.parse(p.applications) : [] };
-  });
+  }));
 
   return NextResponse.json(withVariants);
 }
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const result = db.insert(products).values({
+  const [result] = await db.insert(products).values({
     name: body.name,
     brand: body.brand || "Leyard",
     subBrand: body.subBrand || "Standard",
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     status: body.status || "Active",
     description: body.description,
     applications: body.applications ? JSON.stringify(body.applications) : null,
-  }).run();
+  }).returning();
 
-  return NextResponse.json({ id: result.lastInsertRowid }, { status: 201 });
+  return NextResponse.json({ id: result.id }, { status: 201 });
 }

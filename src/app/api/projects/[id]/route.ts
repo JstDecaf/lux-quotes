@@ -8,7 +8,7 @@ export async function GET(
   const { id } = await params;
   const projectId = parseInt(id);
 
-  const project = db
+  const project = await db
     .select({
       id: schema.projects.id,
       clientId: schema.projects.clientId,
@@ -28,7 +28,7 @@ export async function GET(
     return Response.json({ error: "Project not found" }, { status: 404 });
   }
 
-  const quotes = db.select().from(schema.quotes).where(eq(schema.quotes.projectId, projectId)).all();
+  const quotes = await db.select().from(schema.quotes).where(eq(schema.quotes.projectId, projectId)).all();
 
   return Response.json({ ...project, quotes });
 }
@@ -41,14 +41,13 @@ export async function PUT(
   const projectId = parseInt(id);
   const body = await request.json();
 
-  const result = db.update(schema.projects)
+  const [result] = await db.update(schema.projects)
     .set({
       ...body,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(schema.projects.id, projectId))
-    .returning()
-    .get();
+    .returning();
 
   if (!result) {
     return Response.json({ error: "Project not found" }, { status: 404 });
@@ -64,6 +63,6 @@ export async function DELETE(
   const { id } = await params;
   const projectId = parseInt(id);
 
-  db.delete(schema.projects).where(eq(schema.projects.id, projectId)).run();
+  await db.delete(schema.projects).where(eq(schema.projects.id, projectId)).run();
   return Response.json({ ok: true });
 }

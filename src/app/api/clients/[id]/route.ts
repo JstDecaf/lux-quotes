@@ -8,12 +8,12 @@ export async function GET(
   const { id } = await params;
   const clientId = parseInt(id);
 
-  const client = db.select().from(schema.clients).where(eq(schema.clients.id, clientId)).get();
+  const client = await db.select().from(schema.clients).where(eq(schema.clients.id, clientId)).get();
   if (!client) {
     return Response.json({ error: "Client not found" }, { status: 404 });
   }
 
-  const projects = db.select().from(schema.projects).where(eq(schema.projects.clientId, clientId)).all();
+  const projects = await db.select().from(schema.projects).where(eq(schema.projects.clientId, clientId)).all();
 
   return Response.json({ ...client, projects });
 }
@@ -26,14 +26,13 @@ export async function PUT(
   const clientId = parseInt(id);
   const body = await request.json();
 
-  const result = db.update(schema.clients)
+  const [result] = await db.update(schema.clients)
     .set({
       ...body,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(schema.clients.id, clientId))
-    .returning()
-    .get();
+    .returning();
 
   if (!result) {
     return Response.json({ error: "Client not found" }, { status: 404 });
@@ -49,6 +48,6 @@ export async function DELETE(
   const { id } = await params;
   const clientId = parseInt(id);
 
-  db.delete(schema.clients).where(eq(schema.clients.id, clientId)).run();
+  await db.delete(schema.clients).where(eq(schema.clients.id, clientId)).run();
   return Response.json({ ok: true });
 }

@@ -2,11 +2,11 @@ import { db, schema } from "./db";
 import { eq } from "drizzle-orm";
 import { calculateQuoteTotals } from "./calculations";
 
-export function recalcQuoteTotals(quoteId: number) {
-  const quote = db.select().from(schema.quotes).where(eq(schema.quotes.id, quoteId)).get();
+export async function recalcQuoteTotals(quoteId: number) {
+  const quote = await db.select().from(schema.quotes).where(eq(schema.quotes.id, quoteId)).get();
   if (!quote) return;
 
-  const items = db.select().from(schema.quoteLineItems).where(eq(schema.quoteLineItems.quoteId, quoteId)).all();
+  const items = await db.select().from(schema.quoteLineItems).where(eq(schema.quoteLineItems.quoteId, quoteId)).all();
 
   const settings = {
     fxRate: quote.fxRate,
@@ -28,7 +28,7 @@ export function recalcQuoteTotals(quoteId: number) {
 
   const totals = calculateQuoteTotals(inputs, settings);
 
-  db.update(schema.quotes)
+  await db.update(schema.quotes)
     .set({
       cachedTotalUsd: totals.totalUsd,
       cachedTotalAudCost: totals.totalAudCost,

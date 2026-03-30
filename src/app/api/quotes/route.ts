@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const status = request.nextUrl.searchParams.get("status");
   const projectId = request.nextUrl.searchParams.get("projectId");
 
-  let rows = db
+  let rows = await db
     .select({
       id: schema.quotes.id,
       projectId: schema.quotes.projectId,
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
 
   const quoteNumber = generateQuoteNumber();
 
-  const result = db.insert(schema.quotes).values({
+  const [result] = await db.insert(schema.quotes).values({
     projectId,
     quoteNumber,
     name,
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     totalResolution: totalResolution ?? null,
     supplierQuoteDate: supplierQuoteDate ?? null,
     notes: notes ?? null,
-  }).returning().get();
+  }).returning();
 
   return Response.json(result, { status: 201 });
 }
