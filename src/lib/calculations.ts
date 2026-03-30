@@ -49,7 +49,8 @@ export function calculateLineItem(
     };
   }
 
-  const margin = item.marginOverride ?? settings.defaultMargin;
+  // Local items (freight, installation) default to 0% margin unless explicitly overridden
+  const margin = item.marginOverride ?? (item.isLocal ? 0 : settings.defaultMargin);
   const resellerMargin = item.resellerMarginOverride ?? settings.defaultResellerMargin;
 
   const usdSubtotal = item.isLocal ? 0 : item.qty * item.usdUnitPrice;

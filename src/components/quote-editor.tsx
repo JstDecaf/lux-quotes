@@ -179,9 +179,13 @@ export function QuoteEditor({
 
   const addItem = async (preset?: { itemName: string; isLocal: boolean; unit: string }) => {
     const maxOrder = items.length > 0 ? Math.max(...items.map((i) => i.sortOrder)) : 0;
+    const isLocal = preset?.isLocal ?? false;
     const body = {
       itemName: preset?.itemName ?? "New Item",
-      isLocal: preset?.isLocal ?? false,
+      isLocal,
+      // Local items (freight, installation etc) default to 0% margin — pass-through at cost
+      // USD items default to null (uses quote default margin)
+      marginOverride: isLocal ? 0 : null,
       unit: preset?.unit ?? "PCS",
       sortOrder: maxOrder + 1,
       qty: 1,
