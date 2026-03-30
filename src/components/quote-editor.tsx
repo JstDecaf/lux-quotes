@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { calculateLineItem, calculateQuoteTotals, type LineItemInput, type QuoteSettings } from "@/lib/calculations";
 import { NumericInput } from "@/components/numeric-input";
+import { FreightCalculator } from "@/components/freight-calculator";
 
 const UNITS = ["SQM", "PCS", "LOT", "JOB", "SET"] as const;
 
@@ -199,6 +200,7 @@ export function QuoteEditor({
   };
 
   const [exporting, setExporting] = useState<string | null>(null);
+  const [showFreight, setShowFreight] = useState(false);
 
   const downloadPriceSheet = async () => {
     setExporting("price-sheet");
@@ -508,6 +510,13 @@ export function QuoteEditor({
           )}
           {exporting === "proposal" ? "Generating..." : "Export Client Proposal"}
         </button>
+        <button
+          onClick={() => setShowFreight(true)}
+          className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 text-sm font-medium flex items-center gap-2 transition-colors"
+        >
+          <span>🚢</span>
+          Freight Calculator
+        </button>
         <div className="flex-1" />
         <button
           onClick={deleteQuote}
@@ -723,6 +732,17 @@ export function QuoteEditor({
           </div>
         </div>
       </div>
+
+      {/* Freight Calculator Modal */}
+      {showFreight && (
+        <FreightCalculator
+          quoteId={quote.id}
+          quoteName={quote.name}
+          fxRate={quote.fxRate}
+          lineItems={items}
+          onClose={() => setShowFreight(false)}
+        />
+      )}
     </div>
   );
 }
