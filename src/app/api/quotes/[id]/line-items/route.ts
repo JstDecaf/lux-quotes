@@ -16,7 +16,28 @@ export async function GET(
     .orderBy(schema.quoteLineItems.sortOrder)
     .all();
 
-  return Response.json(items);
+  // Enrich with product/variant data
+  const enriched = await Promise.all(items.map(async (item: typeof items[number]) => {
+    if (!item.productVariantId) return { ...item, productName: null, variantName: null, pixelPitch: null, variantWeight: null };
+    const variant = await db.select({
+      name: schema.productVariants.name,
+      pixelPitch: schema.productVariants.pixelPitch,
+      weight: schema.productVariants.weight,
+      productName: schema.products.name,
+    })
+      .from(schema.productVariants)
+      .leftJoin(schema.products, eq(schema.productVariants.productId, schema.products.id))
+      .where(eq(schema.productVariants.id, item.productVariantId))
+      .get();
+    return {
+      ...item,
+      productName: variant?.productName ?? null,
+      variantName: variant?.name ?? null,
+      pixelPitch: variant?.pixelPitch ?? null,
+      variantWeight: variant?.weight ?? null,
+    };
+  }));
+  return Response.json(enriched);
 }
 
 export async function POST(
@@ -39,6 +60,8 @@ export async function POST(
     audLocalCost: body.audLocalCost ?? 0,
     isFree: body.isFree ?? false,
     sortOrder: body.sortOrder ?? 0,
+    productId: body.productId ?? null,
+    productVariantId: body.productVariantId ?? null,
   }).returning();
 
   await recalcQuoteTotals(quoteId);

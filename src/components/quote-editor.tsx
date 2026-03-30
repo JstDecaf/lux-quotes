@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { calculateLineItem, calculateQuoteTotals, type LineItemInput, type QuoteSettings } from "@/lib/calculations";
 import { NumericInput } from "@/components/numeric-input";
 import { FreightCalculator } from "@/components/freight-calculator";
+import { ProductPicker } from "@/components/product-picker";
 
 const UNITS = ["SQM", "PCS", "LOT", "JOB", "SET"] as const;
 
@@ -21,7 +22,11 @@ interface LineItem {
   isLocal: boolean;
   audLocalCost: number | null;
   isFree: boolean;
+  productId: number | null;
   productVariantId: number | null;
+  productName: string | null;
+  variantName: string | null;
+  pixelPitch: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -199,8 +204,56 @@ export function QuoteEditor({
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const unlinkProduct = async (idx: number) => {
+    const item = items[idx];
+    await fetch(`/api/quotes/${quote.id}/line-items`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify([{ ...item, productId: null, productVariantId: null }]),
+    });
+    setItems(prev => prev.map((it, i) => i === idx ? { ...it, productId: null, productVariantId: null, productName: null, variantName: null, pixelPitch: null } : it));
+  };
+
+  const handleProductSelected = async (selection: { productId: number; productName: string; variantId: number | null; variantName: string | null; pixelPitch: string | null; weight: string | null; pricePerSqmUsd: number | null }) => {
+    if (!showProductPicker) return;
+
+    if (showProductPicker.mode === 'add') {
+      const itemName = selection.variantName || selection.productName;
+      const unit = selection.pixelPitch ? 'SQM' : 'PCS';
+      const usdUnitPrice = selection.pricePerSqmUsd ?? 0;
+
+      const res = await fetch(`/api/quotes/${quote.id}/line-items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          itemName,
+          unit,
+          qty: 1,
+          usdUnitPrice,
+          productId: selection.productId,
+          productVariantId: selection.variantId,
+          sortOrder: items.length,
+        }),
+      });
+      const newItem = await res.json();
+      setItems(prev => [...prev, { ...newItem, productName: selection.productName, variantName: selection.variantName, pixelPitch: selection.pixelPitch }]);
+    } else if (showProductPicker.mode === 'link' && showProductPicker.itemIdx !== null) {
+      const idx = showProductPicker.itemIdx;
+      const item = items[idx];
+      await fetch(`/api/quotes/${quote.id}/line-items`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify([{ ...item, productId: selection.productId, productVariantId: selection.variantId }]),
+      });
+      setItems(prev => prev.map((it, i) => i === idx ? { ...it, productId: selection.productId, productVariantId: selection.variantId, productName: selection.productName, variantName: selection.variantName, pixelPitch: selection.pixelPitch } : it));
+    }
+
+    setShowProductPicker(null);
+  };
+
   const [exporting, setExporting] = useState<string | null>(null);
   const [showFreight, setShowFreight] = useState(false);
+  const [showProductPicker, setShowProductPicker] = useState<{ mode: 'link' | 'add', itemIdx: number | null } | null>(null);
 
   const downloadPriceSheet = async () => {
     setExporting("price-sheet");
@@ -573,6 +626,23 @@ export function QuoteEditor({
                         value={item.itemName}
                         onChange={(e) => updateItem(idx, "itemName", e.target.value)}
                       />
+                      {item.productName && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded px-1.5 py-0.5 font-medium">
+                            {item.productName}{item.pixelPitch ? ` • ${item.pixelPitch}mm` : ''}
+                          </span>
+                          <button onClick={() => unlinkProduct(idx)} className="text-xs text-gray-400 hover:text-red-500" title="Unlink product">&times;</button>
+                        </div>
+                      )}
+                      {!item.productName && (
+                        <button
+                          onClick={() => setShowProductPicker({ mode: 'link', itemIdx: idx })}
+                          className="text-xs text-gray-400 hover:text-blue-600 mt-0.5 flex items-center gap-0.5"
+                          title="Link to product catalog"
+                        >
+                          🔗 Link product
+                        </button>
+                      )}
                     </td>
                     <td className="px-2 py-1">
                       <select
@@ -724,6 +794,12 @@ export function QuoteEditor({
           >
             + Frame Build
           </button>
+          <button
+            onClick={() => setShowProductPicker({ mode: 'add', itemIdx: null })}
+            className="px-3 py-2 sm:py-1.5 text-sm bg-blue-50 text-blue-800 border border-blue-200 rounded hover:bg-blue-100 transition-colors"
+          >
+            🔗 From Catalog
+          </button>
 
           <div className="hidden sm:flex ml-auto gap-2 text-xs text-gray-500">
             <label className="flex items-center gap-1">
@@ -732,6 +808,14 @@ export function QuoteEditor({
           </div>
         </div>
       </div>
+
+      {/* Product Picker Modal */}
+      {showProductPicker && (
+        <ProductPicker
+          onSelect={handleProductSelected}
+          onClose={() => setShowProductPicker(null)}
+        />
+      )}
 
       {/* Freight Calculator Modal */}
       {showFreight && (

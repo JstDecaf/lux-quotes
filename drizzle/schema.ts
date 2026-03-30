@@ -104,6 +104,7 @@ export const quoteLineItems = sqliteTable("quote_line_items", {
   isLocal: integer("is_local", { mode: "boolean" }).notNull().default(false),
   audLocalCost: real("aud_local_cost").default(0),
   isFree: integer("is_free", { mode: "boolean" }).notNull().default(false),
+  productId: integer("product_id").references(() => products.id),
   productVariantId: integer("product_variant_id").references(() => productVariants.id),
   ...timestamps,
 });

@@ -1,5 +1,6 @@
 import { db, schema } from "@/lib/db";
 import { eq } from "drizzle-orm";
+
 import { QuoteEditor } from "@/components/quote-editor";
 
 export const dynamic = "force-dynamic";
@@ -59,8 +60,32 @@ export default async function QuoteDetailPage({
   }
 
   const lineItems = await db
-    .select()
+    .select({
+      id: schema.quoteLineItems.id,
+      quoteId: schema.quoteLineItems.quoteId,
+      sortOrder: schema.quoteLineItems.sortOrder,
+      itemName: schema.quoteLineItems.itemName,
+      description: schema.quoteLineItems.description,
+      unit: schema.quoteLineItems.unit,
+      qty: schema.quoteLineItems.qty,
+      usdUnitPrice: schema.quoteLineItems.usdUnitPrice,
+      marginOverride: schema.quoteLineItems.marginOverride,
+      resellerMarginOverride: schema.quoteLineItems.resellerMarginOverride,
+      isLocal: schema.quoteLineItems.isLocal,
+      audLocalCost: schema.quoteLineItems.audLocalCost,
+      isFree: schema.quoteLineItems.isFree,
+      productId: schema.quoteLineItems.productId,
+      productVariantId: schema.quoteLineItems.productVariantId,
+      createdAt: schema.quoteLineItems.createdAt,
+      updatedAt: schema.quoteLineItems.updatedAt,
+      productName: schema.products.name,
+      variantName: schema.productVariants.name,
+      pixelPitch: schema.productVariants.pixelPitch,
+      variantWeight: schema.productVariants.weight,
+    })
     .from(schema.quoteLineItems)
+    .leftJoin(schema.productVariants, eq(schema.quoteLineItems.productVariantId, schema.productVariants.id))
+    .leftJoin(schema.products, eq(schema.productVariants.productId, schema.products.id))
     .where(eq(schema.quoteLineItems.quoteId, quoteId))
     .orderBy(schema.quoteLineItems.sortOrder)
     .all();
