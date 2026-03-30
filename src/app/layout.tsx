@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Archivo } from "next/font/google";
 import "./globals.css";
-import { Nav } from "@/components/nav";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -31,12 +30,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className="min-h-full bg-gray-50 font-sans antialiased">
-        <div className="flex h-screen">
-          <Nav />
-          <main className="flex-1 overflow-y-auto pt-14 md:pt-0 p-3 sm:p-4 md:p-6">
-            {children}
-          </main>
-        </div>
+        {children}
       </body>
     </html>
   );
