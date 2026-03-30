@@ -8,10 +8,13 @@ const fmt = (v: number) =>
   "$" + v.toLocaleString("en-AU", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 const STATUS_STYLE: Record<string, string> = {
-  draft:  "bg-gray-100 text-gray-600",
-  sent:   "bg-blue-100 text-blue-700",
-  won:    "bg-green-100 text-green-700",
-  lost:   "bg-red-100 text-red-600",
+  draft:           "bg-gray-100 text-gray-600",
+  active:          "bg-orange-100 text-orange-600",
+  sent:            "bg-blue-100 text-blue-700",
+  won:             "bg-green-100 text-green-700",
+  lost:            "bg-red-100 text-red-600",
+  expired:         "bg-yellow-100 text-yellow-700",
+  converted_to_pi: "bg-purple-100 text-purple-700",
 };
 
 export default async function Dashboard() {
@@ -49,8 +52,8 @@ export default async function Dashboard() {
   }, {} as Record<string, { count: number; value: number; profit: number }>);
 
 
-  const pipeline = (byStatus.draft?.value ?? 0) + (byStatus.sent?.value ?? 0);
-  const pipelineCount = (byStatus.draft?.count ?? 0) + (byStatus.sent?.count ?? 0);
+  const pipeline = (byStatus.active?.value ?? 0) + (byStatus.sent?.value ?? 0);
+  const pipelineCount = (byStatus.active?.count ?? 0) + (byStatus.sent?.count ?? 0);
   const wonValue = byStatus.won?.value ?? 0;
   const wonCount = byStatus.won?.count ?? 0;
   const sentValue = byStatus.sent?.value ?? 0;
@@ -106,17 +109,19 @@ export default async function Dashboard() {
         <div className="bg-white rounded-lg border p-5 mb-6">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">Pipeline Breakdown</p>
           <div className="flex rounded-full overflow-hidden h-4 mb-3">
-            {byStatus.won   && <div style={{ width: pct(byStatus.won.value)  }} className="bg-green-500" title={`Won: ${fmt(byStatus.won.value)}`} />}
-            {byStatus.sent  && <div style={{ width: pct(byStatus.sent.value) }} className="bg-blue-400"  title={`Sent: ${fmt(byStatus.sent.value)}`} />}
-            {byStatus.draft && <div style={{ width: pct(byStatus.draft.value)}} className="bg-gray-200"  title={`Draft: ${fmt(byStatus.draft.value)}`} />}
-            {byStatus.lost  && <div style={{ width: pct(byStatus.lost.value) }} className="bg-red-300"   title={`Lost: ${fmt(byStatus.lost.value)}`} />}
+            {byStatus.won    && <div style={{ width: pct(byStatus.won.value)    }} className="bg-green-500"  title={`Won: ${fmt(byStatus.won.value)}`} />}
+            {byStatus.sent   && <div style={{ width: pct(byStatus.sent.value)   }} className="bg-blue-400"   title={`Sent: ${fmt(byStatus.sent.value)}`} />}
+            {byStatus.active && <div style={{ width: pct(byStatus.active.value) }} className="bg-orange-400" title={`Active: ${fmt(byStatus.active.value)}`} />}
+            {byStatus.draft  && <div style={{ width: pct(byStatus.draft.value)  }} className="bg-gray-200"   title={`Draft: ${fmt(byStatus.draft.value)}`} />}
+            {byStatus.lost   && <div style={{ width: pct(byStatus.lost.value)   }} className="bg-red-300"    title={`Lost: ${fmt(byStatus.lost.value)}`} />}
           </div>
           <div className="flex flex-wrap gap-4 text-xs text-gray-600">
             {[
-              { key: "won",   label: "Won",   color: "bg-green-500" },
-              { key: "sent",  label: "Sent",  color: "bg-blue-400" },
-              { key: "draft", label: "Draft", color: "bg-gray-300" },
-              { key: "lost",  label: "Lost",  color: "bg-red-300" },
+              { key: "won",    label: "Won",    color: "bg-green-500" },
+              { key: "sent",   label: "Sent",   color: "bg-blue-400" },
+              { key: "active", label: "Active", color: "bg-orange-400" },
+              { key: "draft",  label: "Draft",  color: "bg-gray-300" },
+              { key: "lost",   label: "Lost",   color: "bg-red-300" },
             ].filter(({ key }) => byStatus[key]).map(({ key, label, color }) => (
               <span key={key} className="flex items-center gap-1.5">
                 <span className={`inline-block w-2.5 h-2.5 rounded-full ${color}`} />

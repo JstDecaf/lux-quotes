@@ -58,12 +58,13 @@ interface QuoteData {
 }
 
 const STATUS_OPTIONS = [
-  { value: "draft", label: "Draft", color: "#9CA3AF" },
-  { value: "sent", label: "Sent", color: "#3B82F6" },
-  { value: "won", label: "Won", color: "#22C55E" },
-  { value: "lost", label: "Lost", color: "#EF4444" },
-  { value: "expired", label: "Expired", color: "#F59E0B" },
-  { value: "converted_to_pi", label: "Converted to PI", color: "#8B5CF6" },
+  { value: "draft",            label: "Draft",           color: "#9CA3AF" },
+  { value: "active",           label: "Active",          color: "#F97316" },
+  { value: "sent",             label: "Sent",            color: "#3B82F6" },
+  { value: "won",              label: "Won",             color: "#22C55E" },
+  { value: "lost",             label: "Lost",            color: "#EF4444" },
+  { value: "expired",          label: "Expired",         color: "#F59E0B" },
+  { value: "converted_to_pi",  label: "Converted to PI", color: "#8B5CF6" },
 ];
 
 function fmt(val: number): string {
