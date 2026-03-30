@@ -181,6 +181,8 @@ export async function GET(
   for (const item of items as any[]) {
     const calc = calculateLineItem(item, settings);
     const bg = isEven ? LIGHT_GRAY : WHITE;
+    // Reseller tint: slightly warm white on even rows, plain white on odd
+    const resellerBg = isEven ? "FFFFF0F0" : "FFFFFFFF";
     isEven = !isEven;
 
     let usdUnit: string | number = "";
@@ -225,11 +227,18 @@ export async function GET(
       if (col === 3) cell.alignment = { horizontal: "center", vertical: "middle" };
     });
 
-    // Reseller columns get a subtle red-tint background
+    // Reseller columns: subtle warm tint + red left border on col 11
     [11, 12, 13].forEach((col) => {
       const c = row.getCell(col);
-      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: isEven ? "FFFFF5F5" : "FFFFFFEFEF" } };
+      c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: resellerBg } };
+      c.font = { size: 9, color: { argb: "FF" + NAVY } };
     });
+    // Red left border to visually separate reseller section
+    const sepCell = row.getCell(11);
+    sepCell.border = {
+      ...sepCell.border,
+      left: { style: "medium", color: { argb: "FF" + RED } },
+    };
 
     dataRowIndex++;
   }
