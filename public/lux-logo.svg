@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 277" width="720" height="277">
+  <title>LUX LED Screen Solutions</title>
+
+  <!-- Pixel Arrow (behind X) -->
+  <g id="pixel-arrow">
+      <rect x="504" y="17" width="15" height="15" rx="2" ry="2" fill="#2c9f4d"/>
+      <rect x="522" y="17" width="15" height="15" rx="2" ry="2" fill="#049272"/>
+      <rect x="540" y="17" width="15" height="15" rx="2" ry="2" fill="#009495"/>
+      <rect x="558" y="17" width="15" height="15" rx="2" ry="2" fill="#0091b6"/>
+      <rect x="486" y="35" width="15" height="15" rx="2" ry="2" fill="#74bd46"/>
+      <rect x="504" y="35" width="15" height="15" rx="2" ry="2" fill="#51ae46"/>
+      <rect x="522" y="35" width="15" height="15" rx="2" ry="2" fill="#2c9f4d"/>
+      <rect x="540" y="35" width="15" height="15" rx="2" ry="2" fill="#049272"/>
+      <rect x="558" y="35" width="15" height="15" rx="2" ry="2" fill="#009495"/>
+      <rect x="576" y="35" width="15" height="15" rx="2" ry="2" fill="#0091b6"/>
+      <rect x="468" y="53" width="15" height="15" rx="2" ry="2" fill="#c2da39"/>
+      <rect x="486" y="53" width="15" height="15" rx="2" ry="2" fill="#9acb3c"/>
+      <rect x="504" y="53" width="15" height="15" rx="2" ry="2" fill="#74bd46"/>
+      <rect x="522" y="53" width="15" height="15" rx="2" ry="2" fill="#51ae46"/>
+      <rect x="540" y="53" width="15" height="15" rx="2" ry="2" fill="#2c9f4d"/>
+      <rect x="558" y="53" width="15" height="15" rx="2" ry="2" fill="#049272"/>
+      <rect x="576" y="53" width="15" height="15" rx="2" ry="2" fill="#009495"/>
+      <rect x="594" y="53" width="15" height="15" rx="2" ry="2" fill="#0091b6"/>
+      <rect x="450" y="71" width="15" height="15" rx="2" ry="2" fill="#fdd42e"/>
+      <rect x="468" y="71" width="15" height="15" rx="2" ry="2" fill="#e5dd37"/>
+      <rect x="486" y="71" width="15" height="15" rx="2" ry="2" fill="#c2da39"/>
+      <rect x="504" y="71" width="15" height="15" rx="2" ry="2" fill="#9acb3c"/>
+      <rect x="522" y="71" width="15" height="15" rx="2" ry="2" fill="#74bd46"/>
+      <rect x="540" y="71" width="15" height="15" rx="2" ry="2" fill="#51ae46"/>
+      <rect x="558" y="71" width="15" height="15" rx="2" ry="2" fill="#2c9f4d"/>
+      <rect x="576" y="71" width="15" height="15" rx="2" ry="2" fill="#049272"/>
+      <rect x="594" y="71" width="15" height="15" rx="2" ry="2" fill="#009495"/>
+      <rect x="612" y="71" width="15" height="15" rx="2" ry="2" fill="#0091b6"/>
+      <rect x="432" y="89" width="15" height="15" rx="2" ry="2" fill="#ffaf02"/>
+      <rect x="450" y="89" width="15" height="15" rx="2" ry="2" fill="#fec40c"/>
+      <rect x="468" y="89" width="15" height="15" rx="2" ry="2" fill="#fdd42e"/>
+      <rect x="486" y="89" width="15" height="15" rx="2" ry="2" fill="#e5dd37"/>
+      <rect x="504" y="89" width="15" height="15" rx="2" ry="2" fill="#c2da39"/>
+      <rect x="522" y="89" width="15" height="15" rx="2" ry="2" fill="#9acb3c"/>
+      <rect x="540" y="89" width="15" height="15" rx="2" ry="2" fill="#74bd46"/>
+      <rect x="558" y="89" width="15" height="15" rx="2" ry="2" fill="#51ae46"/>
+      <rect x="576" y="89" width="15" height="15" rx="2" ry="2" fill="#2c9f4d"/>
+      <rect x="594" y="89" width="15" height="15" rx="2" ry="2" fill="#049272"/>
+      <rect x="612" y="89" width="15" height="15" rx="2" ry="2" fill="#009495"/>
+      <rect x="630" y="89" width="15" height="15" rx="2" ry="2" fill="#0091b6"/>
+      <rect x="414" y="107" width="15" height="15" rx="2" ry="2" fill="#f47d01"/>
+      <rect x="432" y="107" width="15" height="15" rx="2" ry="2" fill="#fb9700"/>
+      <rect x="450" y="107" width="15" height="15" rx="2" ry="2" fill="#ffaf02"/>
+      <rect x="468" y="107" width="15" height="15" rx="2" ry="2" fill="#fec40c"/>
+      <rect x="486" y="107" width="15" height="15" rx="2" ry="2" fill="#fdd42e"/>
+      <rect x="504" y="107" width="15" height="15" rx="2" ry="2" fill="#e5dd37"/>
+      <rect x="522" y="107" width="15" height="15" rx="2" ry="2" fill="#c2da39"/>
+      <rect x="540" y="107" width="15" height="15" rx="2" ry="2" fill="#9acb3c"/>
+      <rect x="558" y="107" width="15" height="15" rx="2" ry="2" fill="#74bd46"/>
+      <rect x="576" y="107" width="15" height="15" rx="2" ry="2" fill="#51ae46"/>
+      <rect x="594" y="107" width="15" height="15" rx="2" ry="2" fill="#2c9f4d"/>
+      <rect x="612" y="107" width="15" height="15" rx="2" ry="2" fill="#049272"/>
+      <rect x="630" y="107" width="15" height="15" rx="2" ry="2" fill="#009495"/>
+      <rect x="648" y="107" width="15" height="15" rx="2" ry="2" fill="#0091b6"/>
+      <rect x="432" y="125" width="15" height="15" rx="2" ry="2" fill="#f47d01"/>
+      <rect x="450" y="125" width="15" height="15" rx="2" ry="2" fill="#fb9700"/>
+      <rect x="468" y="125" width="15" height="15" rx="2" ry="2" fill="#ffaf02"/>
+      <rect x="486" y="125" width="15" height="15" rx="2" ry="2" fill="#fec40c"/>
+      <rect x="504" y="125" width="15" height="15" rx="2" ry="2" fill="#fdd42e"/>
+      <rect x="522" y="125" width="15" height="15" rx="2" ry="2" fill="#e5dd37"/>
+      <rect x="540" y="125" width="15" height="15" rx="2" ry="2" fill="#c2da39"/>
+      <rect x="558" y="125" width="15" height="15" rx="2" ry="2" fill="#9acb3c"/>
+      <rect x="576" y="125" width="15" height="15" rx="2" ry="2" fill="#74bd46"/>
+      <rect x="594" y="125" width="15" height="15" rx="2" ry="2" fill="#51ae46"/>
+      <rect x="612" y="125" width="15" height="15" rx="2" ry="2" fill="#2c9f4d"/>
+      <rect x="630" y="125" width="15" height="15" rx="2" ry="2" fill="#049272"/>
+      <rect x="450" y="143" width="15" height="15" rx="2" ry="2" fill="#f47d01"/>
+      <rect x="468" y="143" width="15" height="15" rx="2" ry="2" fill="#fb9700"/>
+      <rect x="486" y="143" width="15" height="15" rx="2" ry="2" fill="#ffaf02"/>
+      <rect x="504" y="143" width="15" height="15" rx="2" ry="2" fill="#fec40c"/>
+      <rect x="522" y="143" width="15" height="15" rx="2" ry="2" fill="#fdd42e"/>
+      <rect x="540" y="143" width="15" height="15" rx="2" ry="2" fill="#e5dd37"/>
+      <rect x="558" y="143" width="15" height="15" rx="2" ry="2" fill="#c2da39"/>
+      <rect x="576" y="143" width="15" height="15" rx="2" ry="2" fill="#9acb3c"/>
+      <rect x="594" y="143" width="15" height="15" rx="2" ry="2" fill="#74bd46"/>
+      <rect x="612" y="143" width="15" height="15" rx="2" ry="2" fill="#51ae46"/>
+      <rect x="468" y="161" width="15" height="15" rx="2" ry="2" fill="#f47d01"/>
+      <rect x="486" y="161" width="15" height="15" rx="2" ry="2" fill="#fb9700"/>
+      <rect x="504" y="161" width="15" height="15" rx="2" ry="2" fill="#ffaf02"/>
+      <rect x="522" y="161" width="15" height="15" rx="2" ry="2" fill="#fec40c"/>
+      <rect x="540" y="161" width="15" height="15" rx="2" ry="2" fill="#fdd42e"/>
+      <rect x="558" y="161" width="15" height="15" rx="2" ry="2" fill="#e5dd37"/>
+      <rect x="576" y="161" width="15" height="15" rx="2" ry="2" fill="#c2da39"/>
+      <rect x="594" y="161" width="15" height="15" rx="2" ry="2" fill="#9acb3c"/>
+      <rect x="486" y="179" width="15" height="15" rx="2" ry="2" fill="#f47d01"/>
+      <rect x="504" y="179" width="15" height="15" rx="2" ry="2" fill="#fb9700"/>
+      <rect x="522" y="179" width="15" height="15" rx="2" ry="2" fill="#ffaf02"/>
+      <rect x="540" y="179" width="15" height="15" rx="2" ry="2" fill="#fec40c"/>
+      <rect x="558" y="179" width="15" height="15" rx="2" ry="2" fill="#fdd42e"/>
+      <rect x="576" y="179" width="15" height="15" rx="2" ry="2" fill="#e5dd37"/>
+      <rect x="504" y="197" width="15" height="15" rx="2" ry="2" fill="#f47d01"/>
+      <rect x="522" y="197" width="15" height="15" rx="2" ry="2" fill="#fb9700"/>
+      <rect x="540" y="197" width="15" height="15" rx="2" ry="2" fill="#ffaf02"/>
+      <rect x="558" y="197" width="15" height="15" rx="2" ry="2" fill="#fec40c"/>
+  </g>
+
+  <!-- L -->
+  <g id="letter-L" transform="translate(28,15)">
+    <path d="M6,0 L48,0 L48,156 L130,156 L130,200 L0,200 L0,6 Q0,0 6,0 Z" fill="#3C3C3C"/>
+  </g>
+
+  <!-- U -->
+  <g id="letter-U" transform="translate(168,15)">
+    <path d="M0,0 L48,0 L48,118 A36,38 0 0,0 122,118 L122,0 L170,0 L170,126 A85,74 0 0,1 0,126 Z" fill="#3C3C3C"/>
+  </g>
+
+  <!-- X (on top of arrow to create V-notch effect) -->
+  <g id="letter-X" transform="translate(346,15)">
+    <path d="M0,0 L52,0 L80,58 L108,0 L160,0 L98,100 L160,200 L108,200 L80,142 L52,200 L0,200 L62,100 Z" fill="#3C3C3C"/>
+  </g>
+
+  <!-- Tagline -->
+  <g id="tagline">
+    <text x="31" y="257"
+          font-family="'Montserrat', 'Helvetica Neue', 'Arial', sans-serif"
+          font-weight="400"
+          font-size="42"
+          fill="#4A4A4A"
+          letter-spacing="7">LED SCREEN SOLUTIONS</text>
+  </g>
+</svg>

@@ -38,9 +38,157 @@ const STATUS_COLORS: Record<string, string> = {
   converted_to_pi: "#8B5CF6",
 };
 
+const PROJECT_STATUSES = [
+  { value: "active", label: "Active" },
+  { value: "quoted", label: "Quoted" },
+  { value: "won", label: "Won" },
+  { value: "lost", label: "Lost" },
+  { value: "on_hold", label: "On Hold" },
+];
+
+const PROJECT_STATUS_COLORS: Record<string, string> = {
+  active: "bg-green-100 text-green-700",
+  quoted: "bg-blue-100 text-blue-700",
+  won: "bg-emerald-100 text-emerald-700",
+  lost: "bg-red-100 text-red-700",
+  on_hold: "bg-yellow-100 text-yellow-700",
+};
+
 function fmt(val: number | null): string {
   if (val == null) return "$0.00";
   return "$" + val.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function ProjectCard({ project: initialProject }: { project: Project }) {
+  const [project, setProject] = useState(initialProject);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const saveProject = async () => {
+    setSaving(true);
+    try {
+      await fetch(`/api/projects/${project.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: project.name,
+          description: project.description,
+          status: project.status,
+        }),
+      });
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg border p-4">
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex-1 min-w-0">
+          {editing ? (
+            <input
+              className="w-full border rounded px-2 py-1 text-sm font-medium"
+              value={project.name}
+              onChange={(e) => setProject({ ...project, name: e.target.value })}
+            />
+          ) : (
+            <a href={`/projects/${project.id}`} className="font-medium hover:text-[#DB412B] transition-colors">
+              {project.name}
+            </a>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {editing ? (
+            <select
+              className="text-xs border rounded px-2 py-1"
+              value={project.status}
+              onChange={(e) => setProject({ ...project, status: e.target.value })}
+            >
+              {PROJECT_STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          ) : (
+            <span className={`text-xs px-2 py-0.5 rounded-full ${PROJECT_STATUS_COLORS[project.status] || "bg-gray-100 text-gray-600"}`}>
+              {PROJECT_STATUSES.find((s) => s.value === project.status)?.label || project.status}
+            </span>
+          )}
+          {editing ? (
+            <div className="flex gap-1">
+              <button
+                onClick={saveProject}
+                disabled={saving}
+                className="px-2 py-1 text-xs bg-[#0D1B2A] text-white rounded disabled:opacity-50"
+              >
+                {saving ? "..." : "Save"}
+              </button>
+              <button
+                onClick={() => { setProject(initialProject); setEditing(false); }}
+                className="px-2 py-1 text-xs text-gray-500 border rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={(e) => { e.preventDefault(); setEditing(true); }}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+      </div>
+
+      {editing ? (
+        <textarea
+          className="w-full border rounded px-2 py-1 text-sm text-gray-600 mb-3 min-h-[40px]"
+          value={project.description ?? ""}
+          onChange={(e) => setProject({ ...project, description: e.target.value || null })}
+          placeholder="Project description..."
+        />
+      ) : (
+        project.description && <p className="text-sm text-gray-500 mb-3">{project.description}</p>
+      )}
+
+      {/* Link to project detail */}
+      <div className="flex items-center justify-between mb-2">
+        <a href={`/projects/${project.id}`} className="text-xs text-gray-400 hover:text-[#DB412B]">
+          View project &rarr;
+        </a>
+      </div>
+
+      {project.quotes.length > 0 ? (
+        <div className="space-y-1">
+          {project.quotes.map((q) => (
+            <a
+              key={q.id}
+              href={`/quotes/${q.id}`}
+              className="flex items-center justify-between text-sm py-1.5 px-3 rounded hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-xs text-gray-400">{q.quoteNumber}</span>
+                <span>{q.name}</span>
+                <span
+                  className="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                  style={{
+                    backgroundColor: (STATUS_COLORS[q.status] ?? "#9CA3AF") + "20",
+                    color: STATUS_COLORS[q.status] ?? "#9CA3AF",
+                  }}
+                >
+                  {q.status}
+                </span>
+              </div>
+              <span className="font-medium">{fmt(q.cachedTotalAudSellIncGst)}</span>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-gray-400">No quotes yet</p>
+      )}
+    </div>
+  );
 }
 
 export function ClientDetail({ client: initialClient, projects }: { client: Client; projects: Project[] }) {
@@ -99,7 +247,7 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <span className="text-gray-500">Contact:</span>{" "}
             {editing ? (
@@ -186,41 +334,7 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
       ) : (
         <div className="space-y-3">
           {projects.map((p) => (
-            <div key={p.id} className="bg-white rounded-lg border p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium">{p.name}</h3>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{p.status}</span>
-              </div>
-              {p.description && <p className="text-sm text-gray-500 mb-3">{p.description}</p>}
-              {p.quotes.length > 0 ? (
-                <div className="space-y-1">
-                  {p.quotes.map((q) => (
-                    <a
-                      key={q.id}
-                      href={`/quotes/${q.id}`}
-                      className="flex items-center justify-between text-sm py-1.5 px-3 rounded hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs text-gray-400">{q.quoteNumber}</span>
-                        <span>{q.name}</span>
-                        <span
-                          className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                          style={{
-                            backgroundColor: (STATUS_COLORS[q.status] ?? "#9CA3AF") + "20",
-                            color: STATUS_COLORS[q.status] ?? "#9CA3AF",
-                          }}
-                        >
-                          {q.status}
-                        </span>
-                      </div>
-                      <span className="font-medium">{fmt(q.cachedTotalAudSellIncGst)}</span>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-gray-400">No quotes yet</p>
-              )}
-            </div>
+            <ProjectCard key={p.id} project={p} />
           ))}
         </div>
       )}

@@ -147,6 +147,7 @@ export function QuotesList({ quotes, projects }: { quotes: Quote[]; projects: Pr
               <th className="px-4 py-3 text-right">Total inc-GST</th>
               <th className="px-4 py-3 text-right">Profit</th>
               <th className="px-4 py-3 text-left">Date</th>
+              <th className="px-4 py-3 w-10"></th>
             </tr>
           </thead>
           <tbody>
@@ -183,6 +184,20 @@ export function QuotesList({ quotes, projects }: { quotes: Quote[]; projects: Pr
                     <td className="px-4 py-3 text-right font-medium">{fmt(q.cachedTotalAudSellIncGst)}</td>
                     <td className="px-4 py-3 text-right text-green-600">{fmt(q.cachedTotalGrossProfit)}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{q.createdAt?.slice(0, 10)}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Delete quote "${q.quoteNumber} - ${q.name}"?\n\nThis will permanently remove the quote and all its line items.`)) {
+                            fetch(`/api/quotes/${q.id}`, { method: "DELETE" }).then(() => router.refresh());
+                          }
+                        }}
+                        className="text-red-400 hover:text-red-600 text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                        title="Delete quote"
+                      >
+                        🗑️
+                      </button>
+                    </td>
                   </tr>
                 );
               })

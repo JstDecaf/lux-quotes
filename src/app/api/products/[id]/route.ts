@@ -34,6 +34,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     category: body.category,
     status: body.status,
     description: body.description,
+    imageUrl: body.imageUrl ?? null,
     applications: body.applications ? JSON.stringify(body.applications) : null,
     updatedAt: new Date().toISOString(),
   }).where(eq(products.id, Number(id))).run();

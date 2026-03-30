@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { products, productVariants, productDocuments } from "@/../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
 import ProductCatalog from "@/components/product-catalog";
+import { NewProductButton } from "@/components/new-product-button";
 
 export default function ProductsPage() {
   const rows = db.select().from(products).orderBy(asc(products.name)).all();
@@ -39,6 +40,7 @@ export default function ProductsPage() {
             }, 0)} variants
           </p>
         </div>
+        <NewProductButton />
       </div>
       <ProductCatalog initialProducts={withVariants} />
     </div>

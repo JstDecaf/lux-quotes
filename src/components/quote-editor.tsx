@@ -197,6 +197,65 @@ export function QuoteEditor({
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const [exporting, setExporting] = useState<string | null>(null);
+
+  const downloadPriceSheet = async () => {
+    setExporting("price-sheet");
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}/export/price-sheet`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `LUX-PriceSheet-${quote.quoteNumber}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Price sheet export error:", err);
+      alert("Failed to export price sheet. Check console for details.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const downloadProposal = async () => {
+    setExporting("proposal");
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}/export/proposal`);
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `LUX-Proposal-${quote.quoteNumber}.pptx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Proposal export error:", err);
+      alert("Failed to export proposal. Check console for details.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const deleteQuote = async () => {
+    const reason = prompt("Why are you deleting this quote? (e.g. replaced by another product, no longer required)\n\nType DELETE to confirm:");
+    if (reason !== "DELETE") return;
+    try {
+      const res = await fetch(`/api/quotes/${quote.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      window.location.href = "/quotes";
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("Failed to delete quote.");
+    }
+  };
+
   const statusInfo = STATUS_OPTIONS.find((s) => s.value === quote.status) ?? STATUS_OPTIONS[0];
 
   const balancePct = 1 - quote.depositPct - quote.secondTranchePct;
@@ -241,16 +300,16 @@ export function QuoteEditor({
           </a>
         )}
         {quote.projectName && (
-          <span>
+          <a href={`/projects/${quote.projectId}`} className="hover:text-[#DB412B]">
             Project: <span className="font-medium">{quote.projectName}</span>
-          </span>
+          </a>
         )}
       </div>
 
-      {/* Summary Card */}
-      <div className="bg-white rounded-lg border p-5 mb-6">
-        {/* Settings Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+      {/* Settings Card */}
+      <div className="bg-white rounded-lg border p-5 mb-4">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Quote Settings</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">FX Rate (USD/AUD)</label>
             <input
@@ -312,99 +371,151 @@ export function QuoteEditor({
             />
           </div>
         </div>
+      </div>
 
-        {/* LUX Totals */}
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">LUX Pricing</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-          <div className="bg-gray-50 rounded p-3">
-            <p className="text-xs text-gray-500">Total USD</p>
-            <p className="text-lg font-bold">US${totals.totalUsd.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-          </div>
-          <div className="bg-gray-50 rounded p-3">
-            <p className="text-xs text-gray-500">Total AUD Cost</p>
-            <p className="text-lg font-bold">{fmt(totals.totalAudCost)}</p>
-          </div>
-          <div className="bg-gray-50 rounded p-3">
-            <p className="text-xs text-gray-500">LUX Sell ex-GST</p>
-            <p className="text-lg font-bold">{fmt(totals.totalAudSellExGst)}</p>
-          </div>
-          <div className="bg-gray-50 rounded p-3">
-            <p className="text-xs text-gray-500">LUX Sell inc-GST</p>
-            <p className="text-lg font-bold">{fmt(totals.totalAudSellIncGst)}</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-          <div className="bg-green-50 rounded p-3">
-            <p className="text-xs text-gray-500">Gross Profit</p>
-            <p className="text-xl font-bold text-green-600">{fmt(totals.totalGrossProfit)}</p>
-          </div>
-          <div className="bg-gray-50 rounded p-3">
-            <p className="text-xs text-gray-500">Overall Margin</p>
-            <p className="text-xl font-bold">{fmtPct(totals.overallMargin)}</p>
-          </div>
-          <div className="bg-gray-50 rounded p-3">
-            <p className="text-xs text-gray-500">Total GST (LUX)</p>
-            <p className="text-xl font-bold">{fmt(totals.totalGst)}</p>
-          </div>
-        </div>
-
-        {/* Reseller Totals */}
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Reseller Pricing (Client-Facing)</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-          <div className="bg-blue-50 rounded p-3">
-            <p className="text-xs text-gray-500">Reseller Sell ex-GST</p>
-            <p className="text-lg font-bold text-blue-700">{fmt(totals.totalResellerSellExGst)}</p>
-          </div>
-          <div className="bg-blue-50 rounded p-3">
-            <p className="text-xs text-gray-500">Reseller GST</p>
-            <p className="text-lg font-bold text-blue-700">{fmt(totals.totalResellerGst)}</p>
-          </div>
-          <div className="bg-blue-50 rounded p-3">
-            <p className="text-xs text-gray-500">Reseller Sell inc-GST</p>
-            <p className="text-xl font-bold text-blue-800">{fmt(totals.totalResellerSellIncGst)}</p>
-          </div>
-          <div className="bg-blue-50 rounded p-3">
-            <p className="text-xs text-gray-500">Reseller Profit</p>
-            <p className="text-xl font-bold text-blue-700">{fmt(totals.totalResellerProfit)}</p>
+      {/* Three Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        {/* LUX Pricing Card */}
+        <div className="bg-white rounded-lg border border-l-4 border-l-gray-400 p-4">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">LUX Pricing</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Total USD</span>
+              <span className="font-medium">US${totals.totalUsd.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">AUD Cost</span>
+              <span className="font-medium">{fmt(totals.totalAudCost)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Sell ex-GST</span>
+              <span className="font-medium">{fmt(totals.totalAudSellExGst)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">GST</span>
+              <span className="font-medium">{fmt(totals.totalGst)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Sell inc-GST</span>
+              <span className="font-bold">{fmt(totals.totalAudSellIncGst)}</span>
+            </div>
+            <div className="border-t pt-2 mt-2">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-green-700">Gross Profit</span>
+                <span className="text-lg font-bold text-green-600">{fmt(totals.totalGrossProfit)}</span>
+              </div>
+              <div className="flex justify-between text-sm mt-1">
+                <span className="text-gray-500">Overall Margin</span>
+                <span className="font-semibold">{fmtPct(totals.overallMargin)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Deposit Schedule */}
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Payment Schedule</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <div className="bg-purple-50 rounded p-3">
-            <p className="text-xs text-gray-500">Deposit ({(quote.depositPct * 100).toFixed(0)}%)</p>
-            <p className="text-lg font-bold text-purple-700">{fmt(totals.depositAmount)}</p>
-          </div>
-          <div className="bg-purple-50 rounded p-3">
-            <p className="text-xs text-gray-500">2nd Payment ({(quote.secondTranchePct * 100).toFixed(0)}%)</p>
-            <p className="text-lg font-bold text-purple-700">{fmt(totals.secondTrancheAmount)}</p>
-          </div>
-          <div className="bg-purple-50 rounded p-3">
-            <p className="text-xs text-gray-500">Balance ({(balancePct * 100).toFixed(0)}%)</p>
-            <p className="text-lg font-bold text-purple-700">{fmt(totals.balanceAmount)}</p>
+        {/* Reseller Pricing Card */}
+        <div className="bg-white rounded-lg border border-l-4 border-l-blue-400 p-4">
+          <h3 className="text-sm font-semibold text-blue-700 mb-3">Reseller Pricing</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Sell ex-GST</span>
+              <span className="font-medium text-blue-700">{fmt(totals.totalResellerSellExGst)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">GST</span>
+              <span className="font-medium text-blue-700">{fmt(totals.totalResellerGst)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Sell inc-GST</span>
+              <span className="font-bold text-blue-800">{fmt(totals.totalResellerSellIncGst)}</span>
+            </div>
+            <div className="border-t pt-2 mt-2">
+              <div className="flex justify-between">
+                <span className="text-sm font-medium text-blue-700">Reseller Profit</span>
+                <span className="text-lg font-bold text-blue-600">{fmt(totals.totalResellerProfit)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Screen specs */}
-        {(quote.screenSize || quote.panelConfig || quote.totalResolution) && (
-          <div className="mt-4 pt-4 border-t flex flex-wrap gap-3 sm:gap-6 text-sm text-gray-600">
-            {quote.screenSize && <span>Screen: {quote.screenSize}</span>}
-            {quote.panelConfig && <span>Panels: {quote.panelConfig}</span>}
-            {quote.totalResolution && <span>Resolution: {quote.totalResolution}</span>}
+        {/* Payment Schedule Card */}
+        <div className="bg-white rounded-lg border border-l-4 border-l-purple-400 p-4">
+          <h3 className="text-sm font-semibold text-purple-700 mb-3">Payment Schedule</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Deposit ({(quote.depositPct * 100).toFixed(0)}%)</span>
+              <span className="font-medium text-purple-700">{fmt(totals.depositAmount)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">2nd Payment ({(quote.secondTranchePct * 100).toFixed(0)}%)</span>
+              <span className="font-medium text-purple-700">{fmt(totals.secondTrancheAmount)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-500">Balance ({(balancePct * 100).toFixed(0)}%)</span>
+              <span className="font-medium text-purple-700">{fmt(totals.balanceAmount)}</span>
+            </div>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* Notes */}
-        <div className="mt-4 pt-4 border-t">
-          <label className="block text-xs text-gray-500 mb-1">Notes</label>
+      {/* Screen Specs */}
+      {(quote.screenSize || quote.panelConfig || quote.totalResolution) && (
+        <div className="bg-white rounded-lg border p-4 mb-4 flex flex-wrap gap-3 sm:gap-6 text-sm text-gray-600">
+          {quote.screenSize && <span><strong>Screen:</strong> {quote.screenSize}</span>}
+          {quote.panelConfig && <span><strong>Panels:</strong> {quote.panelConfig}</span>}
+          {quote.totalResolution && <span><strong>Resolution:</strong> {quote.totalResolution}</span>}
+        </div>
+      )}
+
+      {/* Notes - Collapsible */}
+      <details className="bg-white rounded-lg border mb-6 group">
+        <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 select-none flex items-center justify-between">
+          <span>Notes</span>
+          <span className="text-gray-400 text-xs group-open:rotate-180 transition-transform">&#9660;</span>
+        </summary>
+        <div className="px-4 pb-4">
           <textarea
-            className="w-full border rounded px-3 py-2 text-sm min-h-[60px]"
+            className="w-full border rounded px-3 py-2 text-sm min-h-[80px]"
             value={quote.notes ?? ""}
             onChange={(e) => updateQuoteField("notes", e.target.value)}
             placeholder="Add notes..."
           />
         </div>
+      </details>
+
+      {/* Actions */}
+      <div className="flex flex-wrap gap-3 mb-6 items-center">
+        <button
+          onClick={downloadPriceSheet}
+          disabled={exporting !== null}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {exporting === "price-sheet" ? (
+            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <span>📊</span>
+          )}
+          {exporting === "price-sheet" ? "Generating..." : "Export Reseller Price Sheet"}
+        </button>
+        <button
+          onClick={downloadProposal}
+          disabled={exporting !== null}
+          className="px-4 py-2 bg-[#0D1B2A] text-white rounded-lg hover:bg-[#1a2d42] text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {exporting === "proposal" ? (
+            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <span>📑</span>
+          )}
+          {exporting === "proposal" ? "Generating..." : "Export Client Proposal"}
+        </button>
+        <div className="flex-1" />
+        <button
+          onClick={deleteQuote}
+          className="px-4 py-2 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-400 text-sm font-medium flex items-center gap-2 transition-colors"
+        >
+          <span>🗑️</span>
+          Delete Quote
+        </button>
       </div>
 
       {/* Line Items Table */}
