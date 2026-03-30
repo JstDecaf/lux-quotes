@@ -9,7 +9,6 @@ const links = [
   { href: "/", label: "Dashboard", icon: "H" },
   { href: "/quotes", label: "Quotes", icon: "Q" },
   { href: "/clients", label: "Clients", icon: "C" },
-  { href: "/projects", label: "Projects", icon: "P" },
   { href: "/products", label: "Products", icon: "K" },
   { href: "/import", label: "Import XLS", icon: "I" },
 ];
