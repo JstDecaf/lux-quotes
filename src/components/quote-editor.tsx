@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { calculateLineItem, calculateQuoteTotals, type LineItemInput, type QuoteSettings } from "@/lib/calculations";
+import { NumericInput } from "@/components/numeric-input";
 
 const UNITS = ["SQM", "PCS", "LOT", "JOB", "SET"] as const;
 
@@ -312,62 +313,61 @@ export function QuoteEditor({
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">FX Rate (USD/AUD)</label>
-            <input
-              type="number"
+            <NumericInput
               step="0.001"
               className="w-full border rounded px-3 py-2 text-sm"
               value={quote.fxRate}
-              onChange={(e) => updateQuoteField("fxRate", parseFloat(e.target.value) || 0)}
+              onChange={(v) => updateQuoteField("fxRate", v)}
             />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">LUX Margin %</label>
-            <input
-              type="number"
-              step="0.1"
+            <NumericInput
+              step="1"
               className="w-full border rounded px-3 py-2 text-sm"
-              value={(quote.defaultMargin * 100).toFixed(1)}
-              onChange={(e) => updateQuoteField("defaultMargin", (parseFloat(e.target.value) || 0) / 100)}
+              value={quote.defaultMargin}
+              displayMultiplier={100}
+              onChange={(v) => updateQuoteField("defaultMargin", v)}
             />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Reseller Margin %</label>
-            <input
-              type="number"
-              step="0.1"
+            <NumericInput
+              step="1"
               className="w-full border rounded px-3 py-2 text-sm"
-              value={(quote.defaultResellerMargin * 100).toFixed(1)}
-              onChange={(e) => updateQuoteField("defaultResellerMargin", (parseFloat(e.target.value) || 0) / 100)}
+              value={quote.defaultResellerMargin}
+              displayMultiplier={100}
+              onChange={(v) => updateQuoteField("defaultResellerMargin", v)}
             />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">GST Rate %</label>
-            <input
-              type="number"
-              step="0.1"
+            <NumericInput
+              step="1"
               className="w-full border rounded px-3 py-2 text-sm"
-              value={(quote.gstRate * 100).toFixed(1)}
-              onChange={(e) => updateQuoteField("gstRate", (parseFloat(e.target.value) || 0) / 100)}
+              value={quote.gstRate}
+              displayMultiplier={100}
+              onChange={(v) => updateQuoteField("gstRate", v)}
             />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">Deposit %</label>
-            <input
-              type="number"
+            <NumericInput
               step="1"
               className="w-full border rounded px-3 py-2 text-sm"
-              value={(quote.depositPct * 100).toFixed(0)}
-              onChange={(e) => updateQuoteField("depositPct", (parseFloat(e.target.value) || 0) / 100)}
+              value={quote.depositPct}
+              displayMultiplier={100}
+              onChange={(v) => updateQuoteField("depositPct", v)}
             />
           </div>
           <div>
             <label className="block text-xs text-gray-500 mb-1">2nd Tranche %</label>
-            <input
-              type="number"
+            <NumericInput
               step="1"
               className="w-full border rounded px-3 py-2 text-sm"
-              value={(quote.secondTranchePct * 100).toFixed(0)}
-              onChange={(e) => updateQuoteField("secondTranchePct", (parseFloat(e.target.value) || 0) / 100)}
+              value={quote.secondTranchePct}
+              displayMultiplier={100}
+              onChange={(v) => updateQuoteField("secondTranchePct", v)}
             />
           </div>
         </div>
@@ -577,22 +577,20 @@ export function QuoteEditor({
                       </select>
                     </td>
                     <td className="px-2 py-1">
-                      <input
-                        type="number"
+                      <NumericInput
                         step="1"
                         className="w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-blue-400 focus:outline-none rounded px-1 py-0.5 text-right"
                         value={item.qty}
-                        onChange={(e) => updateItem(idx, "qty", parseFloat(e.target.value) || 0)}
+                        onChange={(v) => updateItem(idx, "qty", v)}
                       />
                     </td>
                     <td className="px-2 py-1">
-                      <input
-                        type="number"
+                      <NumericInput
                         step="0.01"
                         className={`w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-blue-400 focus:outline-none rounded px-1 py-0.5 text-right ${isLocal ? "text-gray-300 cursor-not-allowed" : ""}`}
                         value={item.usdUnitPrice ?? 0}
                         disabled={isLocal}
-                        onChange={(e) => updateItem(idx, "usdUnitPrice", parseFloat(e.target.value) || 0)}
+                        onChange={(v) => updateItem(idx, "usdUnitPrice", v)}
                       />
                     </td>
                     <td className={`px-2 py-1 text-right bg-gray-50 text-gray-600 ${isFree ? "line-through" : ""}`}>
@@ -600,12 +598,11 @@ export function QuoteEditor({
                     </td>
                     <td className="px-2 py-1 text-right bg-gray-50">
                       {isLocal ? (
-                        <input
-                          type="number"
+                        <NumericInput
                           step="0.01"
                           className="w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-blue-400 focus:outline-none rounded px-1 py-0.5 text-right"
                           value={item.audLocalCost ?? 0}
-                          onChange={(e) => updateItem(idx, "audLocalCost", parseFloat(e.target.value) || 0)}
+                          onChange={(v) => updateItem(idx, "audLocalCost", v)}
                         />
                       ) : (
                         <span className={`text-gray-600 ${isFree ? "line-through" : ""}`}>{fmt(calc.audCost)}</span>
