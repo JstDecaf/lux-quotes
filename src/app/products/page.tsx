@@ -7,7 +7,7 @@ import { NewProductButton } from "@/components/new-product-button";
 export default function ProductsPage() {
   const rows = db.select().from(products).orderBy(asc(products.name)).all();
 
-  const withVariants = rows.map((p) => {
+  const withVariants = rows.map((p: any) => {
     const variants = db
       .select()
       .from(productVariants)
@@ -34,7 +34,7 @@ export default function ProductsPage() {
         <div>
           <h1 className="font-archivo text-2xl font-bold text-gray-900">Product Catalog</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {rows.length} product families · {rows.reduce((sum, p) => {
+            {rows.length} product families · {rows.reduce((sum: number, p: any) => {
               const v = db.select().from(productVariants).where(eq(productVariants.productId, p.id)).all();
               return sum + v.length;
             }, 0)} variants

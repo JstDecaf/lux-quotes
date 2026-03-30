@@ -29,7 +29,7 @@ export default async function ClientDetailPage({
     .all();
 
   // Get quotes for each project
-  const projectsWithQuotes = projects.map((p) => {
+  const projectsWithQuotes = projects.map((p: any) => {
     const quotes = db
       .select({
         id: schema.quotes.id,

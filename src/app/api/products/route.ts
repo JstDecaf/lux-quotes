@@ -10,7 +10,7 @@ export async function GET() {
     .orderBy(asc(products.name))
     .all();
 
-  const withVariants = rows.map((p) => {
+  const withVariants = rows.map((p: typeof rows[number]) => {
     const variants = db
       .select()
       .from(productVariants)

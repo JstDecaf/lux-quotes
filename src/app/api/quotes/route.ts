@@ -34,10 +34,10 @@ export async function GET(request: NextRequest) {
     .all();
 
   if (status) {
-    rows = rows.filter(r => r.status === status);
+    rows = rows.filter((r: any) => r.status === status);
   }
   if (projectId) {
-    rows = rows.filter(r => r.projectId === parseInt(projectId));
+    rows = rows.filter((r: any) => r.projectId === parseInt(projectId));
   }
 
   return Response.json(rows);

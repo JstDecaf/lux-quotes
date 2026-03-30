@@ -16,7 +16,7 @@ export function recalcQuoteTotals(quoteId: number) {
     depositPct: quote.depositPct,
     secondTranchePct: quote.secondTranchePct,
   };
-  const inputs = items.map(item => ({
+  const inputs = items.map((item: any) => ({
     qty: item.qty,
     usdUnitPrice: item.usdUnitPrice ?? 0,
     marginOverride: item.marginOverride,
