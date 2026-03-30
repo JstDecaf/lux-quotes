@@ -10,13 +10,18 @@ async function generateQuoteNumberAsync(): Promise<string> {
   const prefix = `LUX-${year}-`;
 
   const result = await db
-    .select({ count: sql<number>`count(*)` })
+    .select({ maxNum: sql<string>`MAX(quote_number)` })
     .from(schema.quotes)
     .where(sql`quote_number LIKE ${prefix + "%"}`)
     .get();
 
-  const num = (((result?.count ?? 0) as number) + 1).toString().padStart(4, "0");
-  return `${prefix}${num}`;
+  let next = 1;
+  if (result?.maxNum) {
+    const parts = result.maxNum.split("-");
+    const last = parseInt(parts[parts.length - 1], 10);
+    if (!isNaN(last)) next = last + 1;
+  }
+  return `${prefix}${next.toString().padStart(4, "0")}`;
 }
 
 interface LineItemInput {
@@ -54,7 +59,23 @@ interface ImportBody {
 }
 
 export async function POST(request: NextRequest) {
-  const body: ImportBody = await request.json();
+  let body: ImportBody;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  try {
+    return await handleImport(body);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[import] Error:", message);
+    return Response.json({ error: message }, { status: 500 });
+  }
+}
+
+async function handleImport(body: ImportBody) {
 
   const {
     clientId: rawClientId,

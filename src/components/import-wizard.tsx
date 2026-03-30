@@ -335,16 +335,23 @@ export function ImportWizard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
+      let data: { success?: boolean; error?: string; quoteIds?: number[] } = {};
+      try {
+        data = await res.json();
+      } catch {
+        setImportError(`Server error (${res.status} ${res.statusText})`);
+        setImporting(false);
+        return;
+      }
       if (!res.ok || !data.success) {
-        setImportError(data.error ?? "Import failed");
+        setImportError(data.error ?? `Import failed (${res.status})`);
         setImporting(false);
         return;
       }
       // Redirect to first quote
-      router.push(`/quotes/${data.quoteIds[0]}`);
-    } catch {
-      setImportError("Network error during import");
+      router.push(`/quotes/${data.quoteIds![0]}`);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : "Network error during import");
       setImporting(false);
     }
   };
