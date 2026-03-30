@@ -26,6 +26,8 @@ interface ParsedQuote {
   totalResolution: string;
   lineItems: ParsedLineItem[];
   totalUsd: number;
+  /** Total read directly from the XLS "Total Amount" row — used for validation */
+  xlsTotalUsd: number;
 }
 
 interface Client {
@@ -62,47 +64,125 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
     if (!r) return 0;
     const v = r[col];
     if (v === null || v === undefined || v === "") return 0;
-    const n = parseFloat(String(v).replace(/,/g, ""));
+    const n = parseFloat(String(v).replace(/[$,\s]/g, ""));
     return isNaN(n) ? 0 : n;
   }
 
-  // Extract header fields
-  const supplierQuoteDate = cell(7, 0).replace(/^Date:\s*/i, "").trim();
-  const rawRef = cell(8, 0);
-  const supplierQuoteRef = rawRef;
-  // Strip common prefixes like "Quote " to get a clean name
-  const name = rawRef.replace(/^Quote\s+/i, "").trim() || sheetName;
+  function rowAsStrings(rowIdx: number): string[] {
+    const r = raw[rowIdx] as unknown[];
+    if (!r) return [];
+    return r.map((v) => (v === null || v === undefined ? "" : String(v).toLowerCase().trim()));
+  }
 
-  const screenSize = cell(11, 0).replace(/^Required Screen Size:\s*/i, "").trim();
-  const panelConfig = cell(13, 0).replace(/^Required Panel Qty:\s*/i, "").trim();
-  const totalResolution = cell(14, 0).replace(/^Total Resolution:\s*/i, "").trim();
+  // ── Detect column layout from header row ──────────────────────────────────
+  // Scan rows 0-25 looking for a row that mentions "product name" and "qty" or "quantity"
+  let headerRowIdx = -1;
+  let colName = 0;
+  let colDesc = 4;
+  let colUnit = 5;
+  let colQty = 7;
+  let colUnitPrice = 8;
+  let colSubTotal = 10;
 
-  // Parse line items starting from row 17 (0-indexed)
+  for (let r = 0; r < Math.min(raw.length, 25); r++) {
+    const strs = rowAsStrings(r);
+    const nameIdx = strs.findIndex((s) => s.includes("product") && (s.includes("name") || s === "product name"));
+    if (nameIdx < 0) continue;
+
+    // Found a header row — map the other columns
+    headerRowIdx = r;
+    colName = nameIdx;
+
+    const qtyIdx = strs.findIndex((s, i) => i > nameIdx && (s === "qty" || s === "quantity"));
+    const priceIdx = strs.findIndex((s, i) => i > nameIdx && s.includes("unit price"));
+    const totalIdx = strs.findIndex((s, i) => i > nameIdx && (s.includes("sub total") || s.includes("total price")));
+    const unitIdx = strs.findIndex((s, i) => i > nameIdx && s === "unit");
+    const descIdx = strs.findIndex((s, i) => i > nameIdx && s === "description");
+
+    if (qtyIdx > 0) colQty = qtyIdx;
+    if (priceIdx > 0) colUnitPrice = priceIdx;
+    if (totalIdx > 0) colSubTotal = totalIdx;
+    if (unitIdx > 0) colUnit = unitIdx;
+    if (descIdx > 0) colDesc = descIdx;
+    break;
+  }
+
+  // ── Extract header metadata ────────────────────────────────────────────────
+  // Try fixed rows first (generated format), fall back to scanning
+  let supplierQuoteDate = "";
+  let supplierQuoteRef = "";
+  let name = sheetName;
+  let screenSize = "";
+  let panelConfig = "";
+  let totalResolution = "";
+
+  for (let r = 0; r < Math.min(raw.length, headerRowIdx > 0 ? headerRowIdx : 20); r++) {
+    const c0 = cell(r, 0);
+    const c0l = c0.toLowerCase();
+    if (c0l.startsWith("date:")) supplierQuoteDate = c0.replace(/^date:\s*/i, "").trim();
+    else if (c0l.startsWith("quote ")) { supplierQuoteRef = c0; name = c0.replace(/^quote\s+/i, "").trim() || sheetName; }
+    else if (c0l.startsWith("required screen size:")) screenSize = c0.replace(/^required screen size:\s*/i, "").trim();
+    else if (c0l.startsWith("required panel qty:")) panelConfig = c0.replace(/^required panel qty:\s*/i, "").trim();
+    else if (c0l.startsWith("total resolution:")) totalResolution = c0.replace(/^total resolution:\s*/i, "").trim();
+  }
+
+  // ── Parse line items ───────────────────────────────────────────────────────
+  // Start 2 rows after header (header + possible sub-header), or row 17 if no header found
+  const dataStart = headerRowIdx >= 0 ? headerRowIdx + 2 : 17;
   const lineItems: ParsedLineItem[] = [];
   let sortOrder = 0;
+  let lastCategory = "";
+  let xlsTotalUsd = 0;
 
-  for (let rowIdx = 17; rowIdx < raw.length; rowIdx++) {
-    const itemName = cell(rowIdx, 0);
-    if (!itemName) continue;
-    if (itemName.toLowerCase().startsWith("total amount")) break;
+  for (let rowIdx = dataStart; rowIdx < raw.length; rowIdx++) {
+    const c0 = cell(rowIdx, 0);
+    const c0l = c0.toLowerCase();
 
-    const description = cell(rowIdx, 4);
-    const unit = cell(rowIdx, 5) || "PCS";
-    const qty = cellNum(rowIdx, 7);
-    const usdUnitPrice = cellNum(rowIdx, 8);
+    // Detect the total row — stop parsing items
+    if (c0l.startsWith("total amount") || c0l.startsWith("total:") || c0l === "total") {
+      // Total value is in the last populated numeric cell of this row
+      // Try the sub-total column first, then scan right-to-left
+      xlsTotalUsd = cellNum(rowIdx, colSubTotal);
+      if (!xlsTotalUsd) {
+        const r = raw[rowIdx] as unknown[];
+        for (let c = (r?.length ?? 0) - 1; c >= 0; c--) {
+          const v = cellNum(rowIdx, c);
+          if (v > 0) { xlsTotalUsd = v; break; }
+        }
+      }
+      break;
+    }
+
+    // Track the last non-empty category (handles merged cells)
+    if (c0) lastCategory = c0;
+
+    const qty = cellNum(rowIdx, colQty);
+    const usdUnitPrice = cellNum(rowIdx, colUnitPrice);
+
+    // Skip rows with no quantity AND no price
+    if (!qty && !usdUnitPrice) continue;
+
+    // Build item name
+    // For merged-cell formats the description sits in colDesc when col 0 is empty
+    const subDesc = cell(rowIdx, colDesc);
+    let itemName: string;
+    if (c0) {
+      // Col 0 has a value — use it, appending sub-description if it adds information
+      itemName = subDesc && subDesc !== "/" && subDesc.toLowerCase() !== c0.toLowerCase()
+        ? `${c0} – ${subDesc}`
+        : c0;
+    } else {
+      // Merged cell: carry-forward category + sub-description
+      itemName = subDesc && subDesc !== "/"
+        ? `${lastCategory} – ${subDesc}`
+        : lastCategory;
+    }
+
+    const description = subDesc !== "/" ? subDesc : cell(rowIdx, colDesc + 1);
+    const unit = cell(rowIdx, colUnit) || "PCS";
     const isFree = usdUnitPrice === 0;
 
-    if (!qty && !usdUnitPrice) continue; // skip blank rows
-
-    lineItems.push({
-      itemName,
-      description,
-      unit,
-      qty,
-      usdUnitPrice,
-      isFree,
-      sortOrder: sortOrder++,
-    });
+    lineItems.push({ itemName, description, unit, qty, usdUnitPrice, isFree, sortOrder: sortOrder++ });
   }
 
   const totalUsd = lineItems.reduce((sum, item) => {
@@ -120,6 +200,7 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
     totalResolution,
     lineItems,
     totalUsd,
+    xlsTotalUsd,
   };
 }
 
@@ -774,15 +855,30 @@ export function ImportWizard() {
 
             <hr className="border-gray-200" />
 
-            {parsedQuotes.map((q, i) => (
-              <div key={i} className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">{quoteNames[i] ?? q.name}</p>
-                  <p className="text-xs text-gray-500">{q.lineItems.length} line items</p>
+            {parsedQuotes.map((q, i) => {
+              const mismatch = q.xlsTotalUsd > 0 && Math.abs(q.totalUsd - q.xlsTotalUsd) > 0.5;
+              return (
+                <div key={i}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{quoteNames[i] ?? q.name}</p>
+                      <p className="text-xs text-gray-500">{q.lineItems.length} line items</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">{fmtUsd(q.totalUsd)} USD</p>
+                      {mismatch && (
+                        <p className="text-xs text-amber-600">XLS total: {fmtUsd(q.xlsTotalUsd)}</p>
+                      )}
+                    </div>
+                  </div>
+                  {mismatch && (
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mt-1">
+                      ⚠ Parsed total doesn&apos;t match the XLS total — some line items may have been missed. Check the spreadsheet for merged or grouped rows.
+                    </p>
+                  )}
                 </div>
-                <p className="font-semibold text-gray-900">{fmtUsd(q.totalUsd)} USD</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {importError && (
