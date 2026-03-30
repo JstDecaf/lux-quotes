@@ -12,7 +12,7 @@ export default async function QuoteDetailPage({
   const { id } = await params;
   const quoteId = parseInt(id);
 
-  const quote = db
+  const quote = await db
     .select({
       id: schema.quotes.id,
       projectId: schema.quotes.projectId,
@@ -58,7 +58,7 @@ export default async function QuoteDetailPage({
     );
   }
 
-  const lineItems = db
+  const lineItems = await db
     .select()
     .from(schema.quoteLineItems)
     .where(eq(schema.quoteLineItems.quoteId, quoteId))

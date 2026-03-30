@@ -12,7 +12,7 @@ export default async function ClientDetailPage({
   const { id } = await params;
   const clientId = parseInt(id);
 
-  const client = db.select().from(schema.clients).where(eq(schema.clients.id, clientId)).get();
+  const client = await db.select().from(schema.clients).where(eq(schema.clients.id, clientId)).get();
   if (!client) {
     return (
       <div className="p-8 text-center">
@@ -22,15 +22,15 @@ export default async function ClientDetailPage({
     );
   }
 
-  const projects = db
+  const projects = await db
     .select()
     .from(schema.projects)
     .where(eq(schema.projects.clientId, clientId))
     .all();
 
   // Get quotes for each project
-  const projectsWithQuotes = projects.map((p: any) => {
-    const quotes = db
+  const projectsWithQuotes = await Promise.all(projects.map(async (p: any) => {
+    const quotes = await db
       .select({
         id: schema.quotes.id,
         quoteNumber: schema.quotes.quoteNumber,
@@ -42,7 +42,7 @@ export default async function ClientDetailPage({
       .where(eq(schema.quotes.projectId, p.id))
       .all();
     return { ...p, quotes };
-  });
+  }));
 
   return <ClientDetail client={client} projects={projectsWithQuotes} />;
 }

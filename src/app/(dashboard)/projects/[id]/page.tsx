@@ -12,7 +12,7 @@ export default async function ProjectDetailPage({
   const { id } = await params;
   const projectId = parseInt(id);
 
-  const project = db
+  const project = await db
     .select({
       id: schema.projects.id,
       clientId: schema.projects.clientId,
@@ -37,7 +37,7 @@ export default async function ProjectDetailPage({
     );
   }
 
-  const quotes = db
+  const quotes = await db
     .select({
       id: schema.quotes.id,
       quoteNumber: schema.quotes.quoteNumber,

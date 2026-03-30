@@ -8,14 +8,14 @@ export const dynamic = "force-dynamic";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = db.select().from(products).where(eq(products.id, Number(id))).get();
+  const product = await db.select().from(products).where(eq(products.id, Number(id))).get();
   if (!product) notFound();
 
-  const variantsList = db.select().from(productVariants)
+  const variantsList = await db.select().from(productVariants)
     .where(eq(productVariants.productId, Number(id)))
     .orderBy(asc(productVariants.pixelPitch)).all();
 
-  const documentsList = db.select().from(productDocuments)
+  const documentsList = await db.select().from(productDocuments)
     .where(eq(productDocuments.productId, Number(id)))
     .orderBy(asc(productDocuments.type)).all();
 

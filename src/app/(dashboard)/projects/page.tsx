@@ -4,8 +4,8 @@ import { ProjectsList } from "@/components/projects-list";
 
 export const dynamic = "force-dynamic";
 
-export default function ProjectsPage() {
-  const projects = db
+export default async function ProjectsPage() {
+  const projects = await db
     .select({
       id: schema.projects.id,
       clientId: schema.projects.clientId,

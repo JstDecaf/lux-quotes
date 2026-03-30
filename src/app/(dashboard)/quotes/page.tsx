@@ -4,8 +4,8 @@ import { QuotesList } from "@/components/quotes-list";
 
 export const dynamic = "force-dynamic";
 
-export default function QuotesPage() {
-  const quotes = db
+export default async function QuotesPage() {
+  const quotes = await db
     .select({
       id: schema.quotes.id,
       quoteNumber: schema.quotes.quoteNumber,
@@ -25,7 +25,7 @@ export default function QuotesPage() {
     .all();
 
   // Get projects for the new quote form
-  const projects = db
+  const projects = await db
     .select({
       id: schema.projects.id,
       name: schema.projects.name,

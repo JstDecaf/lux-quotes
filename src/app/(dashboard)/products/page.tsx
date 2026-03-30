@@ -5,17 +5,17 @@ import { eq, asc } from "drizzle-orm";
 import ProductCatalog from "@/components/product-catalog";
 import { NewProductButton } from "@/components/new-product-button";
 
-export default function ProductsPage() {
-  const rows = db.select().from(products).orderBy(asc(products.name)).all();
+export default async function ProductsPage() {
+  const rows = await db.select().from(products).orderBy(asc(products.name)).all();
 
-  const withVariants = rows.map((p: any) => {
-    const variants = db
+  const withVariants = await Promise.all(rows.map(async (p: any) => {
+    const variants = await db
       .select()
       .from(productVariants)
       .where(eq(productVariants.productId, p.id))
       .orderBy(asc(productVariants.pixelPitch))
       .all();
-    const documents = db
+    const documents = await db
       .select()
       .from(productDocuments)
       .where(eq(productDocuments.productId, p.id))
@@ -27,7 +27,9 @@ export default function ProductsPage() {
       variants,
       documents,
     };
-  });
+  }));
+
+  const totalVariants = withVariants.reduce((sum, p) => sum + p.variants.length, 0);
 
   return (
     <div>
@@ -35,10 +37,7 @@ export default function ProductsPage() {
         <div>
           <h1 className="font-archivo text-2xl font-bold text-gray-900">Product Catalog</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {rows.length} product families · {rows.reduce((sum: number, p: any) => {
-              const v = db.select().from(productVariants).where(eq(productVariants.productId, p.id)).all();
-              return sum + v.length;
-            }, 0)} variants
+            {rows.length} product families · {totalVariants} variants
           </p>
         </div>
         <NewProductButton />
