@@ -22,7 +22,7 @@ export function Nav() {
       {/* Mobile top bar */}
       <header className="md:hidden fixed top-0 left-0 right-0 z-50 bg-[#0D1B2A] text-white flex items-center justify-between px-4 h-14">
         <h1 className="font-archivo text-lg font-bold tracking-wide">
-          <span className="text-[#DB412B]">LUX</span> Quotes
+          <span className="text-[#DB412B]">lux</span> Quotes
         </h1>
         <button
           onClick={() => setOpen(!open)}
@@ -91,7 +91,7 @@ export function Nav() {
       <aside className="hidden md:flex w-56 bg-[#0D1B2A] text-white flex-col shrink-0">
         <div className="p-5 border-b border-white/10">
           <h1 className="font-archivo text-xl font-bold tracking-wide">
-            <span className="text-[#DB412B]">LUX</span> Quotes
+            <span className="text-[#DB412B]">lux</span> Quotes
           </h1>
         </div>
         <nav className="flex-1 p-3 space-y-1">
