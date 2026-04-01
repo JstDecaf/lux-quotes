@@ -206,6 +206,17 @@ export function QuoteEditor({
     saveItems(updated);
   };
 
+  const moveItem = (index: number, direction: -1 | 1) => {
+    const next = index + direction;
+    if (next < 0 || next >= items.length) return;
+    const updated = [...items];
+    [updated[index], updated[next]] = [updated[next], updated[index]];
+    // Renumber sortOrder to match display order
+    const renumbered = updated.map((item, i) => ({ ...item, sortOrder: i }));
+    setItems(renumbered);
+    saveItems(renumbered);
+  };
+
   const addItem = async (preset?: { itemName: string; isLocal: boolean; unit: string }) => {
     const maxOrder = items.length > 0 ? Math.max(...items.map((i) => i.sortOrder)) : 0;
     const isLocal = preset?.isLocal ?? false;
@@ -332,6 +343,16 @@ export function QuoteEditor({
     updated[index] = { ...updated[index], [field]: value };
     setInstallItems(updated);
     saveInstallItems(updated);
+  };
+
+  const moveInstallItem = (index: number, direction: -1 | 1) => {
+    const next = index + direction;
+    if (next < 0 || next >= installItems.length) return;
+    const updated = [...installItems];
+    [updated[index], updated[next]] = [updated[next], updated[index]];
+    const renumbered = updated.map((item, i) => ({ ...item, sortOrder: i }));
+    setInstallItems(renumbered);
+    saveInstallItems(renumbered);
   };
 
   const addInstallItem = async (preset?: Partial<InstallationItem>) => {
@@ -776,7 +797,7 @@ export function QuoteEditor({
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-[#0D1B2A] text-white text-xs">
-                <th className="px-2 py-2 text-left w-8">#</th>
+                <th className="px-2 py-2 text-left w-14"></th>
                 <th className="px-2 py-2 text-left min-w-[180px] sticky left-0 bg-[#0D1B2A] z-10">Item Name</th>
                 <th className="px-2 py-2 text-left w-16">Unit</th>
                 <th className="px-2 py-2 text-right w-16">Qty</th>
@@ -809,7 +830,12 @@ export function QuoteEditor({
 
                 return (
                   <tr key={item.id} className={`${rowBg} border-b border-gray-100 hover:bg-gray-50/50`}>
-                    <td className="px-2 py-1 text-gray-400 text-xs">{item.sortOrder}</td>
+                    <td className="px-1 py-1">
+                      <div className="flex flex-col items-center gap-0.5">
+                        <button onClick={() => moveItem(idx, -1)} disabled={idx === 0} className="text-gray-300 hover:text-gray-600 disabled:opacity-20 leading-none text-xs" title="Move up">▲</button>
+                        <button onClick={() => moveItem(idx, 1)} disabled={idx === items.length - 1} className="text-gray-300 hover:text-gray-600 disabled:opacity-20 leading-none text-xs" title="Move down">▼</button>
+                      </div>
+                    </td>
                     <td className={`px-2 py-1 sticky left-0 z-10 ${rowBg} border-r border-gray-200`}>
                       <input
                         className={`w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-blue-400 focus:outline-none rounded px-1 py-0.5 ${isFree ? "line-through text-gray-400" : ""}`}
@@ -1052,6 +1078,7 @@ export function QuoteEditor({
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-amber-800 text-white text-xs">
+                <th className="px-2 py-2 w-14"></th>
                 <th className="px-2 py-2 text-left min-w-[200px]">Item Name</th>
                 <th className="px-2 py-2 text-center w-20">Type</th>
                 <th className="px-2 py-2 text-right w-16">Hours</th>
@@ -1072,6 +1099,12 @@ export function QuoteEditor({
                 const isHourly = item.type === "hourly";
                 return (
                   <tr key={item.id} className="border-b border-gray-100 hover:bg-amber-50/30">
+                    <td className="px-1 py-1">
+                      <div className="flex flex-col items-center gap-0.5">
+                        <button onClick={() => moveInstallItem(idx, -1)} disabled={idx === 0} className="text-amber-300 hover:text-amber-800 disabled:opacity-20 leading-none text-xs" title="Move up">▲</button>
+                        <button onClick={() => moveInstallItem(idx, 1)} disabled={idx === installItems.length - 1} className="text-amber-300 hover:text-amber-800 disabled:opacity-20 leading-none text-xs" title="Move down">▼</button>
+                      </div>
+                    </td>
                     <td className="px-2 py-1">
                       <input
                         className="w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-amber-400 focus:outline-none rounded px-1 py-0.5"
