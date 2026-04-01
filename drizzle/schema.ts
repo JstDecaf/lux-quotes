@@ -75,6 +75,8 @@ export const quotes = sqliteTable("quotes", {
   defaultResellerMargin: real("default_reseller_margin").notNull().default(0.3),
   depositPct: real("deposit_pct").notNull().default(0.5),
   secondTranchePct: real("second_tranche_pct").notNull().default(0.25),
+  installationHourlyRate: real("installation_hourly_rate").notNull().default(95),
+  installationMargin: real("installation_margin").notNull().default(0.3),
   screenSize: text("screen_size"),
   panelConfig: text("panel_config"),
   totalResolution: text("total_resolution"),
@@ -116,6 +118,21 @@ export const productDocuments = sqliteTable("product_documents", {
   type: text("type").notNull().default("link"), // brochure, manual, spec_sheet, video, link
   url: text("url").notNull(),
   fileType: text("file_type"), // pdf, xlsx, mp4, web
+  notes: text("notes"),
+  ...timestamps,
+});
+
+export const quoteInstallationItems = sqliteTable("quote_installation_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  quoteId: integer("quote_id").notNull().references(() => quotes.id, { onDelete: "cascade" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  itemName: text("item_name").notNull(),
+  type: text("type").notNull().default("hourly"), // "hourly" | "fixed"
+  hours: real("hours").default(0),
+  hourlyRate: real("hourly_rate"),              // null = use quote default
+  fixedCost: real("fixed_cost").default(0),
+  marginOverride: real("margin_override"),       // null = use quote installation_margin
+  isFree: integer("is_free", { mode: "boolean" }).notNull().default(false),
   notes: text("notes"),
   ...timestamps,
 });

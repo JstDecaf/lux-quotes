@@ -21,6 +21,8 @@ export async function GET(
       gstRate: schema.quotes.gstRate,
       depositPct: schema.quotes.depositPct,
       secondTranchePct: schema.quotes.secondTranchePct,
+      installationHourlyRate: schema.quotes.installationHourlyRate,
+      installationMargin: schema.quotes.installationMargin,
       screenSize: schema.quotes.screenSize,
       panelConfig: schema.quotes.panelConfig,
       totalResolution: schema.quotes.totalResolution,

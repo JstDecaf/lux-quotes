@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { db, schema } from "@/lib/db";
 import { eq } from "drizzle-orm";
-import { calculateLineItem, calculateQuoteTotals } from "@/lib/calculations";
+import { calculateLineItem, calculateQuoteTotals, calculateInstallationItem, calculateInstallationTotals } from "@/lib/calculations";
 
 // Brand colours
 const NAVY = "0D1B2A";
@@ -45,6 +45,11 @@ export async function GET(
     .where(eq(schema.quoteLineItems.quoteId, quoteId))
     .orderBy(schema.quoteLineItems.sortOrder).all();
 
+  const installItems = await db
+    .select().from(schema.quoteInstallationItems)
+    .where(eq(schema.quoteInstallationItems.quoteId, quoteId))
+    .orderBy(schema.quoteInstallationItems.sortOrder).all();
+
   const settings = {
     fxRate: quote.fxRate,
     defaultMargin: quote.defaultMargin,
@@ -54,7 +59,23 @@ export async function GET(
     secondTranchePct: quote.secondTranchePct,
   };
 
+  const installSettings = {
+    defaultHourlyRate: quote.installationHourlyRate,
+    defaultInstallationMargin: quote.installationMargin,
+    gstRate: quote.gstRate,
+  };
+
   const totals = calculateQuoteTotals(items as any[], settings);
+  const installTotals = calculateInstallationTotals(
+    installItems.map((i: any) => ({ type: i.type, hours: i.hours ?? 0, hourlyRate: i.hourlyRate, fixedCost: i.fixedCost ?? 0, marginOverride: i.marginOverride, isFree: i.isFree })),
+    installSettings
+  );
+  const grandTotal = {
+    totalAudCost: totals.totalAudCost + installTotals.totalCost,
+    totalAudSellExGst: totals.totalAudSellExGst + installTotals.totalSellExGst,
+    totalAudSellIncGst: totals.totalAudSellIncGst + installTotals.totalSellIncGst,
+    totalGrossProfit: totals.totalGrossProfit + installTotals.totalGrossProfit,
+  };
 
   // ── Build workbook with ExcelJS ─────────────────────────────────────────────
   const ExcelJS = require("exceljs");
@@ -243,9 +264,9 @@ export async function GET(
     dataRowIndex++;
   }
 
-  // ── Totals row ────────────────────────────────────────────────────────────────
+  // ── Products subtotal row ─────────────────────────────────────────────────────
   const totRow = ws.addRow([
-    "TOTAL", "", "", "",
+    "PRODUCTS SUBTOTAL", "", "", "",
     "", totals.totalUsd,
     totals.totalAudCost,
     totals.totalAudSellExGst,
@@ -266,6 +287,107 @@ export async function GET(
     }
   });
   merge(`A${dataRowIndex}`, `D${dataRowIndex}`);
+  dataRowIndex++;
+
+  // ── Installation & Services section (only if items exist) ────────────────────
+  if (installItems.length > 0) {
+    // Spacer
+    ws.addRow([]);
+    dataRowIndex++;
+
+    // Section header
+    const instHdrRow = ws.addRow(["Installation & Services (AUD)"]);
+    instHdrRow.height = 20;
+    merge(`A${dataRowIndex}`, `M${dataRowIndex}`);
+    style(ws.getCell(`A${dataRowIndex}`), { bg: "7B4F00", fg: WHITE, bold: true, size: 11 });
+    dataRowIndex++;
+
+    // Column sub-headers (reuse cols A, C, D, E, G, H, I, J)
+    const instSubHdr = ws.addRow(["Item", "", "Type", "Hours/Qty", "Rate / Cost", "", "AUD Cost", "Sell ex-GST", "Sell inc-GST", "Profit"]);
+    instSubHdr.height = 18;
+    instSubHdr.eachCell((cell: any, col: number) => {
+      if ([1, 3, 4, 5, 7, 8, 9, 10].includes(col)) {
+        style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: col >= 4 ? "right" : "left", border: true, borderColor: "8B5A14" });
+      }
+    });
+    dataRowIndex++;
+
+    let instIsEven = false;
+    for (const item of installItems as any[]) {
+      const calc = calculateInstallationItem(
+        { type: item.type, hours: item.hours ?? 0, hourlyRate: item.hourlyRate, fixedCost: item.fixedCost ?? 0, marginOverride: item.marginOverride, isFree: item.isFree },
+        installSettings
+      );
+      const bg = instIsEven ? "FFFFF8F0" : WHITE;
+      instIsEven = !instIsEven;
+
+      const typeLabel = item.type === "hourly" ? "Hourly" : "Fixed";
+      const hrsOrQty = item.type === "hourly" ? item.hours ?? 0 : "—";
+      const rateOrCost = item.type === "hourly"
+        ? (item.hourlyRate ?? installSettings.defaultHourlyRate)
+        : item.fixedCost ?? 0;
+
+      const instRow = ws.addRow([
+        item.itemName, "", typeLabel, hrsOrQty, rateOrCost, "",
+        item.isFree ? "" : calc.cost,
+        item.isFree ? "" : calc.sellExGst,
+        item.isFree ? "" : calc.sellIncGst,
+        item.isFree ? "" : calc.grossProfit,
+      ]);
+      instRow.height = 18;
+      instRow.eachCell((cell: any, col: number) => {
+        style(cell, { bg, border: true, borderColor: "DDDDDD" });
+        cell.font = { size: 9, color: { argb: "FF" + NAVY } };
+        if (col === 1) cell.alignment = { horizontal: "left", vertical: "middle" };
+        if ([4, 5].includes(col)) cell.alignment = { horizontal: "right", vertical: "middle" };
+        if (col >= 7 && typeof cell.value === "number") {
+          cell.alignment = { horizontal: "right", vertical: "middle" };
+          cell.numFmt = '"$"#,##0.00';
+        }
+      });
+      dataRowIndex++;
+    }
+
+    // Installation totals row
+    const instTotRow = ws.addRow([
+      "INSTALLATION SUBTOTAL", "", "", "", "", "",
+      installTotals.totalCost,
+      installTotals.totalSellExGst,
+      installTotals.totalSellIncGst,
+      installTotals.totalGrossProfit,
+    ]);
+    instTotRow.height = 22;
+    instTotRow.eachCell((cell: any, col: number) => {
+      style(cell, { bg: "7B4F00", fg: WHITE, bold: true, size: 10, border: true, borderColor: "7B4F00" });
+      cell.font = { bold: true, size: 10, color: { argb: WHITE } };
+      if (col >= 7 && typeof cell.value === "number") {
+        cell.alignment = { horizontal: "right", vertical: "middle" };
+        cell.numFmt = '"$"#,##0.00';
+      }
+    });
+    merge(`A${dataRowIndex}`, `F${dataRowIndex}`);
+    dataRowIndex++;
+
+    // Grand total row
+    const grandRow = ws.addRow([
+      "GRAND TOTAL (inc GST)", "", "", "", "", "",
+      grandTotal.totalAudCost,
+      grandTotal.totalAudSellExGst,
+      grandTotal.totalAudSellIncGst,
+      grandTotal.totalGrossProfit,
+    ]);
+    grandRow.height = 24;
+    grandRow.eachCell((cell: any, col: number) => {
+      style(cell, { bg: RED, fg: WHITE, bold: true, size: 11, border: true, borderColor: RED });
+      cell.font = { bold: true, size: 11, color: { argb: WHITE } };
+      if (col >= 7 && typeof cell.value === "number") {
+        cell.alignment = { horizontal: "right", vertical: "middle" };
+        cell.numFmt = '"$"#,##0.00';
+      }
+    });
+    merge(`A${dataRowIndex}`, `F${dataRowIndex}`);
+    dataRowIndex++;
+  }
 
   // ── Spacer ────────────────────────────────────────────────────────────────────
   ws.addRow([]);
@@ -278,11 +400,12 @@ export async function GET(
   merge(`A${pmtStart}`, `D${pmtStart}`);
   style(ws.getCell(`A${pmtStart}`), { bg: RED, fg: WHITE, bold: true, size: 11 });
 
+  const grandIncGst = grandTotal.totalAudSellIncGst;
   const pmtRows = [
-    ["Deposit", pct(quote.depositPct), `$${aud(totals.depositAmount)}`],
-    ["Progress Payment", pct(quote.secondTranchePct), `$${aud(totals.secondTrancheAmount)}`],
-    ["Balance on Delivery", pct(1 - quote.depositPct - quote.secondTranchePct), `$${aud(totals.balanceAmount)}`],
-    ["TOTAL (inc GST)", "", `$${aud(totals.totalAudSellIncGst)}`],
+    ["Deposit", pct(quote.depositPct), `$${aud(grandIncGst * quote.depositPct)}`],
+    ["Progress Payment", pct(quote.secondTranchePct), `$${aud(grandIncGst * quote.secondTranchePct)}`],
+    ["Balance on Delivery", pct(1 - quote.depositPct - quote.secondTranchePct), `$${aud(grandIncGst * (1 - quote.depositPct - quote.secondTranchePct))}`],
+    ["TOTAL (inc GST)", "", `$${aud(grandIncGst)}`],
   ];
 
   pmtRows.forEach((pmtData, i) => {

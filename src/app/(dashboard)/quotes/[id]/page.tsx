@@ -26,6 +26,8 @@ export default async function QuoteDetailPage({
       defaultResellerMargin: schema.quotes.defaultResellerMargin,
       depositPct: schema.quotes.depositPct,
       secondTranchePct: schema.quotes.secondTranchePct,
+      installationHourlyRate: schema.quotes.installationHourlyRate,
+      installationMargin: schema.quotes.installationMargin,
       screenSize: schema.quotes.screenSize,
       panelConfig: schema.quotes.panelConfig,
       totalResolution: schema.quotes.totalResolution,
@@ -90,5 +92,12 @@ export default async function QuoteDetailPage({
     .orderBy(schema.quoteLineItems.sortOrder)
     .all();
 
-  return <QuoteEditor initialQuote={quote} initialItems={lineItems} />;
+  const installationItems = await db
+    .select()
+    .from(schema.quoteInstallationItems)
+    .where(eq(schema.quoteInstallationItems.quoteId, quoteId))
+    .orderBy(schema.quoteInstallationItems.sortOrder)
+    .all();
+
+  return <QuoteEditor initialQuote={quote} initialItems={lineItems} initialInstallationItems={installationItems} />;
 }

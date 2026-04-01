@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { calculateLineItem, calculateQuoteTotals, type LineItemInput, type QuoteSettings } from "@/lib/calculations";
+import { calculateLineItem, calculateQuoteTotals, calculateInstallationItem, calculateInstallationTotals, type LineItemInput, type QuoteSettings, type InstallationItemInput, type InstallationSettings } from "@/lib/calculations";
 import { NumericInput } from "@/components/numeric-input";
 import { FreightCalculator } from "@/components/freight-calculator";
 import { ProductPicker } from "@/components/product-picker";
@@ -31,6 +31,32 @@ interface LineItem {
   updatedAt: string;
 }
 
+interface InstallationItem {
+  id: number;
+  quoteId: number;
+  sortOrder: number;
+  itemName: string;
+  type: "hourly" | "fixed";
+  hours: number;
+  hourlyRate: number | null;
+  fixedCost: number;
+  marginOverride: number | null;
+  isFree: boolean;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const DEFAULT_INSTALLATION_ITEMS: Array<Omit<InstallationItem, "id" | "quoteId" | "createdAt" | "updatedAt">> = [
+  { sortOrder: 0, itemName: "Project Management",     type: "hourly", hours: 4,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
+  { sortOrder: 1, itemName: "Site Survey",            type: "hourly", hours: 2,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
+  { sortOrder: 2, itemName: "Installation Labour",    type: "hourly", hours: 8,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
+  { sortOrder: 3, itemName: "Commissioning & Testing",type: "hourly", hours: 2,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
+  { sortOrder: 4, itemName: "Travel & Accommodation", type: "fixed",  hours: 0,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
+  { sortOrder: 5, itemName: "Commission / Referral",  type: "fixed",  hours: 0,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
+  { sortOrder: 6, itemName: "Documentation",          type: "fixed",  hours: 0,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
+];
+
 interface QuoteData {
   id: number;
   quoteNumber: string;
@@ -42,6 +68,8 @@ interface QuoteData {
   gstRate: number;
   depositPct: number;
   secondTranchePct: number;
+  installationHourlyRate: number;
+  installationMargin: number;
   notes: string | null;
   screenSize: string | null;
   panelConfig: string | null;
@@ -78,12 +106,15 @@ function fmtPct(val: number): string {
 export function QuoteEditor({
   initialQuote,
   initialItems,
+  initialInstallationItems,
 }: {
   initialQuote: QuoteData;
   initialItems: LineItem[];
+  initialInstallationItems: InstallationItem[];
 }) {
   const [quote, setQuote] = useState(initialQuote);
   const [items, setItems] = useState<LineItem[]>(initialItems);
+  const [installItems, setInstallItems] = useState<InstallationItem[]>(initialInstallationItems);
   const [saving, setSaving] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -254,6 +285,101 @@ export function QuoteEditor({
     }
 
     setShowProductPicker(null);
+  };
+
+  const saveInstallItems = useCallback(
+    (updatedItems: InstallationItem[]) => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(async () => {
+        setSaving(true);
+        try {
+          await fetch(`/api/quotes/${quote.id}/installation-items`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedItems),
+          });
+        } finally {
+          setSaving(false);
+        }
+      }, 800);
+    },
+    [quote.id]
+  );
+
+  const installSettings: InstallationSettings = {
+    defaultHourlyRate: quote.installationHourlyRate,
+    defaultInstallationMargin: quote.installationMargin,
+    gstRate: quote.gstRate,
+  };
+
+  const installInputs: InstallationItemInput[] = installItems.map((item) => ({
+    type: item.type,
+    hours: item.hours,
+    hourlyRate: item.hourlyRate,
+    fixedCost: item.fixedCost,
+    marginOverride: item.marginOverride,
+    isFree: item.isFree,
+  }));
+
+  const installTotals = calculateInstallationTotals(installInputs, installSettings);
+
+  const calculatedInstallItems = installItems.map((item) =>
+    calculateInstallationItem(
+      { type: item.type, hours: item.hours, hourlyRate: item.hourlyRate, fixedCost: item.fixedCost, marginOverride: item.marginOverride, isFree: item.isFree },
+      installSettings
+    )
+  );
+
+  const updateInstallItem = (index: number, field: string, value: unknown) => {
+    const updated = [...installItems];
+    updated[index] = { ...updated[index], [field]: value };
+    setInstallItems(updated);
+    saveInstallItems(updated);
+  };
+
+  const addInstallItem = async (preset?: Partial<InstallationItem>) => {
+    const maxOrder = installItems.length > 0 ? Math.max(...installItems.map((i) => i.sortOrder)) : -1;
+    const body = {
+      itemName: preset?.itemName ?? "New Item",
+      type: preset?.type ?? "hourly",
+      hours: preset?.hours ?? 1,
+      hourlyRate: preset?.hourlyRate ?? null,
+      fixedCost: preset?.fixedCost ?? 0,
+      marginOverride: preset?.marginOverride ?? null,
+      isFree: false,
+      sortOrder: maxOrder + 1,
+    };
+    const res = await fetch(`/api/quotes/${quote.id}/installation-items`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const item = await res.json();
+    setInstallItems((prev) => [...prev, item]);
+  };
+
+  const deleteInstallItem = async (index: number) => {
+    const item = installItems[index];
+    await fetch(`/api/quotes/${quote.id}/installation-items/${item.id}`, { method: "DELETE" });
+    setInstallItems(installItems.filter((_, i) => i !== index));
+  };
+
+  const loadDefaultInstallItems = async () => {
+    if (installItems.length > 0) {
+      if (!confirm("This will add default items to your existing installation list. Continue?")) return;
+    }
+    const maxOrder = installItems.length > 0 ? Math.max(...installItems.map((i) => i.sortOrder)) : -1;
+    const newItems: InstallationItem[] = [];
+    for (let i = 0; i < DEFAULT_INSTALLATION_ITEMS.length; i++) {
+      const preset = DEFAULT_INSTALLATION_ITEMS[i];
+      const res = await fetch(`/api/quotes/${quote.id}/installation-items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...preset, sortOrder: maxOrder + 1 + i }),
+      });
+      newItems.push(await res.json());
+    }
+    setInstallItems((prev) => [...prev, ...newItems]);
   };
 
   const [exporting, setExporting] = useState<string | null>(null);
@@ -810,6 +936,175 @@ export function QuoteEditor({
             <label className="flex items-center gap-1">
               <span>Tip: Leave margin blank to use quote default</span>
             </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Installation & Services Section */}
+      <div className="bg-white rounded-lg border overflow-hidden mt-6">
+        <div className="flex items-center justify-between px-4 py-3 bg-amber-50 border-b border-amber-200">
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-amber-900">Installation & Services</h3>
+            <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">AUD only</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-xs text-amber-800">
+              <label className="text-gray-500">Hourly Rate $</label>
+              <NumericInput
+                step="1"
+                className="w-20 border rounded px-2 py-1 text-sm text-right"
+                value={quote.installationHourlyRate}
+                onChange={(v) => updateQuoteField("installationHourlyRate", v)}
+              />
+              <label className="text-gray-500 ml-2">Margin %</label>
+              <NumericInput
+                step="1"
+                className="w-16 border rounded px-2 py-1 text-sm text-right"
+                value={quote.installationMargin}
+                displayMultiplier={100}
+                onChange={(v) => updateQuoteField("installationMargin", v)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-amber-800 text-white text-xs">
+                <th className="px-2 py-2 text-left min-w-[200px]">Item Name</th>
+                <th className="px-2 py-2 text-center w-20">Type</th>
+                <th className="px-2 py-2 text-right w-16">Hours</th>
+                <th className="px-2 py-2 text-right w-24">Rate ($/hr)</th>
+                <th className="px-2 py-2 text-right w-28">Fixed Cost</th>
+                <th className="px-2 py-2 text-right w-20">Margin %</th>
+                <th className="px-2 py-2 text-right w-24 bg-white/10">Cost</th>
+                <th className="px-2 py-2 text-right w-24 bg-white/10">Sell ex-GST</th>
+                <th className="px-2 py-2 text-right w-20 bg-white/10">GST</th>
+                <th className="px-2 py-2 text-right w-24 bg-white/10">Sell inc-GST</th>
+                <th className="px-2 py-2 text-right w-24 bg-white/10">Profit</th>
+                <th className="px-2 py-2 w-8"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {installItems.map((item, idx) => {
+                const calc = calculatedInstallItems[idx];
+                const isHourly = item.type === "hourly";
+                return (
+                  <tr key={item.id} className="border-b border-gray-100 hover:bg-amber-50/30">
+                    <td className="px-2 py-1">
+                      <input
+                        className="w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-amber-400 focus:outline-none rounded px-1 py-0.5"
+                        value={item.itemName}
+                        onChange={(e) => updateInstallItem(idx, "itemName", e.target.value)}
+                      />
+                    </td>
+                    <td className="px-2 py-1">
+                      <select
+                        className="w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-amber-400 focus:outline-none rounded px-1 py-0.5 text-xs text-center"
+                        value={item.type}
+                        onChange={(e) => updateInstallItem(idx, "type", e.target.value)}
+                      >
+                        <option value="hourly">Hourly</option>
+                        <option value="fixed">Fixed</option>
+                      </select>
+                    </td>
+                    <td className="px-2 py-1">
+                      <NumericInput
+                        step="0.5"
+                        className={`w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-amber-400 focus:outline-none rounded px-1 py-0.5 text-right ${!isHourly ? "text-gray-300 cursor-not-allowed" : ""}`}
+                        value={item.hours}
+                        disabled={!isHourly}
+                        onChange={(v) => updateInstallItem(idx, "hours", v)}
+                      />
+                    </td>
+                    <td className="px-2 py-1">
+                      <NumericInput
+                        step="1"
+                        className={`w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-amber-400 focus:outline-none rounded px-1 py-0.5 text-right ${!isHourly ? "text-gray-300 cursor-not-allowed" : ""}`}
+                        value={item.hourlyRate ?? quote.installationHourlyRate}
+                        disabled={!isHourly}
+                        onChange={(v) => updateInstallItem(idx, "hourlyRate", v)}
+                      />
+                    </td>
+                    <td className="px-2 py-1">
+                      <NumericInput
+                        step="1"
+                        className={`w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-amber-400 focus:outline-none rounded px-1 py-0.5 text-right ${isHourly ? "text-gray-300 cursor-not-allowed" : ""}`}
+                        value={item.fixedCost}
+                        disabled={isHourly}
+                        onChange={(v) => updateInstallItem(idx, "fixedCost", v)}
+                      />
+                    </td>
+                    <td className="px-2 py-1">
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-amber-400 focus:outline-none rounded px-1 py-0.5 text-right"
+                        placeholder={fmtPct(quote.installationMargin)}
+                        value={item.marginOverride != null ? (item.marginOverride * 100).toFixed(1) : ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          updateInstallItem(idx, "marginOverride", v === "" ? null : (parseFloat(v) || 0) / 100);
+                        }}
+                      />
+                    </td>
+                    <td className="px-2 py-1 text-right bg-gray-50 text-gray-600">{fmt(calc.cost)}</td>
+                    <td className="px-2 py-1 text-right bg-gray-50 text-gray-600">{fmt(calc.sellExGst)}</td>
+                    <td className="px-2 py-1 text-right bg-gray-50 text-gray-600">{fmt(calc.gst)}</td>
+                    <td className="px-2 py-1 text-right bg-gray-50 text-gray-600 font-medium">{fmt(calc.sellIncGst)}</td>
+                    <td className="px-2 py-1 text-right bg-gray-50 text-green-600">{fmt(calc.grossProfit)}</td>
+                    <td className="px-2 py-1">
+                      <button
+                        onClick={() => deleteInstallItem(idx)}
+                        className="text-gray-300 hover:text-red-500 transition-colors"
+                        title="Delete item"
+                      >
+                        &times;
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+
+              {installItems.length === 0 && (
+                <tr>
+                  <td colSpan={12} className="px-4 py-6 text-center text-gray-400 text-sm">
+                    No installation items yet.
+                  </td>
+                </tr>
+              )}
+
+              {installItems.length > 0 && (
+                <tr className="border-t-2 border-amber-800 font-bold bg-amber-50">
+                  <td className="px-2 py-2" colSpan={6}>TOTALS</td>
+                  <td className="px-2 py-2 text-right">{fmt(installTotals.totalCost)}</td>
+                  <td className="px-2 py-2 text-right">{fmt(installTotals.totalSellExGst)}</td>
+                  <td className="px-2 py-2 text-right">{fmt(installTotals.totalGst)}</td>
+                  <td className="px-2 py-2 text-right">{fmt(installTotals.totalSellIncGst)}</td>
+                  <td className="px-2 py-2 text-right text-green-700">{fmt(installTotals.totalGrossProfit)}</td>
+                  <td></td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-wrap gap-2 p-3 border-t bg-amber-50/50">
+          <button
+            onClick={() => addInstallItem({ type: "hourly", hours: 1 })}
+            className="px-3 py-1.5 text-sm bg-amber-800 text-white rounded hover:bg-amber-900 transition-colors"
+          >
+            + Add Item
+          </button>
+          <button
+            onClick={loadDefaultInstallItems}
+            className="px-3 py-1.5 text-sm bg-white text-amber-800 border border-amber-300 rounded hover:bg-amber-50 transition-colors"
+          >
+            ↓ Load Defaults
+          </button>
+          <div className="hidden sm:flex ml-auto gap-2 text-xs text-gray-500 items-center">
+            <span>Tip: Leave margin blank to use section default · Hourly rate uses quote default when blank</span>
           </div>
         </div>
       </div>

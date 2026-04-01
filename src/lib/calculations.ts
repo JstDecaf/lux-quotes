@@ -160,6 +160,75 @@ export function calculateQuoteTotals(
   };
 }
 
+// ── Installation items ───────────────────────────────────────────────────────
+
+export interface InstallationItemInput {
+  type: "hourly" | "fixed";
+  hours: number;
+  hourlyRate: number | null;    // null = use defaultHourlyRate from settings
+  fixedCost: number;
+  marginOverride: number | null; // null = use defaultInstallationMargin
+  isFree: boolean;
+}
+
+export interface InstallationSettings {
+  defaultHourlyRate: number;
+  defaultInstallationMargin: number;
+  gstRate: number;
+}
+
+export interface InstallationItemCalculated {
+  cost: number;
+  sellExGst: number;
+  gst: number;
+  sellIncGst: number;
+  grossProfit: number;
+}
+
+export function calculateInstallationItem(
+  item: InstallationItemInput,
+  settings: InstallationSettings
+): InstallationItemCalculated {
+  if (item.isFree) {
+    return { cost: 0, sellExGst: 0, gst: 0, sellIncGst: 0, grossProfit: 0 };
+  }
+
+  const rate = item.hourlyRate ?? settings.defaultHourlyRate;
+  const cost = item.type === "hourly" ? item.hours * rate : item.fixedCost;
+  const margin = item.marginOverride ?? settings.defaultInstallationMargin;
+
+  const sellExGst = margin < 1 ? cost / (1 - margin) : cost;
+  const gst = sellExGst * settings.gstRate;
+  const sellIncGst = sellExGst + gst;
+  const grossProfit = sellExGst - cost;
+
+  return { cost, sellExGst, gst, sellIncGst, grossProfit };
+}
+
+export interface InstallationTotals {
+  totalCost: number;
+  totalSellExGst: number;
+  totalGst: number;
+  totalSellIncGst: number;
+  totalGrossProfit: number;
+}
+
+export function calculateInstallationTotals(
+  items: InstallationItemInput[],
+  settings: InstallationSettings
+): InstallationTotals {
+  let totalCost = 0, totalSellExGst = 0, totalGst = 0, totalSellIncGst = 0, totalGrossProfit = 0;
+  for (const item of items) {
+    const c = calculateInstallationItem(item, settings);
+    totalCost += c.cost;
+    totalSellExGst += c.sellExGst;
+    totalGst += c.gst;
+    totalSellIncGst += c.sellIncGst;
+    totalGrossProfit += c.grossProfit;
+  }
+  return { totalCost, totalSellExGst, totalGst, totalSellIncGst, totalGrossProfit };
+}
+
 export function formatCurrency(value: number, currency: "AUD" | "USD" = "AUD"): string {
   const prefix = currency === "USD" ? "US$" : "$";
   return `${prefix}${value.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
