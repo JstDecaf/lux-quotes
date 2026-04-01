@@ -28,6 +28,7 @@ export default async function QuoteDetailPage({
       secondTranchePct: schema.quotes.secondTranchePct,
       installationHourlyRate: schema.quotes.installationHourlyRate,
       installationMargin: schema.quotes.installationMargin,
+      installationQuotedBy: schema.quotes.installationQuotedBy,
       screenSize: schema.quotes.screenSize,
       panelConfig: schema.quotes.panelConfig,
       totalResolution: schema.quotes.totalResolution,

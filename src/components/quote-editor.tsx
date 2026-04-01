@@ -66,6 +66,7 @@ interface QuoteData {
   secondTranchePct: number;
   installationHourlyRate: number;
   installationMargin: number;
+  installationQuotedBy: string;
   notes: string | null;
   screenSize: string | null;
   panelConfig: string | null;
@@ -557,18 +558,42 @@ export function QuoteEditor({
 
       {/* Three Summary Cards */}
       {(() => {
+        const qb = quote.installationQuotedBy; // "lux" | "reseller" | "both"
         const hasInstall = installItems.length > 0;
-        const grandSellIncGst = totals.totalAudSellIncGst + installTotals.totalSellIncGst;
-        const grandSellExGst = totals.totalAudSellExGst + installTotals.totalSellExGst;
-        const grandCost = totals.totalAudCost + installTotals.totalCost;
-        const grandProfit = totals.totalGrossProfit + installTotals.totalGrossProfit;
-        const grandResellerIncGst = totals.totalResellerSellIncGst + installTotals.totalSellIncGst;
-        const grandResellerExGst = totals.totalResellerSellExGst + installTotals.totalSellExGst;
-        const grandResellerProfit = totals.totalResellerProfit + installTotals.totalGrossProfit;
-        const grandOverallMargin = grandSellExGst > 0 ? grandProfit / grandSellExGst : 0;
-        const grandDeposit = grandSellIncGst * quote.depositPct;
-        const grandSecondTranche = grandSellIncGst * quote.secondTranchePct;
-        const grandBalance = grandSellIncGst * balancePct;
+        const luxIncludesInstall  = hasInstall && (qb === "lux"      || qb === "both");
+        const resIncludesInstall  = hasInstall && (qb === "reseller"  || qb === "both");
+
+        // LUX-side installation (at LUX install margin)
+        const luxInstallSellExGst  = installTotals.totalSellExGst;
+        const luxInstallSellIncGst = installTotals.totalSellIncGst;
+        const luxInstallCost       = installTotals.totalCost;
+        const luxInstallProfit     = installTotals.totalGrossProfit;
+
+        // Reseller-side installation (reseller marks up the raw install cost at their margin)
+        const resM = quote.defaultResellerMargin;
+        const resInstallSellExGst  = resM < 1 ? installTotals.totalCost / (1 - resM) : installTotals.totalCost;
+        const resInstallGst        = resInstallSellExGst * quote.gstRate;
+        const resInstallSellIncGst = resInstallSellExGst + resInstallGst;
+        const resInstallProfit     = resInstallSellExGst - installTotals.totalCost;
+
+        // LUX grand totals
+        const luxGrandSellIncGst = totals.totalAudSellIncGst + (luxIncludesInstall ? luxInstallSellIncGst : 0);
+        const luxGrandSellExGst  = totals.totalAudSellExGst  + (luxIncludesInstall ? luxInstallSellExGst  : 0);
+        const luxGrandCost       = totals.totalAudCost        + (luxIncludesInstall ? luxInstallCost       : 0);
+        const luxGrandProfit     = totals.totalGrossProfit    + (luxIncludesInstall ? luxInstallProfit     : 0);
+        const luxGrandMargin     = luxGrandSellExGst > 0 ? luxGrandProfit / luxGrandSellExGst : 0;
+
+        // Reseller grand totals
+        const resGrandSellIncGst = totals.totalResellerSellIncGst + (resIncludesInstall ? resInstallSellIncGst : 0);
+        const resGrandSellExGst  = totals.totalResellerSellExGst  + (resIncludesInstall ? resInstallSellExGst  : 0);
+        const resGrandProfit     = totals.totalResellerProfit      + (resIncludesInstall ? resInstallProfit     : 0);
+
+        // Payment schedule always based on LUX's total (what LUX collects)
+        const pmtBase        = luxGrandSellIncGst;
+        const pmtDeposit     = pmtBase * quote.depositPct;
+        const pmtSecond      = pmtBase * quote.secondTranchePct;
+        const pmtBalance     = pmtBase * balancePct;
+
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* LUX Pricing Card */}
@@ -583,32 +608,32 @@ export function QuoteEditor({
                   <span className="text-gray-500">Products sell inc-GST</span>
                   <span className="font-medium">{fmt(totals.totalAudSellIncGst)}</span>
                 </div>
-                {hasInstall && (
+                {luxIncludesInstall && (
                   <div className="flex justify-between text-sm">
                     <span className="text-amber-700">+ Installation inc-GST</span>
-                    <span className="font-medium text-amber-700">{fmt(installTotals.totalSellIncGst)}</span>
+                    <span className="font-medium text-amber-700">{fmt(luxInstallSellIncGst)}</span>
                   </div>
                 )}
-                <div className={`flex justify-between text-sm ${hasInstall ? "border-t pt-1.5 mt-0.5" : ""}`}>
-                  <span className={hasInstall ? "font-semibold" : "text-gray-500"}>{hasInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
-                  <span className="font-bold">{fmt(hasInstall ? grandSellIncGst : totals.totalAudSellIncGst)}</span>
+                <div className={`flex justify-between text-sm ${luxIncludesInstall ? "border-t pt-1.5 mt-0.5" : ""}`}>
+                  <span className={luxIncludesInstall ? "font-semibold" : "text-gray-500"}>{luxIncludesInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
+                  <span className="font-bold">{fmt(luxGrandSellIncGst)}</span>
                 </div>
                 <div className="border-t pt-2 mt-1 space-y-1">
                   <div className="flex justify-between text-xs text-gray-400">
                     <span>Products cost</span><span>{fmt(totals.totalAudCost)}</span>
                   </div>
-                  {hasInstall && (
+                  {luxIncludesInstall && (
                     <div className="flex justify-between text-xs text-gray-400">
-                      <span>Installation cost</span><span>{fmt(installTotals.totalCost)}</span>
+                      <span>Installation cost</span><span>{fmt(luxInstallCost)}</span>
                     </div>
                   )}
                   <div className="flex justify-between mt-1">
                     <span className="text-sm font-medium text-green-700">Gross Profit</span>
-                    <span className="text-lg font-bold text-green-600">{fmt(hasInstall ? grandProfit : totals.totalGrossProfit)}</span>
+                    <span className="text-lg font-bold text-green-600">{fmt(luxGrandProfit)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Overall Margin</span>
-                    <span className="font-semibold">{fmtPct(hasInstall ? grandOverallMargin : totals.overallMargin)}</span>
+                    <span className="font-semibold">{fmtPct(luxGrandMargin)}</span>
                   </div>
                 </div>
               </div>
@@ -622,28 +647,28 @@ export function QuoteEditor({
                   <span className="text-gray-500">Products sell inc-GST</span>
                   <span className="font-medium text-blue-700">{fmt(totals.totalResellerSellIncGst)}</span>
                 </div>
-                {hasInstall && (
+                {resIncludesInstall && (
                   <div className="flex justify-between text-sm">
                     <span className="text-amber-700">+ Installation inc-GST</span>
-                    <span className="font-medium text-amber-700">{fmt(installTotals.totalSellIncGst)}</span>
+                    <span className="font-medium text-amber-700">{fmt(resInstallSellIncGst)}</span>
                   </div>
                 )}
-                <div className={`flex justify-between text-sm ${hasInstall ? "border-t pt-1.5 mt-0.5" : ""}`}>
-                  <span className={hasInstall ? "font-semibold" : "text-gray-500"}>{hasInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
-                  <span className="font-bold text-blue-800">{fmt(hasInstall ? grandResellerIncGst : totals.totalResellerSellIncGst)}</span>
+                <div className={`flex justify-between text-sm ${resIncludesInstall ? "border-t pt-1.5 mt-0.5" : ""}`}>
+                  <span className={resIncludesInstall ? "font-semibold" : "text-gray-500"}>{resIncludesInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
+                  <span className="font-bold text-blue-800">{fmt(resGrandSellIncGst)}</span>
                 </div>
                 <div className="border-t pt-2 mt-1 space-y-1">
                   <div className="flex justify-between text-xs text-gray-400">
                     <span>Products ex-GST</span><span>{fmt(totals.totalResellerSellExGst)}</span>
                   </div>
-                  {hasInstall && (
+                  {resIncludesInstall && (
                     <div className="flex justify-between text-xs text-gray-400">
-                      <span>Installation ex-GST</span><span>{fmt(installTotals.totalSellExGst)}</span>
+                      <span>Installation ex-GST</span><span>{fmt(resInstallSellExGst)}</span>
                     </div>
                   )}
                   <div className="flex justify-between mt-1">
                     <span className="text-sm font-medium text-blue-700">Reseller Profit</span>
-                    <span className="text-lg font-bold text-blue-600">{fmt(hasInstall ? grandResellerProfit : totals.totalResellerProfit)}</span>
+                    <span className="text-lg font-bold text-blue-600">{fmt(resGrandProfit)}</span>
                   </div>
                 </div>
               </div>
@@ -652,24 +677,24 @@ export function QuoteEditor({
             {/* Payment Schedule Card */}
             <div className="bg-white rounded-lg border border-l-4 border-l-purple-400 p-4">
               <h3 className="text-sm font-semibold text-purple-700 mb-3">Payment Schedule</h3>
-              {hasInstall && (
+              {luxIncludesInstall && (
                 <div className="flex justify-between text-xs text-gray-400 mb-2 pb-2 border-b">
-                  <span>Grand total inc-GST</span>
-                  <span className="font-medium">{fmt(grandSellIncGst)}</span>
+                  <span>Total inc-GST (LUX)</span>
+                  <span className="font-medium">{fmt(pmtBase)}</span>
                 </div>
               )}
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Deposit ({(quote.depositPct * 100).toFixed(0)}%)</span>
-                  <span className="font-medium text-purple-700">{fmt(hasInstall ? grandDeposit : totals.depositAmount)}</span>
+                  <span className="font-medium text-purple-700">{fmt(pmtDeposit)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">2nd Payment ({(quote.secondTranchePct * 100).toFixed(0)}%)</span>
-                  <span className="font-medium text-purple-700">{fmt(hasInstall ? grandSecondTranche : totals.secondTrancheAmount)}</span>
+                  <span className="font-medium text-purple-700">{fmt(pmtSecond)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Balance ({(balancePct * 100).toFixed(0)}%)</span>
-                  <span className="font-medium text-purple-700">{fmt(hasInstall ? grandBalance : totals.balanceAmount)}</span>
+                  <span className="font-medium text-purple-700">{fmt(pmtBalance)}</span>
                 </div>
               </div>
             </div>
@@ -981,7 +1006,28 @@ export function QuoteEditor({
             <h3 className="text-sm font-semibold text-amber-900">Installation & Services</h3>
             <span className="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">AUD only</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Quoted by toggle */}
+            <div className="flex items-center gap-1 text-xs">
+              <span className="text-gray-500 mr-1">Quoted by</span>
+              {(["lux", "reseller", "both"] as const).map((opt) => {
+                const labels = { lux: "LUX", reseller: "Reseller", both: "Both" };
+                const active = quote.installationQuotedBy === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => updateQuoteField("installationQuotedBy", opt)}
+                    className={`px-2.5 py-1 rounded font-medium transition-colors border ${
+                      active
+                        ? "bg-amber-800 text-white border-amber-800"
+                        : "bg-white text-amber-800 border-amber-300 hover:bg-amber-50"
+                    }`}
+                  >
+                    {labels[opt]}
+                  </button>
+                );
+              })}
+            </div>
             <div className="flex items-center gap-2 text-xs text-amber-800">
               <label className="text-gray-500">Hourly Rate $</label>
               <NumericInput

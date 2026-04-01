@@ -77,6 +77,7 @@ export const quotes = sqliteTable("quotes", {
   secondTranchePct: real("second_tranche_pct").notNull().default(0.25),
   installationHourlyRate: real("installation_hourly_rate").notNull().default(95),
   installationMargin: real("installation_margin").notNull().default(0.3),
+  installationQuotedBy: text("installation_quoted_by").notNull().default("lux"),
   screenSize: text("screen_size"),
   panelConfig: text("panel_config"),
   totalResolution: text("total_resolution"),
