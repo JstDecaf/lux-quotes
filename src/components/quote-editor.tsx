@@ -49,12 +49,8 @@ interface InstallationItem {
 
 const DEFAULT_INSTALLATION_ITEMS: Array<Omit<InstallationItem, "id" | "quoteId" | "createdAt" | "updatedAt">> = [
   { sortOrder: 0, itemName: "Project Management",     type: "hourly", hours: 4,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
-  { sortOrder: 1, itemName: "Site Survey",            type: "hourly", hours: 2,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
-  { sortOrder: 2, itemName: "Installation Labour",    type: "hourly", hours: 8,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
-  { sortOrder: 3, itemName: "Commissioning & Testing",type: "hourly", hours: 2,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
-  { sortOrder: 4, itemName: "Travel & Accommodation", type: "fixed",  hours: 0,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
-  { sortOrder: 5, itemName: "Commission / Referral",  type: "fixed",  hours: 0,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
-  { sortOrder: 6, itemName: "Documentation",          type: "fixed",  hours: 0,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
+  { sortOrder: 1, itemName: "Installation",           type: "hourly", hours: 8,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
+  { sortOrder: 2, itemName: "Commissioning & Testing",type: "hourly", hours: 2,  hourlyRate: null, fixedCost: 0, marginOverride: null, isFree: false, notes: null },
 ];
 
 interface QuoteData {
@@ -560,88 +556,126 @@ export function QuoteEditor({
       </div>
 
       {/* Three Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        {/* LUX Pricing Card */}
-        <div className="bg-white rounded-lg border border-l-4 border-l-gray-400 p-4">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">LUX Pricing</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Total USD</span>
-              <span className="font-medium">US${totals.totalUsd.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">AUD Cost</span>
-              <span className="font-medium">{fmt(totals.totalAudCost)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Sell ex-GST</span>
-              <span className="font-medium">{fmt(totals.totalAudSellExGst)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">GST</span>
-              <span className="font-medium">{fmt(totals.totalGst)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Sell inc-GST</span>
-              <span className="font-bold">{fmt(totals.totalAudSellIncGst)}</span>
-            </div>
-            <div className="border-t pt-2 mt-2">
-              <div className="flex justify-between">
-                <span className="text-sm font-medium text-green-700">Gross Profit</span>
-                <span className="text-lg font-bold text-green-600">{fmt(totals.totalGrossProfit)}</span>
+      {(() => {
+        const hasInstall = installItems.length > 0;
+        const grandSellIncGst = totals.totalAudSellIncGst + installTotals.totalSellIncGst;
+        const grandSellExGst = totals.totalAudSellExGst + installTotals.totalSellExGst;
+        const grandCost = totals.totalAudCost + installTotals.totalCost;
+        const grandProfit = totals.totalGrossProfit + installTotals.totalGrossProfit;
+        const grandResellerIncGst = totals.totalResellerSellIncGst + installTotals.totalSellIncGst;
+        const grandResellerExGst = totals.totalResellerSellExGst + installTotals.totalSellExGst;
+        const grandResellerProfit = totals.totalResellerProfit + installTotals.totalGrossProfit;
+        const grandOverallMargin = grandSellExGst > 0 ? grandProfit / grandSellExGst : 0;
+        const grandDeposit = grandSellIncGst * quote.depositPct;
+        const grandSecondTranche = grandSellIncGst * quote.secondTranchePct;
+        const grandBalance = grandSellIncGst * balancePct;
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* LUX Pricing Card */}
+            <div className="bg-white rounded-lg border border-l-4 border-l-gray-400 p-4">
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">LUX Pricing</h3>
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Total USD</span>
+                  <span className="font-medium">US${totals.totalUsd.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Products sell inc-GST</span>
+                  <span className="font-medium">{fmt(totals.totalAudSellIncGst)}</span>
+                </div>
+                {hasInstall && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-700">+ Installation inc-GST</span>
+                    <span className="font-medium text-amber-700">{fmt(installTotals.totalSellIncGst)}</span>
+                  </div>
+                )}
+                <div className={`flex justify-between text-sm ${hasInstall ? "border-t pt-1.5 mt-0.5" : ""}`}>
+                  <span className={hasInstall ? "font-semibold" : "text-gray-500"}>{hasInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
+                  <span className="font-bold">{fmt(hasInstall ? grandSellIncGst : totals.totalAudSellIncGst)}</span>
+                </div>
+                <div className="border-t pt-2 mt-1 space-y-1">
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Products cost</span><span>{fmt(totals.totalAudCost)}</span>
+                  </div>
+                  {hasInstall && (
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>Installation cost</span><span>{fmt(installTotals.totalCost)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between mt-1">
+                    <span className="text-sm font-medium text-green-700">Gross Profit</span>
+                    <span className="text-lg font-bold text-green-600">{fmt(hasInstall ? grandProfit : totals.totalGrossProfit)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Overall Margin</span>
+                    <span className="font-semibold">{fmtPct(hasInstall ? grandOverallMargin : totals.overallMargin)}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between text-sm mt-1">
-                <span className="text-gray-500">Overall Margin</span>
-                <span className="font-semibold">{fmtPct(totals.overallMargin)}</span>
-              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Reseller Pricing Card */}
-        <div className="bg-white rounded-lg border border-l-4 border-l-blue-400 p-4">
-          <h3 className="text-sm font-semibold text-blue-700 mb-3">Reseller Pricing</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Sell ex-GST</span>
-              <span className="font-medium text-blue-700">{fmt(totals.totalResellerSellExGst)}</span>
+            {/* Reseller Pricing Card */}
+            <div className="bg-white rounded-lg border border-l-4 border-l-blue-400 p-4">
+              <h3 className="text-sm font-semibold text-blue-700 mb-3">Reseller Pricing</h3>
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Products sell inc-GST</span>
+                  <span className="font-medium text-blue-700">{fmt(totals.totalResellerSellIncGst)}</span>
+                </div>
+                {hasInstall && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-amber-700">+ Installation inc-GST</span>
+                    <span className="font-medium text-amber-700">{fmt(installTotals.totalSellIncGst)}</span>
+                  </div>
+                )}
+                <div className={`flex justify-between text-sm ${hasInstall ? "border-t pt-1.5 mt-0.5" : ""}`}>
+                  <span className={hasInstall ? "font-semibold" : "text-gray-500"}>{hasInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
+                  <span className="font-bold text-blue-800">{fmt(hasInstall ? grandResellerIncGst : totals.totalResellerSellIncGst)}</span>
+                </div>
+                <div className="border-t pt-2 mt-1 space-y-1">
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>Products ex-GST</span><span>{fmt(totals.totalResellerSellExGst)}</span>
+                  </div>
+                  {hasInstall && (
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>Installation ex-GST</span><span>{fmt(installTotals.totalSellExGst)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between mt-1">
+                    <span className="text-sm font-medium text-blue-700">Reseller Profit</span>
+                    <span className="text-lg font-bold text-blue-600">{fmt(hasInstall ? grandResellerProfit : totals.totalResellerProfit)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">GST</span>
-              <span className="font-medium text-blue-700">{fmt(totals.totalResellerGst)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Sell inc-GST</span>
-              <span className="font-bold text-blue-800">{fmt(totals.totalResellerSellIncGst)}</span>
-            </div>
-            <div className="border-t pt-2 mt-2">
-              <div className="flex justify-between">
-                <span className="text-sm font-medium text-blue-700">Reseller Profit</span>
-                <span className="text-lg font-bold text-blue-600">{fmt(totals.totalResellerProfit)}</span>
+
+            {/* Payment Schedule Card */}
+            <div className="bg-white rounded-lg border border-l-4 border-l-purple-400 p-4">
+              <h3 className="text-sm font-semibold text-purple-700 mb-3">Payment Schedule</h3>
+              {hasInstall && (
+                <div className="flex justify-between text-xs text-gray-400 mb-2 pb-2 border-b">
+                  <span>Grand total inc-GST</span>
+                  <span className="font-medium">{fmt(grandSellIncGst)}</span>
+                </div>
+              )}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Deposit ({(quote.depositPct * 100).toFixed(0)}%)</span>
+                  <span className="font-medium text-purple-700">{fmt(hasInstall ? grandDeposit : totals.depositAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">2nd Payment ({(quote.secondTranchePct * 100).toFixed(0)}%)</span>
+                  <span className="font-medium text-purple-700">{fmt(hasInstall ? grandSecondTranche : totals.secondTrancheAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Balance ({(balancePct * 100).toFixed(0)}%)</span>
+                  <span className="font-medium text-purple-700">{fmt(hasInstall ? grandBalance : totals.balanceAmount)}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Payment Schedule Card */}
-        <div className="bg-white rounded-lg border border-l-4 border-l-purple-400 p-4">
-          <h3 className="text-sm font-semibold text-purple-700 mb-3">Payment Schedule</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Deposit ({(quote.depositPct * 100).toFixed(0)}%)</span>
-              <span className="font-medium text-purple-700">{fmt(totals.depositAmount)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">2nd Payment ({(quote.secondTranchePct * 100).toFixed(0)}%)</span>
-              <span className="font-medium text-purple-700">{fmt(totals.secondTrancheAmount)}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Balance ({(balancePct * 100).toFixed(0)}%)</span>
-              <span className="font-medium text-purple-700">{fmt(totals.balanceAmount)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* Screen Specs */}
       {(quote.screenSize || quote.panelConfig || quote.totalResolution) && (
