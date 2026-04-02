@@ -1,0 +1,11 @@
+ALTER TABLE quotes ADD COLUMN screen_width_mm REAL;
+ALTER TABLE quotes ADD COLUMN screen_height_mm REAL;
+ALTER TABLE quotes ADD COLUMN pixel_pitch_mm REAL;
+ALTER TABLE quotes ADD COLUMN cabinet_width_mm REAL;
+ALTER TABLE quotes ADD COLUMN cabinet_height_mm REAL;
+ALTER TABLE quotes ADD COLUMN panel_count_w INTEGER;
+ALTER TABLE quotes ADD COLUMN panel_count_h INTEGER;
+ALTER TABLE quotes ADD COLUMN resolution_w INTEGER;
+ALTER TABLE quotes ADD COLUMN resolution_h INTEGER;
+ALTER TABLE quotes ADD COLUMN brightness_nits INTEGER;
+ALTER TABLE quotes ADD COLUMN cabinet_weight_kg REAL;

@@ -41,6 +41,17 @@ interface QuoteInput {
   screenSize: string;
   panelConfig: string;
   totalResolution: string;
+  screenWidthMm?: number | null;
+  screenHeightMm?: number | null;
+  pixelPitchMm?: number | null;
+  cabinetWidthMm?: number | null;
+  cabinetHeightMm?: number | null;
+  panelCountW?: number | null;
+  panelCountH?: number | null;
+  resolutionW?: number | null;
+  resolutionH?: number | null;
+  brightnessNits?: number | null;
+  cabinetWeightKg?: number | null;
   lineItems: LineItemInput[];
 }
 
@@ -133,6 +144,17 @@ async function handleImport(body: ImportBody) {
           screenSize: quoteInput.screenSize || null,
           panelConfig: quoteInput.panelConfig || null,
           totalResolution: quoteInput.totalResolution || null,
+          screenWidthMm: quoteInput.screenWidthMm ?? null,
+          screenHeightMm: quoteInput.screenHeightMm ?? null,
+          pixelPitchMm: quoteInput.pixelPitchMm ?? null,
+          cabinetWidthMm: quoteInput.cabinetWidthMm ?? null,
+          cabinetHeightMm: quoteInput.cabinetHeightMm ?? null,
+          panelCountW: quoteInput.panelCountW ?? null,
+          panelCountH: quoteInput.panelCountH ?? null,
+          resolutionW: quoteInput.resolutionW ?? null,
+          resolutionH: quoteInput.resolutionH ?? null,
+          brightnessNits: quoteInput.brightnessNits ?? null,
+          cabinetWeightKg: quoteInput.cabinetWeightKg ?? null,
           fxRate,
           defaultMargin,
           defaultResellerMargin,
@@ -160,6 +182,17 @@ async function handleImport(body: ImportBody) {
         screenSize: quoteInput.screenSize || null,
         panelConfig: quoteInput.panelConfig || null,
         totalResolution: quoteInput.totalResolution || null,
+        screenWidthMm: quoteInput.screenWidthMm ?? null,
+        screenHeightMm: quoteInput.screenHeightMm ?? null,
+        pixelPitchMm: quoteInput.pixelPitchMm ?? null,
+        cabinetWidthMm: quoteInput.cabinetWidthMm ?? null,
+        cabinetHeightMm: quoteInput.cabinetHeightMm ?? null,
+        panelCountW: quoteInput.panelCountW ?? null,
+        panelCountH: quoteInput.panelCountH ?? null,
+        resolutionW: quoteInput.resolutionW ?? null,
+        resolutionH: quoteInput.resolutionH ?? null,
+        brightnessNits: quoteInput.brightnessNits ?? null,
+        cabinetWeightKg: quoteInput.cabinetWeightKg ?? null,
         validUntil: validUntil || null,
       }).returning();
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { calculateLineItem, calculateQuoteTotals, calculateInstallationItem, calculateInstallationTotals, type LineItemInput, type QuoteSettings, type InstallationItemInput, type InstallationSettings } from "@/lib/calculations";
+import { calculateLineItem, calculateQuoteTotals, calculateInstallationItem, calculateInstallationTotals, computeScreenSqm, computeAspectRatio, computeTotalPanels, computeTotalWeightKg, reconcileScreenSqm, type LineItemInput, type QuoteSettings, type InstallationItemInput, type InstallationSettings } from "@/lib/calculations";
 import { NumericInput } from "@/components/numeric-input";
 import { FreightCalculator } from "@/components/freight-calculator";
 import { ProductPicker } from "@/components/product-picker";
@@ -71,6 +71,17 @@ interface QuoteData {
   screenSize: string | null;
   panelConfig: string | null;
   totalResolution: string | null;
+  screenWidthMm: number | null;
+  screenHeightMm: number | null;
+  pixelPitchMm: number | null;
+  cabinetWidthMm: number | null;
+  cabinetHeightMm: number | null;
+  panelCountW: number | null;
+  panelCountH: number | null;
+  resolutionW: number | null;
+  resolutionH: number | null;
+  brightnessNits: number | null;
+  cabinetWeightKg: number | null;
   projectId: number;
   projectName: string | null;
   clientId: number | null;
@@ -723,14 +734,134 @@ export function QuoteEditor({
         );
       })()}
 
-      {/* Screen Specs */}
-      {(quote.screenSize || quote.panelConfig || quote.totalResolution) && (
-        <div className="bg-white rounded-lg border p-4 mb-4 flex flex-wrap gap-3 sm:gap-6 text-sm text-gray-600">
-          {quote.screenSize && <span><strong>Screen:</strong> {quote.screenSize}</span>}
-          {quote.panelConfig && <span><strong>Panels:</strong> {quote.panelConfig}</span>}
-          {quote.totalResolution && <span><strong>Resolution:</strong> {quote.totalResolution}</span>}
-        </div>
-      )}
+      {/* Screen Information */}
+      {(() => {
+        const hasAnyScreenData = quote.screenWidthMm || quote.screenHeightMm || quote.pixelPitchMm ||
+          quote.panelCountW || quote.panelCountH || quote.resolutionW || quote.resolutionH ||
+          quote.brightnessNits || quote.cabinetWeightKg || quote.cabinetWidthMm || quote.cabinetHeightMm ||
+          quote.screenSize || quote.panelConfig || quote.totalResolution;
+
+        const screenSqm = computeScreenSqm(quote.screenWidthMm, quote.screenHeightMm);
+        const aspectRatio = computeAspectRatio(quote.screenWidthMm, quote.screenHeightMm);
+        const totalPanels = computeTotalPanels(quote.panelCountW, quote.panelCountH);
+        const totalWeight = computeTotalWeightKg(quote.panelCountW, quote.panelCountH, quote.cabinetWeightKg);
+        const recon = reconcileScreenSqm(quote.screenWidthMm, quote.screenHeightMm, items);
+
+        return (
+          <details className="bg-white rounded-lg border mb-4 group" open={!!hasAnyScreenData}>
+            <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 select-none flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                Screen Information
+                {screenSqm != null && (
+                  <span className="text-xs font-normal text-gray-400">
+                    {screenSqm.toFixed(2)} sqm
+                    {recon.match === "mismatch" && (
+                      <span className="text-amber-600 ml-1" title={`Line items: ${recon.lineItemSqm?.toFixed(2)} sqm`}>
+                        ⚠ sqm mismatch
+                      </span>
+                    )}
+                    {recon.match === "ok" && <span className="text-green-600 ml-1">✓</span>}
+                  </span>
+                )}
+              </span>
+              <span className="text-gray-400 text-xs group-open:rotate-180 transition-transform">&#9660;</span>
+            </summary>
+            <div className="px-4 pb-4">
+              {/* Editable fields grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3 mb-4">
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Screen Width (mm)</label>
+                  <NumericInput value={quote.screenWidthMm ?? 0} onChange={(v) => updateQuoteField("screenWidthMm", v || null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Screen Height (mm)</label>
+                  <NumericInput value={quote.screenHeightMm ?? 0} onChange={(v) => updateQuoteField("screenHeightMm", v || null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Pixel Pitch (mm)</label>
+                  <NumericInput value={quote.pixelPitchMm ?? 0} onChange={(v) => updateQuoteField("pixelPitchMm", v || null)} step={0.1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Brightness (nits)</label>
+                  <NumericInput value={quote.brightnessNits ?? 0} onChange={(v) => updateQuoteField("brightnessNits", v ? Math.round(v) : null)} step={100} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Panels Wide</label>
+                  <NumericInput value={quote.panelCountW ?? 0} onChange={(v) => updateQuoteField("panelCountW", v ? Math.round(v) : null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Panels High</label>
+                  <NumericInput value={quote.panelCountH ?? 0} onChange={(v) => updateQuoteField("panelCountH", v ? Math.round(v) : null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Resolution W (px)</label>
+                  <NumericInput value={quote.resolutionW ?? 0} onChange={(v) => updateQuoteField("resolutionW", v ? Math.round(v) : null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Resolution H (px)</label>
+                  <NumericInput value={quote.resolutionH ?? 0} onChange={(v) => updateQuoteField("resolutionH", v ? Math.round(v) : null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Cabinet Width (mm)</label>
+                  <NumericInput value={quote.cabinetWidthMm ?? 0} onChange={(v) => updateQuoteField("cabinetWidthMm", v || null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Cabinet Height (mm)</label>
+                  <NumericInput value={quote.cabinetHeightMm ?? 0} onChange={(v) => updateQuoteField("cabinetHeightMm", v || null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Cabinet Weight (kg)</label>
+                  <NumericInput value={quote.cabinetWeightKg ?? 0} onChange={(v) => updateQuoteField("cabinetWeightKg", v || null)} step={0.1} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+              </div>
+
+              {/* Computed values */}
+              {(screenSqm != null || aspectRatio || totalPanels != null || totalWeight != null) && (
+                <div className="border-t pt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                  {screenSqm != null && (
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase font-semibold">Screen Area</span>
+                      <p className="font-medium text-gray-700">
+                        {screenSqm.toFixed(2)} sqm
+                        <span className="text-gray-400 font-normal ml-1">
+                          ({((quote.screenWidthMm ?? 0) / 1000).toFixed(2)}m × {((quote.screenHeightMm ?? 0) / 1000).toFixed(2)}m)
+                        </span>
+                      </p>
+                    </div>
+                  )}
+                  {aspectRatio && (
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase font-semibold">Aspect Ratio</span>
+                      <p className="font-medium text-gray-700">{aspectRatio}</p>
+                    </div>
+                  )}
+                  {totalPanels != null && (
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase font-semibold">Total Panels</span>
+                      <p className="font-medium text-gray-700">{totalPanels}</p>
+                    </div>
+                  )}
+                  {totalWeight != null && (
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase font-semibold">Est. Total Weight</span>
+                      <p className="font-medium text-gray-700">{totalWeight.toFixed(1)} kg</p>
+                    </div>
+                  )}
+                  {recon.match !== "no_data" && (
+                    <div>
+                      <span className="text-gray-400 text-xs uppercase font-semibold">SQM Reconciliation</span>
+                      <p className={`font-medium ${recon.match === "ok" ? "text-green-700" : "text-amber-600"}`}>
+                        Screen: {recon.screenSqm?.toFixed(2)} sqm / Line Items: {recon.lineItemSqm?.toFixed(2)} sqm
+                        {recon.match === "ok" ? " ✓" : " ⚠"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </details>
+        );
+      })()}
 
       {/* Notes - Collapsible */}
       <details className="bg-white rounded-lg border mb-6 group">
@@ -1190,7 +1321,7 @@ export function QuoteEditor({
 
               {installItems.length > 0 && (
                 <tr className="border-t-2 border-amber-800 font-bold bg-amber-50">
-                  <td className="px-2 py-2" colSpan={6}>TOTALS</td>
+                  <td className="px-2 py-2" colSpan={7}>TOTALS</td>
                   <td className="px-2 py-2 text-right">{fmt(installTotals.totalCost)}</td>
                   <td className="px-2 py-2 text-right">{fmt(installTotals.totalSellExGst)}</td>
                   <td className="px-2 py-2 text-right">{fmt(installTotals.totalGst)}</td>

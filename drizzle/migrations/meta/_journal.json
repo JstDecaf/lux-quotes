@@ -8,6 +8,13 @@
       "when": 1775006067662,
       "tag": "0000_add_installation_items",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1775092800000,
+      "tag": "0001_add_screen_info",
+      "breakpoints": true
     }
   ]
 }

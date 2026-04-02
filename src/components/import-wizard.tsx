@@ -16,6 +16,20 @@ interface ParsedLineItem {
   sortOrder: number;
 }
 
+interface ParsedScreenInfo {
+  screenWidthMm: number | null;
+  screenHeightMm: number | null;
+  pixelPitchMm: number | null;
+  cabinetWidthMm: number | null;
+  cabinetHeightMm: number | null;
+  panelCountW: number | null;
+  panelCountH: number | null;
+  resolutionW: number | null;
+  resolutionH: number | null;
+  brightnessNits: number | null;
+  cabinetWeightKg: number | null;
+}
+
 interface ParsedQuote {
   sheetName: string;
   name: string;
@@ -24,6 +38,7 @@ interface ParsedQuote {
   screenSize: string;
   panelConfig: string;
   totalResolution: string;
+  screenInfo: ParsedScreenInfo;
   lineItems: ParsedLineItem[];
   totalUsd: number;
   /** Total read directly from the XLS "Total Amount" row — used for validation */
@@ -116,6 +131,11 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
   let panelConfig = "";
   let totalResolution = "";
 
+  let pixelPitchRaw = "";
+  let brightnessRaw = "";
+  let cabinetSizeRaw = "";
+  let cabinetWeightRaw = "";
+
   for (let r = 0; r < Math.min(raw.length, headerRowIdx > 0 ? headerRowIdx : 20); r++) {
     const c0 = cell(r, 0);
     const c0l = c0.toLowerCase();
@@ -124,6 +144,78 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
     else if (c0l.startsWith("required screen size:")) screenSize = c0.replace(/^required screen size:\s*/i, "").trim();
     else if (c0l.startsWith("required panel qty:")) panelConfig = c0.replace(/^required panel qty:\s*/i, "").trim();
     else if (c0l.startsWith("total resolution:")) totalResolution = c0.replace(/^total resolution:\s*/i, "").trim();
+    else if (c0l.startsWith("pixel pitch:") || c0l.startsWith("pitch:")) pixelPitchRaw = c0.replace(/^(pixel\s+)?pitch:\s*/i, "").trim();
+    else if (c0l.startsWith("brightness:")) brightnessRaw = c0.replace(/^brightness:\s*/i, "").trim();
+    else if (c0l.startsWith("cabinet size:") || c0l.startsWith("module size:") || c0l.startsWith("panel size:")) cabinetSizeRaw = c0.replace(/^(cabinet|module|panel)\s+size:\s*/i, "").trim();
+    else if (c0l.startsWith("cabinet weight:") || c0l.startsWith("module weight:") || c0l.startsWith("panel weight:")) cabinetWeightRaw = c0.replace(/^(cabinet|module|panel)\s+weight:\s*/i, "").trim();
+  }
+
+  // ── Parse structured screen info from raw text fields ────────────────────
+  const screenInfo: ParsedScreenInfo = {
+    screenWidthMm: null, screenHeightMm: null,
+    pixelPitchMm: null,
+    cabinetWidthMm: null, cabinetHeightMm: null,
+    panelCountW: null, panelCountH: null,
+    resolutionW: null, resolutionH: null,
+    brightnessNits: null, cabinetWeightKg: null,
+  };
+
+  // Screen size: "4.8m x 2.4m" or "4800mm x 2400mm" or "4800 x 2400"
+  if (screenSize) {
+    const sizeMatch = screenSize.match(/([\d.]+)\s*(m|mm)?\s*[x×]\s*([\d.]+)\s*(m|mm)?/i);
+    if (sizeMatch) {
+      const w = parseFloat(sizeMatch[1]);
+      const wUnit = (sizeMatch[2] || sizeMatch[4] || "").toLowerCase();
+      const h = parseFloat(sizeMatch[3]);
+      const hUnit = (sizeMatch[4] || sizeMatch[2] || "").toLowerCase();
+      screenInfo.screenWidthMm = wUnit === "m" ? w * 1000 : (wUnit === "mm" || w > 100) ? w : w * 1000;
+      screenInfo.screenHeightMm = hUnit === "m" ? h * 1000 : (hUnit === "mm" || h > 100) ? h : h * 1000;
+    }
+  }
+
+  // Panel config: "10W x 5H" or "10 x 5"
+  if (panelConfig) {
+    const panelMatch = panelConfig.match(/(\d+)\s*W?\s*[x×]\s*(\d+)\s*H?/i);
+    if (panelMatch) {
+      screenInfo.panelCountW = parseInt(panelMatch[1]);
+      screenInfo.panelCountH = parseInt(panelMatch[2]);
+    }
+  }
+
+  // Resolution: "3840 x 1920"
+  if (totalResolution) {
+    const resMatch = totalResolution.match(/(\d+)\s*[x×]\s*(\d+)/);
+    if (resMatch) {
+      screenInfo.resolutionW = parseInt(resMatch[1]);
+      screenInfo.resolutionH = parseInt(resMatch[2]);
+    }
+  }
+
+  // Pixel pitch: "2.5mm" or "2.5"
+  if (pixelPitchRaw) {
+    const pitchMatch = pixelPitchRaw.match(/([\d.]+)/);
+    if (pitchMatch) screenInfo.pixelPitchMm = parseFloat(pitchMatch[1]);
+  }
+
+  // Brightness: "5000 nits" or "5000"
+  if (brightnessRaw) {
+    const brightMatch = brightnessRaw.match(/([\d,]+)/);
+    if (brightMatch) screenInfo.brightnessNits = parseInt(brightMatch[1].replace(/,/g, ""));
+  }
+
+  // Cabinet size: "500mm x 500mm" or "500 x 500"
+  if (cabinetSizeRaw) {
+    const cabMatch = cabinetSizeRaw.match(/([\d.]+)\s*(mm)?\s*[x×]\s*([\d.]+)\s*(mm)?/i);
+    if (cabMatch) {
+      screenInfo.cabinetWidthMm = parseFloat(cabMatch[1]);
+      screenInfo.cabinetHeightMm = parseFloat(cabMatch[3]);
+    }
+  }
+
+  // Cabinet weight: "8.5kg" or "8.5"
+  if (cabinetWeightRaw) {
+    const weightMatch = cabinetWeightRaw.match(/([\d.]+)/);
+    if (weightMatch) screenInfo.cabinetWeightKg = parseFloat(weightMatch[1]);
   }
 
   // ── Parse line items ───────────────────────────────────────────────────────
@@ -198,6 +290,7 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
     screenSize,
     panelConfig,
     totalResolution,
+    screenInfo,
     lineItems,
     totalUsd,
     xlsTotalUsd,
@@ -406,6 +499,7 @@ export function ImportWizard() {
         screenSize: q.screenSize,
         panelConfig: q.panelConfig,
         totalResolution: q.totalResolution,
+        ...q.screenInfo,
         lineItems: q.lineItems,
       })),
     };
