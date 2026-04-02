@@ -98,6 +98,7 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
   let colQty = 7;
   let colUnitPrice = 8;
   let colSubTotal = 10;
+  let colRemarks = -1;
 
   for (let r = 0; r < Math.min(raw.length, 25); r++) {
     const strs = rowAsStrings(r);
@@ -112,18 +113,22 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
     const priceIdx = strs.findIndex((s, i) => i > nameIdx && s.includes("unit price"));
     const totalIdx = strs.findIndex((s, i) => i > nameIdx && (s.includes("sub total") || s.includes("total price")));
     const unitIdx = strs.findIndex((s, i) => i > nameIdx && s === "unit");
-    const descIdx = strs.findIndex((s, i) => i > nameIdx && s === "description");
+    const descIdx = strs.findIndex((s, i) => i > nameIdx && (s === "description" || s === "item no" || s === "item no."));
+    const remarksIdx = strs.findIndex((s, i) => i > nameIdx && (s === "remarks" || s === "remark" || s === "notes" || s === "note"));
 
     if (qtyIdx > 0) colQty = qtyIdx;
     if (priceIdx > 0) colUnitPrice = priceIdx;
     if (totalIdx > 0) colSubTotal = totalIdx;
     if (unitIdx > 0) colUnit = unitIdx;
     if (descIdx > 0) colDesc = descIdx;
+    if (remarksIdx > 0) colRemarks = remarksIdx;
     break;
   }
 
   // ── Extract header metadata ────────────────────────────────────────────────
-  // Try fixed rows first (generated format), fall back to scanning
+  // Scan ALL columns in the metadata area (not just col 0) for label patterns.
+  // Also handle Leyard's multi-cell structured layout where values are in
+  // separate cells (e.g. "Actual Size:" in col 1, width in col 4, "m(W)x" in col 5, etc.)
   let supplierQuoteDate = "";
   let supplierQuoteRef = "";
   let name = sheetName;
@@ -136,18 +141,149 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
   let cabinetSizeRaw = "";
   let cabinetWeightRaw = "";
 
-  for (let r = 0; r < Math.min(raw.length, headerRowIdx > 0 ? headerRowIdx : 20); r++) {
-    const c0 = cell(r, 0);
-    const c0l = c0.toLowerCase();
-    if (c0l.startsWith("date:")) supplierQuoteDate = c0.replace(/^date:\s*/i, "").trim();
-    else if (c0l.startsWith("quote ")) { supplierQuoteRef = c0; name = c0.replace(/^quote\s+/i, "").trim() || sheetName; }
-    else if (c0l.startsWith("required screen size:")) screenSize = c0.replace(/^required screen size:\s*/i, "").trim();
-    else if (c0l.startsWith("required panel qty:")) panelConfig = c0.replace(/^required panel qty:\s*/i, "").trim();
-    else if (c0l.startsWith("total resolution:")) totalResolution = c0.replace(/^total resolution:\s*/i, "").trim();
-    else if (c0l.startsWith("pixel pitch:") || c0l.startsWith("pitch:")) pixelPitchRaw = c0.replace(/^(pixel\s+)?pitch:\s*/i, "").trim();
-    else if (c0l.startsWith("brightness:")) brightnessRaw = c0.replace(/^brightness:\s*/i, "").trim();
-    else if (c0l.startsWith("cabinet size:") || c0l.startsWith("module size:") || c0l.startsWith("panel size:")) cabinetSizeRaw = c0.replace(/^(cabinet|module|panel)\s+size:\s*/i, "").trim();
-    else if (c0l.startsWith("cabinet weight:") || c0l.startsWith("module weight:") || c0l.startsWith("panel weight:")) cabinetWeightRaw = c0.replace(/^(cabinet|module|panel)\s+weight:\s*/i, "").trim();
+  const metaEnd = Math.min(raw.length, headerRowIdx > 0 ? headerRowIdx : 20);
+
+  for (let r = 0; r < metaEnd; r++) {
+    const rowArr = raw[r] as unknown[];
+    if (!rowArr) continue;
+
+    // Build a concatenated string of all cells in this row for matching
+    // Also check each cell individually for label:value patterns
+    for (let c = 0; c < rowArr.length; c++) {
+      const cv = rowArr[c];
+      if (cv === null || cv === undefined || cv === "") continue;
+      const cs = String(cv).trim();
+      const cl = cs.toLowerCase();
+
+      // ── Date (may be a text label like "Date:" or just "Date:" header with value in next col) ──
+      if (cl === "date:" || cl === "date") {
+        // Value in the next populated cell — could be text or Excel serial number
+        for (let nc = c + 1; nc < rowArr.length; nc++) {
+          const nv = rowArr[nc];
+          if (nv === null || nv === undefined || nv === "") continue;
+          if (typeof nv === "number" && nv > 40000 && nv < 60000) {
+            // Excel serial number — convert to ISO date
+            const epoch = new Date(1899, 11, 30);
+            epoch.setDate(epoch.getDate() + nv);
+            supplierQuoteDate = epoch.toISOString().split("T")[0];
+          } else {
+            supplierQuoteDate = String(nv).trim();
+          }
+          break;
+        }
+      } else if (cl.startsWith("date:") && cl.length > 5) {
+        supplierQuoteDate = cs.replace(/^date:\s*/i, "").trim();
+      }
+
+      // ── Quote ref ──
+      if (cl.startsWith("quote ") && !cl.startsWith("quotation")) {
+        supplierQuoteRef = cs;
+        name = cs.replace(/^quote\s+/i, "").trim() || sheetName;
+      } else if (cl.startsWith("quotation ") && !supplierQuoteRef) {
+        supplierQuoteRef = cs;
+      }
+
+      // ── Project Name (Leyard format: "Project Name: ...") ──
+      if (cl.startsWith("project name:") || cl.startsWith("project name :")) {
+        const projName = cs.replace(/^project\s+name\s*:\s*/i, "").trim();
+        if (projName) name = projName;
+      }
+
+      // ── Screen size (text label format) ──
+      if (cl.startsWith("required screen size:")) screenSize = cs.replace(/^required screen size:\s*/i, "").trim();
+
+      // ── Required panel qty (text label format) ──
+      if (cl.startsWith("required panel qty:")) panelConfig = cs.replace(/^required panel qty:\s*/i, "").trim();
+
+      // ── Total resolution (text label format) ──
+      if (cl.startsWith("total resolution:")) totalResolution = cs.replace(/^total resolution:\s*/i, "").trim();
+
+      // ── Pixel pitch (may be in any column, e.g. "Pixel Pitch :2.5 mm") ──
+      if (cl.startsWith("pixel pitch") || cl.startsWith("pitch:")) {
+        const ppVal = cs.replace(/^(pixel\s+)?pitch\s*:\s*/i, "").trim();
+        if (ppVal) pixelPitchRaw = ppVal;
+      }
+
+      // ── Cabinet/module/panel size (e.g. "Cabinet Size : 600mm(W) x 337.5mm(H)*45mm(T)") ──
+      if (/^(cabinet|module|panel)\s+size\s*:/i.test(cs)) {
+        cabinetSizeRaw = cs.replace(/^(cabinet|module|panel)\s+size\s*:\s*/i, "").trim();
+      }
+
+      // ── Cabinet/module/panel weight ──
+      if (/^(cabinet|module|panel)\s+weight\s*:/i.test(cs)) {
+        cabinetWeightRaw = cs.replace(/^(cabinet|module|panel)\s+weight\s*:\s*/i, "").trim();
+      }
+
+      // ── Brightness ──
+      if (cl.startsWith("brightness:")) brightnessRaw = cs.replace(/^brightness:\s*/i, "").trim();
+
+      // ── Leyard multi-cell structured rows ──
+      // Pattern: label in one cell, numeric values in subsequent cells
+      // e.g. "Actual Size:" | ... | 4.8 | "m(W)x" | 3.0375 | "m(H)"
+      // e.g. "Screen resolution:" | ... | 1920 | "pixel(W)x" | 1215 | "pixel(H)"
+      // e.g. "Arrangement of cabinet:" | ... | 8 | "(W)x" | 9 | "(H)"
+
+      if (cl.includes("actual size") || cl.includes("actual display size")) {
+        // Look for numeric width and height values in the row
+        const vals: number[] = [];
+        for (let vc = c + 1; vc < rowArr.length; vc++) {
+          const vv = rowArr[vc];
+          if (typeof vv === "number" && vv > 0) vals.push(vv);
+          else if (typeof vv === "string") {
+            const n = parseFloat(vv);
+            if (!isNaN(n) && n > 0) vals.push(n);
+          }
+        }
+        if (vals.length >= 2) {
+          // First two positive numbers are width and height
+          const w = vals[0];
+          const h = vals[1];
+          // Check unit from adjacent cells — look for "m(W)" or "mm"
+          const rowText = rowArr.map((v) => String(v ?? "").toLowerCase()).join(" ");
+          const isMetres = rowText.includes("m(w)") || (rowText.includes("(w)") && !rowText.includes("mm(w)"));
+          screenSize = isMetres ? `${w}m x ${h}m` : `${w}mm x ${h}mm`;
+        }
+      }
+
+      if (cl.includes("screen resolution") || cl.includes("total resolution")) {
+        const vals: number[] = [];
+        for (let vc = c + 1; vc < rowArr.length; vc++) {
+          const vv = rowArr[vc];
+          if (typeof vv === "number" && vv > 0) vals.push(vv);
+        }
+        if (vals.length >= 2) {
+          totalResolution = `${vals[0]} x ${vals[1]}`;
+        }
+      }
+
+      if (cl.includes("arrangement") || cl.includes("panel layout") || cl.includes("cabinet layout")) {
+        const vals: number[] = [];
+        for (let vc = c + 1; vc < rowArr.length; vc++) {
+          const vv = rowArr[vc];
+          if (typeof vv === "number" && vv > 0 && Number.isInteger(vv)) vals.push(vv);
+        }
+        if (vals.length >= 2) {
+          panelConfig = `${vals[0]}W x ${vals[1]}H`;
+        }
+      }
+
+      // ── Leyard "Required Display Size:" (separate from "Actual Size") ──
+      if (cl.includes("required display size") || cl.includes("required screen size")) {
+        if (!screenSize) {
+          // Only use this if we haven't already found the actual size
+          const vals: number[] = [];
+          for (let vc = c + 1; vc < rowArr.length; vc++) {
+            const vv = rowArr[vc];
+            if (typeof vv === "number" && vv > 0) vals.push(vv);
+          }
+          if (vals.length >= 2) {
+            const rowText = rowArr.map((v) => String(v ?? "").toLowerCase()).join(" ");
+            const isMetres = rowText.includes("m(w)") || (rowText.includes("(w)") && !rowText.includes("mm(w)"));
+            screenSize = isMetres ? `${vals[0]}m x ${vals[1]}m` : `${vals[0]}mm x ${vals[1]}mm`;
+          }
+        }
+      }
+    }
   }
 
   // ── Parse structured screen info from raw text fields ────────────────────
@@ -203,12 +339,12 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
     if (brightMatch) screenInfo.brightnessNits = parseInt(brightMatch[1].replace(/,/g, ""));
   }
 
-  // Cabinet size: "500mm x 500mm" or "500 x 500"
+  // Cabinet size: "500mm x 500mm" or "500 x 500" or "600mm(W) x 337.5mm(H)*45mm(T)"
   if (cabinetSizeRaw) {
-    const cabMatch = cabinetSizeRaw.match(/([\d.]+)\s*(mm)?\s*[x×]\s*([\d.]+)\s*(mm)?/i);
+    const cabMatch = cabinetSizeRaw.match(/([\d.]+)\s*mm?\s*(?:\(W\))?\s*[x×*]\s*([\d.]+)\s*mm?\s*(?:\(H\))?/i);
     if (cabMatch) {
       screenInfo.cabinetWidthMm = parseFloat(cabMatch[1]);
-      screenInfo.cabinetHeightMm = parseFloat(cabMatch[3]);
+      screenInfo.cabinetHeightMm = parseFloat(cabMatch[2]);
     }
   }
 
@@ -219,8 +355,17 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
   }
 
   // ── Parse line items ───────────────────────────────────────────────────────
-  // Start 2 rows after header (header + possible sub-header), or row 17 if no header found
-  const dataStart = headerRowIdx >= 0 ? headerRowIdx + 2 : 17;
+  // Start after header — check if the row right after header has data (qty/price),
+  // if so start there; otherwise skip one sub-header row
+  let dataStart: number;
+  if (headerRowIdx >= 0) {
+    const nextRow = headerRowIdx + 1;
+    const nextQty = cellNum(nextRow, colQty);
+    const nextPrice = cellNum(nextRow, colUnitPrice);
+    dataStart = (nextQty > 0 || nextPrice > 0) ? nextRow : headerRowIdx + 2;
+  } else {
+    dataStart = 17;
+  }
   const lineItems: ParsedLineItem[] = [];
   let sortOrder = 0;
   let lastCategory = "";
@@ -281,6 +426,24 @@ function parseSheet(ws: XLSX.WorkSheet, sheetName: string): ParsedQuote {
     if (item.isFree) return sum;
     return sum + item.qty * item.usdUnitPrice;
   }, 0);
+
+  // ── Extract brightness from remarks column if not found in metadata ──
+  // Leyard quotes often put brightness info like "600-800 nits" in the remarks of the first LED panel item
+  if (!screenInfo.brightnessNits && colRemarks >= 0) {
+    for (let rowIdx = dataStart; rowIdx < raw.length && rowIdx < dataStart + 5; rowIdx++) {
+      const remark = cell(rowIdx, colRemarks);
+      const nitsMatch = remark.match(/(\d[\d,-]*)\s*nits/i);
+      if (nitsMatch) {
+        // Handle ranges like "600-800" — take the higher value
+        const parts = nitsMatch[1].split(/[-–]/);
+        const vals = parts.map((p) => parseInt(p.replace(/,/g, ""))).filter((n) => !isNaN(n));
+        if (vals.length > 0) {
+          screenInfo.brightnessNits = Math.max(...vals);
+          break;
+        }
+      }
+    }
+  }
 
   return {
     sheetName,
