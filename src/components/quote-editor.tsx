@@ -605,12 +605,10 @@ export function QuoteEditor({
         const luxInstallCost       = installTotals.totalCost;
         const luxInstallProfit     = installTotals.totalGrossProfit;
 
-        // Reseller-side installation (reseller marks up the raw install cost at their margin)
-        const resM = quote.defaultResellerMargin;
-        const resInstallSellExGst  = resM < 1 ? installTotals.totalCost / (1 - resM) : installTotals.totalCost;
-        const resInstallGst        = resInstallSellExGst * quote.gstRate;
-        const resInstallSellIncGst = resInstallSellExGst + resInstallGst;
-        const resInstallProfit     = resInstallSellExGst - installTotals.totalCost;
+        // Reseller-side installation (pass through at installation sell price)
+        const resInstallSellExGst  = installTotals.totalSellExGst;
+        const resInstallSellIncGst = installTotals.totalSellIncGst;
+        const resInstallProfit     = installTotals.totalGrossProfit;
 
         // LUX grand totals
         const luxGrandSellIncGst = totals.totalAudSellIncGst + (luxIncludesInstall ? luxInstallSellIncGst : 0);
