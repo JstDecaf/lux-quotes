@@ -118,6 +118,8 @@ sqlite.exec(ddl);
 const migrations = [
   `ALTER TABLE quotes ADD COLUMN default_reseller_margin REAL NOT NULL DEFAULT 0.30`,
   `ALTER TABLE quote_line_items ADD COLUMN reseller_margin_override REAL`,
+  `ALTER TABLE quotes ADD COLUMN product_id INTEGER REFERENCES products(id)`,
+  `ALTER TABLE quotes ADD COLUMN product_variant_id INTEGER REFERENCES product_variants(id)`,
 ];
 
 for (const migration of migrations) {

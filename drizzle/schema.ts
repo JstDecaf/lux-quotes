@@ -81,6 +81,9 @@ export const quotes = sqliteTable("quotes", {
   screenSize: text("screen_size"),
   panelConfig: text("panel_config"),
   totalResolution: text("total_resolution"),
+  // Product link (selected during import or set manually)
+  productId: integer("product_id").references(() => products.id),
+  productVariantId: integer("product_variant_id").references(() => productVariants.id),
   // Structured screen info (parsed from Leyard XLS or manually entered)
   screenWidthMm: real("screen_width_mm"),
   screenHeightMm: real("screen_height_mm"),

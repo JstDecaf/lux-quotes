@@ -52,6 +52,8 @@ interface QuoteInput {
   resolutionH?: number | null;
   brightnessNits?: number | null;
   cabinetWeightKg?: number | null;
+  productId?: number | null;
+  productVariantId?: number | null;
   lineItems: LineItemInput[];
 }
 
@@ -139,6 +141,8 @@ async function handleImport(body: ImportBody) {
       await db.update(schema.quotes)
         .set({
           name: quoteInput.name,
+          productId: quoteInput.productId ?? null,
+          productVariantId: quoteInput.productVariantId ?? null,
           supplierQuoteRef: quoteInput.supplierQuoteRef || null,
           supplierQuoteDate: quoteInput.supplierQuoteDate || null,
           screenSize: quoteInput.screenSize || null,
@@ -173,6 +177,8 @@ async function handleImport(body: ImportBody) {
         projectId: projectId!,
         quoteNumber,
         name: quoteInput.name,
+        productId: quoteInput.productId ?? null,
+        productVariantId: quoteInput.productVariantId ?? null,
         fxRate,
         defaultMargin,
         defaultResellerMargin,

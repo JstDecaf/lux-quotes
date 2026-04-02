@@ -45,6 +45,68 @@ interface ParsedQuote {
   xlsTotalUsd: number;
 }
 
+interface ProductVariantData {
+  id: number;
+  name: string;
+  pixelPitch: string | null;
+  brightness: string | null;
+  cabinetSize: string | null;
+  cabinetResolution: string | null;
+  weight: string | null;
+  pricePerSqmUsd: number | null;
+}
+
+interface ProductData {
+  id: number;
+  name: string;
+  brand: string | null;
+  category: string | null;
+  variants: ProductVariantData[];
+}
+
+interface QuoteProductSelection {
+  productId: number | null;
+  variantId: number | null;
+  parsedSpecs: Partial<ParsedScreenInfo>;
+}
+
+/** Convert variant text fields to numeric values for the quote */
+function parseVariantSpecs(variant: ProductVariantData): Partial<ParsedScreenInfo> {
+  const specs: Partial<ParsedScreenInfo> = {};
+
+  // Pixel pitch: "P2.5", "2.5mm", "P1.5", etc.
+  if (variant.pixelPitch) {
+    const m = variant.pixelPitch.match(/([\d.]+)/);
+    if (m) specs.pixelPitchMm = parseFloat(m[1]);
+  }
+
+  // Brightness: "600-800 nits", "5000 nits", "800", etc.
+  if (variant.brightness) {
+    const parts = variant.brightness.match(/(\d[\d,-]*)\s*(?:nits)?/i);
+    if (parts) {
+      const vals = parts[1].split(/[-–]/).map((p) => parseInt(p.replace(/,/g, ""))).filter((n) => !isNaN(n));
+      if (vals.length > 0) specs.brightnessNits = Math.max(...vals);
+    }
+  }
+
+  // Cabinet size: "600 x 337.5 x 45mm", "600mm(W) x 337.5mm(H)", etc.
+  if (variant.cabinetSize) {
+    const m = variant.cabinetSize.match(/([\d.]+)\s*mm?\s*(?:\(W\))?\s*[x×*]\s*([\d.]+)/i);
+    if (m) {
+      specs.cabinetWidthMm = parseFloat(m[1]);
+      specs.cabinetHeightMm = parseFloat(m[2]);
+    }
+  }
+
+  // Weight: "4.5 kg/cab", "8.5kg", "4.5 kg/cab (22.2 kg/m²)", etc.
+  if (variant.weight) {
+    const m = variant.weight.match(/([\d.]+)/);
+    if (m) specs.cabinetWeightKg = parseFloat(m[1]);
+  }
+
+  return specs;
+}
+
 interface Client {
   id: number;
   name: string;
@@ -550,6 +612,9 @@ export function ImportWizard() {
   const [defaultResellerMargin, setDefaultResellerMargin] = useState("30");
   const [validUntil, setValidUntil] = useState("");
   const [quoteNames, setQuoteNames] = useState<string[]>([]);
+  const [allProducts, setAllProducts] = useState<ProductData[]>([]);
+  const [productsLoaded, setProductsLoaded] = useState(false);
+  const [quoteProductSelections, setQuoteProductSelections] = useState<QuoteProductSelection[]>([]);
 
   // Step 4 state
   const [importing, setImporting] = useState(false);
@@ -567,6 +632,7 @@ export function ImportWizard() {
       }
       setParsedQuotes(quotes);
       setQuoteNames(quotes.map((q) => q.name));
+      setQuoteProductSelections(quotes.map(() => ({ productId: null, variantId: null, parsedSpecs: {} })));
     } catch {
       setParseError("Failed to parse file. Make sure it is a valid .xls or .xlsx file.");
     }
@@ -618,6 +684,40 @@ export function ImportWizard() {
     setExistingQuotes(data);
   }, []);
 
+  const loadProducts = useCallback(async () => {
+    if (productsLoaded) return;
+    const res = await fetch("/api/products");
+    const data = await res.json();
+    setAllProducts(data);
+    setProductsLoaded(true);
+  }, [productsLoaded]);
+
+  // ── Product/variant handlers ──
+
+  const handleProductChange = (quoteIndex: number, productId: number | null) => {
+    setQuoteProductSelections((prev) => {
+      const updated = [...prev];
+      updated[quoteIndex] = { productId, variantId: null, parsedSpecs: {} };
+      return updated;
+    });
+  };
+
+  const handleVariantChange = (quoteIndex: number, variantId: number | null) => {
+    setQuoteProductSelections((prev) => {
+      const updated = [...prev];
+      const sel = { ...updated[quoteIndex], variantId };
+      if (variantId) {
+        const product = allProducts.find((p) => p.id === sel.productId);
+        const variant = product?.variants.find((v) => v.id === variantId);
+        sel.parsedSpecs = variant ? parseVariantSpecs(variant) : {};
+      } else {
+        sel.parsedSpecs = {};
+      }
+      updated[quoteIndex] = sel;
+      return updated;
+    });
+  };
+
   // ── Step transitions ──
 
   const goToStep2 = () => {
@@ -626,6 +726,7 @@ export function ImportWizard() {
   };
 
   const goToStep3 = () => {
+    loadProducts();
     setStep(3);
   };
 
@@ -655,16 +756,34 @@ export function ImportWizard() {
       defaultMargin: parseFloat(defaultMargin) / 100,
       defaultResellerMargin: parseFloat(defaultResellerMargin) / 100,
       validUntil: validUntil || undefined,
-      quotes: parsedQuotes.map((q, i) => ({
-        name: quoteNames[i] ?? q.name,
-        supplierQuoteRef: q.supplierQuoteRef,
-        supplierQuoteDate: q.supplierQuoteDate,
-        screenSize: q.screenSize,
-        panelConfig: q.panelConfig,
-        totalResolution: q.totalResolution,
-        ...q.screenInfo,
-        lineItems: q.lineItems,
-      })),
+      quotes: parsedQuotes.map((q, i) => {
+        const sel = quoteProductSelections[i];
+        const variantSpecs = sel?.parsedSpecs ?? {};
+        return {
+          name: quoteNames[i] ?? q.name,
+          supplierQuoteRef: q.supplierQuoteRef,
+          supplierQuoteDate: q.supplierQuoteDate,
+          screenSize: q.screenSize,
+          panelConfig: q.panelConfig,
+          totalResolution: q.totalResolution,
+          productId: sel?.productId ?? null,
+          productVariantId: sel?.variantId ?? null,
+          // Screen layout always from XLS
+          screenWidthMm: q.screenInfo.screenWidthMm,
+          screenHeightMm: q.screenInfo.screenHeightMm,
+          panelCountW: q.screenInfo.panelCountW,
+          panelCountH: q.screenInfo.panelCountH,
+          resolutionW: q.screenInfo.resolutionW,
+          resolutionH: q.screenInfo.resolutionH,
+          // Product specs from variant, fallback to XLS
+          pixelPitchMm: variantSpecs.pixelPitchMm ?? q.screenInfo.pixelPitchMm,
+          brightnessNits: variantSpecs.brightnessNits ?? q.screenInfo.brightnessNits,
+          cabinetWidthMm: variantSpecs.cabinetWidthMm ?? q.screenInfo.cabinetWidthMm,
+          cabinetHeightMm: variantSpecs.cabinetHeightMm ?? q.screenInfo.cabinetHeightMm,
+          cabinetWeightKg: variantSpecs.cabinetWeightKg ?? q.screenInfo.cabinetWeightKg,
+          lineItems: q.lineItems,
+        };
+      }),
     };
 
     try {
@@ -1021,29 +1140,103 @@ export function ImportWizard() {
             </div>
           </div>
 
-          <div>
-            <p className="text-sm font-semibold text-gray-700 mb-3">Quote Names</p>
-            <div className="space-y-2">
-              {parsedQuotes.map((q, i) => (
-                <div key={i}>
+          <div className="space-y-4">
+            {parsedQuotes.map((q, i) => {
+              const sel = quoteProductSelections[i] ?? { productId: null, variantId: null, parsedSpecs: {} };
+              const selectedProduct = allProducts.find((p) => p.id === sel.productId);
+              const selectedVariant = selectedProduct?.variants.find((v) => v.id === sel.variantId);
+              const specs = sel.parsedSpecs;
+              const hasSpecs = Object.values(specs).some((v) => v != null);
+
+              return (
+                <div key={i} className="border rounded-lg p-4 space-y-3">
                   {parsedQuotes.length > 1 && (
-                    <label className="block text-xs text-gray-500 mb-1">
-                      Sheet: {q.sheetName}
-                    </label>
+                    <p className="text-xs text-gray-500 font-medium">Sheet: {q.sheetName}</p>
                   )}
-                  <input
-                    type="text"
-                    className="w-full border rounded-md px-3 py-2 text-sm"
-                    value={quoteNames[i] ?? q.name}
-                    onChange={(e) => {
-                      const updated = [...quoteNames];
-                      updated[i] = e.target.value;
-                      setQuoteNames(updated);
-                    }}
-                  />
+
+                  {/* Quote name */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Quote Name</label>
+                    <input
+                      type="text"
+                      className="w-full border rounded-md px-3 py-2 text-sm"
+                      value={quoteNames[i] ?? q.name}
+                      onChange={(e) => {
+                        const updated = [...quoteNames];
+                        updated[i] = e.target.value;
+                        setQuoteNames(updated);
+                      }}
+                    />
+                  </div>
+
+                  {/* Product / Variant selection */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Product</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <select
+                        className="border rounded-md px-3 py-2 text-sm"
+                        value={sel.productId ?? ""}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          handleProductChange(i, v ? parseInt(v) : null);
+                        }}
+                      >
+                        <option value="">No product selected</option>
+                        {allProducts.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                            {p.brand ? ` (${p.brand})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        className="border rounded-md px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                        value={sel.variantId ?? ""}
+                        disabled={!sel.productId || !selectedProduct?.variants.length}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          handleVariantChange(i, v ? parseInt(v) : null);
+                        }}
+                      >
+                        <option value="">
+                          {!sel.productId
+                            ? "Select product first"
+                            : selectedProduct?.variants.length
+                            ? "Select variant…"
+                            : "No variants available"}
+                        </option>
+                        {selectedProduct?.variants.map((v) => (
+                          <option key={v.id} value={v.id}>
+                            {v.name}
+                            {v.pixelPitch ? ` — ${v.pixelPitch}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Specs preview when variant selected */}
+                  {selectedVariant && hasSpecs && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-md px-3 py-2">
+                      <p className="text-xs font-medium text-blue-800 mb-1">
+                        Specs from {selectedProduct?.name} / {selectedVariant.name}
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-0.5 text-xs text-blue-700">
+                        {specs.pixelPitchMm != null && <span>Pitch: {specs.pixelPitchMm}mm</span>}
+                        {specs.brightnessNits != null && <span>Brightness: {specs.brightnessNits} nits</span>}
+                        {specs.cabinetWidthMm != null && specs.cabinetHeightMm != null && (
+                          <span>Cabinet: {specs.cabinetWidthMm} x {specs.cabinetHeightMm}mm</span>
+                        )}
+                        {specs.cabinetWeightKg != null && <span>Weight: {specs.cabinetWeightKg} kg</span>}
+                      </div>
+                      <p className="text-[10px] text-blue-500 mt-1">
+                        Screen size &amp; layout from XLS are preserved
+                      </p>
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -1114,12 +1307,20 @@ export function ImportWizard() {
 
             {parsedQuotes.map((q, i) => {
               const mismatch = q.xlsTotalUsd > 0 && Math.abs(q.totalUsd - q.xlsTotalUsd) > 0.5;
+              const sel = quoteProductSelections[i];
+              const selProduct = sel?.productId ? allProducts.find((p) => p.id === sel.productId) : null;
+              const selVariant = selProduct?.variants.find((v) => v.id === sel?.variantId);
               return (
                 <div key={i}>
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-gray-900">{quoteNames[i] ?? q.name}</p>
-                      <p className="text-xs text-gray-500">{q.lineItems.length} line items</p>
+                      <p className="text-xs text-gray-500">
+                        {q.lineItems.length} line items
+                        {selVariant && (
+                          <> · {selProduct?.name} / {selVariant.name}</>
+                        )}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-gray-900">{fmtUsd(q.totalUsd)} USD</p>
