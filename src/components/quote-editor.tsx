@@ -124,7 +124,9 @@ export function QuoteEditor({
   const [items, setItems] = useState<LineItem[]>(initialItems);
   const [installItems, setInstallItems] = useState<InstallationItem[]>(initialInstallationItems);
   const [saving, setSaving] = useState(false);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveItemsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveQuoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveInstallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const settings: QuoteSettings = {
     fxRate: quote.fxRate,
@@ -162,8 +164,8 @@ export function QuoteEditor({
 
   const saveItems = useCallback(
     (updatedItems: LineItem[]) => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(async () => {
+      if (saveItemsTimerRef.current) clearTimeout(saveItemsTimerRef.current);
+      saveItemsTimerRef.current = setTimeout(async () => {
         setSaving(true);
         try {
           await fetch(`/api/quotes/${quote.id}/line-items`, {
@@ -181,8 +183,8 @@ export function QuoteEditor({
 
   const saveQuoteSettings = useCallback(
     (updates: Partial<QuoteData>) => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(async () => {
+      if (saveQuoteTimerRef.current) clearTimeout(saveQuoteTimerRef.current);
+      saveQuoteTimerRef.current = setTimeout(async () => {
         setSaving(true);
         try {
           await fetch(`/api/quotes/${quote.id}`, {
@@ -200,7 +202,9 @@ export function QuoteEditor({
 
   useEffect(() => {
     return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      if (saveItemsTimerRef.current) clearTimeout(saveItemsTimerRef.current);
+      if (saveQuoteTimerRef.current) clearTimeout(saveQuoteTimerRef.current);
+      if (saveInstallTimerRef.current) clearTimeout(saveInstallTimerRef.current);
     };
   }, []);
 
@@ -308,8 +312,8 @@ export function QuoteEditor({
 
   const saveInstallItems = useCallback(
     (updatedItems: InstallationItem[]) => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(async () => {
+      if (saveInstallTimerRef.current) clearTimeout(saveInstallTimerRef.current);
+      saveInstallTimerRef.current = setTimeout(async () => {
         setSaving(true);
         try {
           await fetch(`/api/quotes/${quote.id}/installation-items`, {
