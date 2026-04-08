@@ -271,7 +271,7 @@ export async function GET(
 
     // Column sub-headers — show LUX sell columns only when LUX charges for installation
     const instSubHdr = ws.addRow([
-      "Item", "", "Type", "",
+      "Item", "Hours", "Type", "Rate / Cost",
       ...(luxIncludesInstall ? ["ex GST", "inc GST"] : ["", ""]),
       "Res ex GST", "Res inc GST", "Res Markup $",
     ]);
@@ -280,8 +280,11 @@ export async function GET(
       if (luxIncludesInstall && [5, 6].includes(col)) {
         style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: "right", border: true, borderColor: "8B5A14" });
       }
-      if ([1, 3].includes(col)) {
+      if ([1].includes(col)) {
         style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: "left", border: true, borderColor: "8B5A14" });
+      }
+      if ([2, 3, 4].includes(col)) {
+        style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: "right", border: true, borderColor: "8B5A14" });
       }
       if ([7, 8, 9].includes(col)) {
         style(cell, { bg: RED, fg: WHITE, bold: true, size: 9, align: "right", border: true, borderColor: RED });
@@ -299,6 +302,10 @@ export async function GET(
       instIsEven = !instIsEven;
 
       const typeLabel = item.type === "hourly" ? "Hourly" : "Fixed";
+      const hours = item.type === "hourly" ? (item.hours ?? 0) : "";
+      const rateOrCost = item.type === "hourly"
+        ? (item.hourlyRate ?? installSettings.defaultHourlyRate)
+        : (item.fixedCost ?? 0);
 
       // Reseller installation: mark up the LUX sell price by the reseller markup
       const resellerMarkup = quote.defaultResellerMargin;
@@ -307,7 +314,7 @@ export async function GET(
       const resInstProfit = resInstExGst - calc.sellExGst;
 
       const instRow = ws.addRow([
-        item.itemName, "", typeLabel, "",
+        item.itemName, hours, typeLabel, rateOrCost,
         luxIncludesInstall ? (item.isFree ? "" : calc.sellExGst) : "",
         luxIncludesInstall ? (item.isFree ? "" : calc.sellIncGst) : "",
         item.isFree ? "" : resInstExGst,
@@ -319,6 +326,12 @@ export async function GET(
         style(cell, { bg, border: true, borderColor: "DDDDDD" });
         cell.font = { size: 9, color: { argb: "FF" + NAVY } };
         if (col === 1) cell.alignment = { horizontal: "left", vertical: "middle" };
+        if (col === 2) { cell.alignment = { horizontal: "right", vertical: "middle" }; }
+        if (col === 3) cell.alignment = { horizontal: "center", vertical: "middle" };
+        if (col === 4 && typeof cell.value === "number") {
+          cell.alignment = { horizontal: "right", vertical: "middle" };
+          cell.numFmt = '"$"#,##0.00';
+        }
         if (col >= 5 && typeof cell.value === "number") {
           cell.alignment = { horizontal: "right", vertical: "middle" };
           cell.numFmt = '"$"#,##0.00';
