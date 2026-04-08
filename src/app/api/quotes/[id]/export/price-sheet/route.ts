@@ -290,7 +290,11 @@ export async function GET(
   dataRowIndex++;
 
   // ── Installation & Services section (only if items exist) ────────────────────
-  if (installItems.length > 0) {
+  const qb = quote.installationQuotedBy; // "lux" | "reseller" | "both"
+  const hasInstall = installItems.length > 0;
+  const resIncludesInstall = hasInstall && (qb === "reseller" || qb === "both");
+
+  if (hasInstall) {
     // Spacer
     ws.addRow([]);
     dataRowIndex++;
@@ -302,12 +306,19 @@ export async function GET(
     style(ws.getCell(`A${dataRowIndex}`), { bg: "7B4F00", fg: WHITE, bold: true, size: 11 });
     dataRowIndex++;
 
-    // Column sub-headers (reuse cols A, C, D, E, G, H, I, J)
-    const instSubHdr = ws.addRow(["Item", "", "Type", "Hours/Qty", "Rate / Cost", "", "AUD Cost", "Sell ex-GST", "Sell inc-GST", "Profit"]);
+    // Column sub-headers — include reseller columns when reseller quotes installation
+    const subHdrData = [
+      "Item", "", "Type", "Hours/Qty", "Rate / Cost", "",
+      "AUD Cost", "Sell ex-GST", "Sell inc-GST", "Profit",
+      ...(resIncludesInstall ? ["Res ex-GST", "Res inc-GST", "Res Markup $"] : []),
+    ];
+    const instSubHdr = ws.addRow(subHdrData);
     instSubHdr.height = 18;
+    const activeCols = resIncludesInstall ? [1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13] : [1, 3, 4, 5, 7, 8, 9, 10];
     instSubHdr.eachCell((cell: any, col: number) => {
-      if ([1, 3, 4, 5, 7, 8, 9, 10].includes(col)) {
-        style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: col >= 4 ? "right" : "left", border: true, borderColor: "8B5A14" });
+      if (activeCols.includes(col)) {
+        const isSep = col >= 11;
+        style(cell, { bg: isSep ? RED : "A0651A", fg: WHITE, bold: true, size: 9, align: col >= 4 ? "right" : "left", border: true, borderColor: isSep ? RED : "8B5A14" });
       }
     });
     dataRowIndex++;
@@ -327,13 +338,26 @@ export async function GET(
         ? (item.hourlyRate ?? installSettings.defaultHourlyRate)
         : item.fixedCost ?? 0;
 
-      const instRow = ws.addRow([
+      // Reseller installation: mark up the LUX sell price by the reseller markup
+      const resellerMarkup = quote.defaultResellerMargin;
+      const resInstExGst = calc.sellExGst * (1 + resellerMarkup);
+      const resInstIncGst = resInstExGst * (1 + quote.gstRate);
+      const resInstProfit = resInstExGst - calc.sellExGst;
+
+      const rowData = [
         item.itemName, "", typeLabel, hrsOrQty, rateOrCost, "",
         item.isFree ? "" : calc.cost,
         item.isFree ? "" : calc.sellExGst,
         item.isFree ? "" : calc.sellIncGst,
         item.isFree ? "" : calc.grossProfit,
-      ]);
+        ...(resIncludesInstall ? [
+          item.isFree ? "" : resInstExGst,
+          item.isFree ? "" : resInstIncGst,
+          item.isFree ? "" : resInstProfit,
+        ] : []),
+      ];
+
+      const instRow = ws.addRow(rowData);
       instRow.height = 18;
       instRow.eachCell((cell: any, col: number) => {
         style(cell, { bg, border: true, borderColor: "DDDDDD" });
@@ -345,16 +369,32 @@ export async function GET(
           cell.numFmt = '"$"#,##0.00';
         }
       });
+      // Reseller columns: warm tint + red left border
+      if (resIncludesInstall) {
+        const resellerBg = instIsEven ? "FFFFF0F0" : "FFFFFFFF";
+        [11, 12, 13].forEach((col) => {
+          const c = instRow.getCell(col);
+          c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: resellerBg } };
+          c.font = { size: 9, color: { argb: "FF" + NAVY } };
+        });
+        const sepCell = instRow.getCell(11);
+        sepCell.border = { ...sepCell.border, left: { style: "medium", color: { argb: "FF" + RED } } };
+      }
       dataRowIndex++;
     }
 
-    // Installation totals row
+    // Installation totals row — compute reseller totals
+    const resTotalInstExGst = installTotals.totalSellExGst * (1 + quote.defaultResellerMargin);
+    const resTotalInstIncGst = resTotalInstExGst * (1 + quote.gstRate);
+    const resTotalInstProfit = resTotalInstExGst - installTotals.totalSellExGst;
+
     const instTotRow = ws.addRow([
       "INSTALLATION SUBTOTAL", "", "", "", "", "",
       installTotals.totalCost,
       installTotals.totalSellExGst,
       installTotals.totalSellIncGst,
       installTotals.totalGrossProfit,
+      ...(resIncludesInstall ? [resTotalInstExGst, resTotalInstIncGst, resTotalInstProfit] : []),
     ]);
     instTotRow.height = 22;
     instTotRow.eachCell((cell: any, col: number) => {
@@ -369,12 +409,19 @@ export async function GET(
     dataRowIndex++;
 
     // Grand total row
+    const grandResExGst = resIncludesInstall ? totals.totalResellerSellExGst + resTotalInstExGst : totals.totalResellerSellExGst;
+    const grandResIncGst = resIncludesInstall ? totals.totalResellerSellIncGst + resTotalInstIncGst : totals.totalResellerSellIncGst;
+    const grandResProfit = resIncludesInstall ? totals.totalResellerProfit + resTotalInstProfit : totals.totalResellerProfit;
+
     const grandRow = ws.addRow([
       "GRAND TOTAL (inc GST)", "", "", "", "", "",
       grandTotal.totalAudCost,
       grandTotal.totalAudSellExGst,
       grandTotal.totalAudSellIncGst,
       grandTotal.totalGrossProfit,
+      grandResExGst,
+      grandResIncGst,
+      grandResProfit,
     ]);
     grandRow.height = 24;
     grandRow.eachCell((cell: any, col: number) => {
