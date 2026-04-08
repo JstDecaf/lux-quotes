@@ -256,6 +256,20 @@ export async function GET(
   dataRowIndex++;
 
   // ── Installation & Services section (only if items exist and reseller quotes it) ──
+  //
+  // Pricing logic depends on who quotes installation:
+  //   "reseller" only: LUX is NOT involved. Base cost = hours × rate.
+  //                    Res sell = base cost × (1 + reseller markup).
+  //                    LUX installation margin is irrelevant.
+  //   "both":          LUX charges reseller: LUX sell = base cost × (1 + install markup).
+  //                    Res sell = LUX sell × (1 + reseller markup).
+  //
+  // Column layout:
+  //   A: Item | B: Hours | C: Type | D: Rate
+  //   E: Subtotal (base cost) — or LUX ex GST when "both"
+  //   F: LUX inc GST (only when "both") — or empty
+  //   G: Res ex GST | H: Res inc GST | I: Res Markup $
+
   if (resIncludesInstall) {
     // Spacer
     ws.addRow([]);
@@ -269,21 +283,24 @@ export async function GET(
     style(ws.getCell(`A${instHdrRowNum}`), { bg: "7B4F00", fg: WHITE, bold: true, size: 11 });
     dataRowIndex++;
 
-    // Column sub-headers — show LUX sell columns only when LUX charges for installation
+    const resellerMarkup = quote.defaultResellerMargin;
+
+    // Column sub-headers
     const instSubHdr = ws.addRow([
       "Item", "Hours", "Type", "Rate / Cost",
-      ...(luxIncludesInstall ? ["ex GST", "inc GST"] : ["", ""]),
+      luxIncludesInstall ? "LUX ex GST" : "Subtotal",
+      luxIncludesInstall ? "LUX inc GST" : "",
       "Res ex GST", "Res inc GST", "Res Markup $",
     ]);
     instSubHdr.height = 18;
     instSubHdr.eachCell((cell: any, col: number) => {
-      if (luxIncludesInstall && [5, 6].includes(col)) {
-        style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: "right", border: true, borderColor: "8B5A14" });
-      }
       if ([1].includes(col)) {
         style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: "left", border: true, borderColor: "8B5A14" });
       }
-      if ([2, 3, 4].includes(col)) {
+      if ([2, 3, 4, 5].includes(col)) {
+        style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: "right", border: true, borderColor: "8B5A14" });
+      }
+      if (col === 6 && luxIncludesInstall) {
         style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: "right", border: true, borderColor: "8B5A14" });
       }
       if ([7, 8, 9].includes(col)) {
@@ -291,6 +308,14 @@ export async function GET(
       }
     });
     dataRowIndex++;
+
+    // Accumulators for totals
+    let totalBaseCost = 0;
+    let totalLuxExGst = 0;
+    let totalLuxIncGst = 0;
+    let totalResExGst = 0;
+    let totalResIncGst = 0;
+    let totalResProfit = 0;
 
     let instIsEven = false;
     for (const item of installItems as any[]) {
@@ -303,36 +328,52 @@ export async function GET(
 
       const typeLabel = item.type === "hourly" ? "Hourly" : "Fixed";
       const hours = item.type === "hourly" ? (item.hours ?? 0) : "";
-      const rateOrCost = item.type === "hourly"
+      const rate = item.type === "hourly"
         ? (item.hourlyRate ?? installSettings.defaultHourlyRate)
         : (item.fixedCost ?? 0);
+      const baseCost = calc.cost; // hours × rate or fixed cost
 
-      // Reseller installation: mark up the LUX sell price by the reseller markup
-      const resellerMarkup = quote.defaultResellerMargin;
-      const resInstExGst = calc.sellExGst * (1 + resellerMarkup);
-      const resInstIncGst = resInstExGst * (1 + quote.gstRate);
-      const resInstProfit = resInstExGst - calc.sellExGst;
+      // Reseller pricing depends on whether LUX is also involved
+      let resExGst: number;
+      let resMarkupBase: number; // what the markup is calculated against
+      if (luxIncludesInstall) {
+        // "both": reseller marks up LUX's sell price
+        resExGst = calc.sellExGst * (1 + resellerMarkup);
+        resMarkupBase = calc.sellExGst;
+      } else {
+        // "reseller" only: reseller marks up the base cost directly
+        resExGst = baseCost * (1 + resellerMarkup);
+        resMarkupBase = baseCost;
+      }
+      const resIncGst = resExGst * (1 + quote.gstRate);
+      const resProfit = resExGst - resMarkupBase;
+
+      if (!item.isFree) {
+        totalBaseCost += baseCost;
+        totalLuxExGst += calc.sellExGst;
+        totalLuxIncGst += calc.sellIncGst;
+        totalResExGst += resExGst;
+        totalResIncGst += resIncGst;
+        totalResProfit += resProfit;
+      }
 
       const instRow = ws.addRow([
-        item.itemName, hours, typeLabel, rateOrCost,
-        luxIncludesInstall ? (item.isFree ? "" : calc.sellExGst) : "",
-        luxIncludesInstall ? (item.isFree ? "" : calc.sellIncGst) : "",
-        item.isFree ? "" : resInstExGst,
-        item.isFree ? "" : resInstIncGst,
-        item.isFree ? "" : resInstProfit,
+        item.itemName, hours, typeLabel,
+        item.isFree ? "INCLUDED" : rate,
+        item.isFree ? "" : (luxIncludesInstall ? calc.sellExGst : baseCost),
+        item.isFree ? "" : (luxIncludesInstall ? calc.sellIncGst : ""),
+        item.isFree ? "" : resExGst,
+        item.isFree ? "" : resIncGst,
+        item.isFree ? "" : resProfit,
       ]);
       instRow.height = 18;
       instRow.eachCell((cell: any, col: number) => {
         style(cell, { bg, border: true, borderColor: "DDDDDD" });
         cell.font = { size: 9, color: { argb: "FF" + NAVY } };
         if (col === 1) cell.alignment = { horizontal: "left", vertical: "middle" };
-        if (col === 2) { cell.alignment = { horizontal: "right", vertical: "middle" }; }
+        if (col === 2) cell.alignment = { horizontal: "right", vertical: "middle" };
         if (col === 3) cell.alignment = { horizontal: "center", vertical: "middle" };
-        if (col === 4 && typeof cell.value === "number") {
-          cell.alignment = { horizontal: "right", vertical: "middle" };
-          cell.numFmt = '"$"#,##0.00';
-        }
-        if (col >= 5 && typeof cell.value === "number") {
+        if (col >= 4 && typeof cell.value === "number") {
           cell.alignment = { horizontal: "right", vertical: "middle" };
           cell.numFmt = '"$"#,##0.00';
         }
@@ -349,18 +390,14 @@ export async function GET(
       dataRowIndex++;
     }
 
-    // Installation totals row
-    const resTotalInstExGst = installTotals.totalSellExGst * (1 + quote.defaultResellerMargin);
-    const resTotalInstIncGst = resTotalInstExGst * (1 + quote.gstRate);
-    const resTotalInstProfit = resTotalInstExGst - installTotals.totalSellExGst;
-
+    // Installation subtotal row
     const instTotRow = ws.addRow([
       "INSTALLATION SUBTOTAL", "", "", "",
-      luxIncludesInstall ? installTotals.totalSellExGst : "",
-      luxIncludesInstall ? installTotals.totalSellIncGst : "",
-      resTotalInstExGst,
-      resTotalInstIncGst,
-      resTotalInstProfit,
+      luxIncludesInstall ? totalLuxExGst : totalBaseCost,
+      luxIncludesInstall ? totalLuxIncGst : "",
+      totalResExGst,
+      totalResIncGst,
+      totalResProfit,
     ]);
     instTotRow.height = 22;
     instTotRow.eachCell((cell: any, col: number) => {
@@ -374,12 +411,12 @@ export async function GET(
     merge(`A${dataRowIndex}`, `D${dataRowIndex}`);
     dataRowIndex++;
 
-    // Grand total row — only include installation in LUX totals when LUX charges for it
-    const grandLuxExGst = totals.totalAudSellExGst + (luxIncludesInstall ? installTotals.totalSellExGst : 0);
-    const grandLuxIncGst = totals.totalAudSellIncGst + (luxIncludesInstall ? installTotals.totalSellIncGst : 0);
-    const grandResExGst = totals.totalResellerSellExGst + resTotalInstExGst;
-    const grandResIncGst = totals.totalResellerSellIncGst + resTotalInstIncGst;
-    const grandResProfit = totals.totalResellerProfit + resTotalInstProfit;
+    // Grand total row
+    const grandLuxExGst = totals.totalAudSellExGst + (luxIncludesInstall ? totalLuxExGst : 0);
+    const grandLuxIncGst = totals.totalAudSellIncGst + (luxIncludesInstall ? totalLuxIncGst : 0);
+    const grandResExGst = totals.totalResellerSellExGst + totalResExGst;
+    const grandResIncGst = totals.totalResellerSellIncGst + totalResIncGst;
+    const grandResProfit = totals.totalResellerProfit + totalResProfit;
 
     const grandRow = ws.addRow([
       "GRAND TOTAL", "", "", "",
