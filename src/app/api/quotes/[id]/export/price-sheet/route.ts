@@ -337,12 +337,13 @@ export async function GET(
       let resExGst: number;
       let resMarkupBase: number; // what the markup is calculated against
       if (luxIncludesInstall) {
-        // "both": reseller marks up LUX's sell price
+        // "both": reseller marks up LUX's sell price (which includes LUX install markup)
         resExGst = calc.sellExGst * (1 + resellerMarkup);
         resMarkupBase = calc.sellExGst;
       } else {
-        // "reseller" only: reseller marks up the base cost directly
-        resExGst = baseCost * (1 + resellerMarkup);
+        // "reseller" only: use the installation's own markup (already in calc.sellExGst)
+        // This matches what the app shows — installation markup applied to base cost
+        resExGst = calc.sellExGst;
         resMarkupBase = baseCost;
       }
       const resIncGst = resExGst * (1 + quote.gstRate);
