@@ -70,6 +70,7 @@ export async function GET(
 
   const qb = quote.installationQuotedBy; // "lux" | "reseller" | "both"
   const hasInstall = installItems.length > 0;
+  const luxIncludesInstall = hasInstall && (qb === "lux" || qb === "both");
   const resIncludesInstall = hasInstall && (qb === "reseller" || qb === "both");
 
   // ── Build workbook with ExcelJS ─────────────────────────────────────────────
@@ -268,16 +269,19 @@ export async function GET(
     style(ws.getCell(`A${instHdrRowNum}`), { bg: "7B4F00", fg: WHITE, bold: true, size: 11 });
     dataRowIndex++;
 
-    // Column sub-headers
+    // Column sub-headers — show LUX sell columns only when LUX charges for installation
     const instSubHdr = ws.addRow([
       "Item", "", "Type", "",
-      "ex GST", "inc GST",
+      ...(luxIncludesInstall ? ["ex GST", "inc GST"] : ["", ""]),
       "Res ex GST", "Res inc GST", "Res Markup $",
     ]);
     instSubHdr.height = 18;
     instSubHdr.eachCell((cell: any, col: number) => {
-      if ([1, 3, 5, 6].includes(col)) {
-        style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: col >= 5 ? "right" : "left", border: true, borderColor: "8B5A14" });
+      if (luxIncludesInstall && [5, 6].includes(col)) {
+        style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: "right", border: true, borderColor: "8B5A14" });
+      }
+      if ([1, 3].includes(col)) {
+        style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: "left", border: true, borderColor: "8B5A14" });
       }
       if ([7, 8, 9].includes(col)) {
         style(cell, { bg: RED, fg: WHITE, bold: true, size: 9, align: "right", border: true, borderColor: RED });
@@ -304,8 +308,8 @@ export async function GET(
 
       const instRow = ws.addRow([
         item.itemName, "", typeLabel, "",
-        item.isFree ? "" : calc.sellExGst,
-        item.isFree ? "" : calc.sellIncGst,
+        luxIncludesInstall ? (item.isFree ? "" : calc.sellExGst) : "",
+        luxIncludesInstall ? (item.isFree ? "" : calc.sellIncGst) : "",
         item.isFree ? "" : resInstExGst,
         item.isFree ? "" : resInstIncGst,
         item.isFree ? "" : resInstProfit,
@@ -339,8 +343,8 @@ export async function GET(
 
     const instTotRow = ws.addRow([
       "INSTALLATION SUBTOTAL", "", "", "",
-      installTotals.totalSellExGst,
-      installTotals.totalSellIncGst,
+      luxIncludesInstall ? installTotals.totalSellExGst : "",
+      luxIncludesInstall ? installTotals.totalSellIncGst : "",
       resTotalInstExGst,
       resTotalInstIncGst,
       resTotalInstProfit,
@@ -357,9 +361,9 @@ export async function GET(
     merge(`A${dataRowIndex}`, `D${dataRowIndex}`);
     dataRowIndex++;
 
-    // Grand total row
-    const grandLuxExGst = totals.totalAudSellExGst + installTotals.totalSellExGst;
-    const grandLuxIncGst = totals.totalAudSellIncGst + installTotals.totalSellIncGst;
+    // Grand total row — only include installation in LUX totals when LUX charges for it
+    const grandLuxExGst = totals.totalAudSellExGst + (luxIncludesInstall ? installTotals.totalSellExGst : 0);
+    const grandLuxIncGst = totals.totalAudSellIncGst + (luxIncludesInstall ? installTotals.totalSellIncGst : 0);
     const grandResExGst = totals.totalResellerSellExGst + resTotalInstExGst;
     const grandResIncGst = totals.totalResellerSellIncGst + resTotalInstIncGst;
     const grandResProfit = totals.totalResellerProfit + resTotalInstProfit;
@@ -397,7 +401,8 @@ export async function GET(
   style(ws.getCell(`A${pmtStart}`), { bg: RED, fg: WHITE, bold: true, size: 11 });
 
   // Payment schedule based on LUX sell price (what the reseller pays LUX)
-  const luxIncGst = totals.totalAudSellIncGst + (resIncludesInstall ? installTotals.totalSellIncGst : 0);
+  // Only include installation when LUX charges for it (lux or both), not reseller-only
+  const luxIncGst = totals.totalAudSellIncGst + (luxIncludesInstall ? installTotals.totalSellIncGst : 0);
   const pmtRows = [
     ["Deposit", `${(quote.depositPct * 100).toFixed(0)}%`, `$${aud(luxIncGst * quote.depositPct)}`],
     ["Progress Payment", `${(quote.secondTranchePct * 100).toFixed(0)}%`, `$${aud(luxIncGst * quote.secondTranchePct)}`],
