@@ -15,9 +15,6 @@ const DARK_GRAY = "FF444444";
 function aud(n: number) {
   return n.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function pct(n: number) {
-  return `${(n * 100).toFixed(1)}%`;
-}
 
 export async function GET(
   _request: Request,
@@ -70,12 +67,10 @@ export async function GET(
     installItems.map((i: any) => ({ type: i.type, hours: i.hours ?? 0, hourlyRate: i.hourlyRate, fixedCost: i.fixedCost ?? 0, marginOverride: i.marginOverride, isFree: i.isFree })),
     installSettings
   );
-  const grandTotal = {
-    totalAudCost: totals.totalAudCost + installTotals.totalCost,
-    totalAudSellExGst: totals.totalAudSellExGst + installTotals.totalSellExGst,
-    totalAudSellIncGst: totals.totalAudSellIncGst + installTotals.totalSellIncGst,
-    totalGrossProfit: totals.totalGrossProfit + installTotals.totalGrossProfit,
-  };
+
+  const qb = quote.installationQuotedBy; // "lux" | "reseller" | "both"
+  const hasInstall = installItems.length > 0;
+  const resIncludesInstall = hasInstall && (qb === "reseller" || qb === "both");
 
   // ── Build workbook with ExcelJS ─────────────────────────────────────────────
   const ExcelJS = require("exceljs");
@@ -87,21 +82,17 @@ export async function GET(
     pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1 },
   });
 
-  // ── Column widths ────────────────────────────────────────────────────────────
+  // Columns: Item, Description, Unit, Qty | LUX ex GST, LUX inc GST | Res ex GST, Res inc GST, Res Markup $
   ws.columns = [
-    { key: "A", width: 36 },  // Item
-    { key: "B", width: 26 },  // Description
-    { key: "C", width: 7  },  // Unit
-    { key: "D", width: 7  },  // Qty
-    { key: "E", width: 14 },  // USD Unit
-    { key: "F", width: 14 },  // USD Total
-    { key: "G", width: 15 },  // AUD Cost
-    { key: "H", width: 18 },  // LUX Ex GST
-    { key: "I", width: 18 },  // LUX Inc GST
-    { key: "J", width: 15 },  // LUX Margin $
-    { key: "K", width: 20 },  // Reseller Ex GST
-    { key: "L", width: 20 },  // Reseller Inc GST
-    { key: "M", width: 16 },  // Reseller Margin $
+    { key: "A", width: 38 },  // Item
+    { key: "B", width: 28 },  // Description
+    { key: "C", width: 8  },  // Unit
+    { key: "D", width: 8  },  // Qty
+    { key: "E", width: 20 },  // LUX Ex GST
+    { key: "F", width: 20 },  // LUX Inc GST
+    { key: "G", width: 20 },  // Reseller Ex GST
+    { key: "H", width: 20 },  // Reseller Inc GST
+    { key: "I", width: 18 },  // Reseller Markup $
   ];
 
   // Helper: style a cell
@@ -131,7 +122,7 @@ export async function GET(
 
   // ── Row 1: Big banner ────────────────────────────────────────────────────────
   ws.addRow(["LUX LED Screen Solutions — Reseller Price Sheet"]);
-  merge("A1", "M1");
+  merge("A1", "I1");
   const r1 = ws.getRow(1);
   r1.height = 36;
   style(ws.getCell("A1"), { bg: NAVY, fg: WHITE, bold: true, size: 16, align: "left" });
@@ -143,28 +134,26 @@ export async function GET(
 
   // ── Rows 3–5: Quote metadata ─────────────────────────────────────────────────
   const meta = [
-    ["Client", client?.name ?? "—", "", "", "Quote #", quote.quoteNumber, "", "", "FX Rate", `1 USD = ${(1 / quote.fxRate).toFixed(4)} AUD`],
-    ["Project", project?.name ?? "—", "", "", "Date", new Date().toLocaleDateString("en-AU"), "", "", "LUX Markup", pct(quote.defaultMargin)],
-    ["Quote", quote.name, "", "", "Valid Until", quote.validUntil ?? "—", "", "", "Reseller Markup", pct(quote.defaultResellerMargin)],
+    ["Client", client?.name ?? "—", "", "", "Quote #", quote.quoteNumber],
+    ["Project", project?.name ?? "—", "", "", "Date", new Date().toLocaleDateString("en-AU")],
+    ["Quote", quote.name, "", "", "Valid Until", quote.validUntil ?? "—"],
   ];
   meta.forEach((rowData, i) => {
     const row = ws.addRow(rowData);
     row.height = 18;
     // Label cells
-    [1, 5, 9].forEach((col) => {
+    [1, 5].forEach((col) => {
       const c = row.getCell(col);
       style(c, { fg: "888888", bold: true, size: 9, align: "left" });
     });
     // Value cells
-    [2, 6, 10].forEach((col) => {
+    [2, 6].forEach((col) => {
       const c = row.getCell(col);
       style(c, { bold: true, size: 10, align: "left", fg: NAVY });
     });
     if (i === 0) {
-      // Merge label+value spans
       merge(`B${2 + i + 1}`, `D${2 + i + 1}`);
-      merge(`F${2 + i + 1}`, `H${2 + i + 1}`);
-      merge(`J${2 + i + 1}`, `M${2 + i + 1}`);
+      merge(`F${2 + i + 1}`, `I${2 + i + 1}`);
     }
   });
 
@@ -173,21 +162,19 @@ export async function GET(
   ws.getRow(6).height = 6;
 
   // ── Section headers ──────────────────────────────────────────────────────────
-  // LUX section label (cols A-J) and Reseller section label (cols K-M)
-  const secRow = ws.addRow(["", "", "", "", "", "", "◀ LUX PRICING", "", "", "", "RESELLER PRICING ▶"]);
+  const secRow = ws.addRow(["", "", "", "", "◀ LUX SELL PRICE", "", "RESELLER SELL PRICE ▶"]);
   secRow.height = 16;
-  merge("A7", "J7");
-  merge("K7", "M7");
+  merge("A7", "F7");
+  merge("G7", "I7");
   style(ws.getCell("A7"), { bg: NAVY, fg: "AAAAAA", bold: false, size: 9, align: "right" });
-  style(ws.getCell("K7"), { bg: RED, fg: WHITE, bold: true, size: 9, align: "center" });
+  style(ws.getCell("G7"), { bg: RED, fg: WHITE, bold: true, size: 9, align: "center" });
   ws.getCell("A7").alignment = { horizontal: "right", vertical: "middle" };
 
   // ── Column headers ────────────────────────────────────────────────────────────
   const hdrRow = ws.addRow([
     "Item", "Description", "Unit", "Qty",
-    "USD Unit", "USD Total",
-    "AUD Cost", "Sell ex GST", "Sell inc GST", "LUX Markup $",
-    "Sell ex GST", "Sell inc GST", "Markup $",
+    "ex GST", "inc GST",
+    "ex GST", "inc GST", "Markup $",
   ]);
   hdrRow.height = 22;
   hdrRow.eachCell((cell: any) => {
@@ -196,33 +183,22 @@ export async function GET(
   });
 
   // ── Data rows ────────────────────────────────────────────────────────────────
-  let dataRowIndex = 9; // rows so far: 1 banner, 1 blank, 3 meta, 1 blank, 1 sec, 1 hdr
+  let dataRowIndex = 9;
   let isEven = false;
 
   for (const item of items as any[]) {
     const calc = calculateLineItem(item, settings);
     const bg = isEven ? LIGHT_GRAY : WHITE;
-    // Reseller tint: slightly warm white on even rows, plain white on odd
     const resellerBg = isEven ? "FFFFF0F0" : "FFFFFFFF";
     isEven = !isEven;
-
-    let usdUnit: string | number = "";
-    let usdTotal: string | number = "";
-    if (item.isFree) { usdUnit = "INCLUDED"; usdTotal = "—"; }
-    else if (item.isLocal) { usdUnit = "LOCAL"; usdTotal = "—"; }
-    else { usdUnit = item.usdUnitPrice ?? 0; usdTotal = calc.usdSubtotal; }
 
     const row = ws.addRow([
       item.itemName,
       item.description ?? "",
       item.unit,
       item.qty,
-      usdUnit,
-      usdTotal,
-      item.isFree ? "" : calc.audCost,
-      item.isFree ? "" : calc.audSellExGst,
+      item.isFree ? "INCLUDED" : calc.audSellExGst,
       item.isFree ? "" : calc.audSellIncGst,
-      item.isFree ? "" : calc.grossProfit,
       item.isFree ? "" : calc.resellerSellExGst,
       item.isFree ? "" : calc.resellerSellIncGst,
       item.isFree ? "" : calc.resellerProfit,
@@ -232,30 +208,23 @@ export async function GET(
     row.eachCell((cell: any, col: number) => {
       style(cell, { bg, border: true, borderColor: "DDDDDD" });
       cell.font = { size: 9, color: { argb: "FF" + NAVY } };
-
-      // Right-align numbers
-      if (col >= 4) {
+      if (col >= 5 && typeof cell.value === "number") {
         cell.alignment = { horizontal: "right", vertical: "middle" };
-        if (col >= 7 && typeof cell.value === "number")
-          cell.numFmt = '"$"#,##0.00';
-        if ((col === 5 || col === 6) && typeof cell.value === "number")
-          cell.numFmt = '"US$"#,##0.00';
+        cell.numFmt = '"$"#,##0.00';
       }
-      // Item name: wrap, left
       if (col === 1) cell.alignment = { horizontal: "left", wrapText: true, vertical: "middle" };
-      if (col === 2) cell.alignment = { horizontal: "left", wrapText: true, vertical: "middle", indent: 1 };
-      if (col === 2) cell.font = { size: 8, color: { argb: "FF888888" }, italic: true };
+      if (col === 2) { cell.alignment = { horizontal: "left", wrapText: true, vertical: "middle", indent: 1 }; cell.font = { size: 8, color: { argb: "FF888888" }, italic: true }; }
       if (col === 3) cell.alignment = { horizontal: "center", vertical: "middle" };
+      if (col === 4) cell.alignment = { horizontal: "right", vertical: "middle" };
     });
 
-    // Reseller columns: subtle warm tint + red left border on col 11
-    [11, 12, 13].forEach((col) => {
+    // Reseller columns: subtle warm tint + red left border
+    [7, 8, 9].forEach((col) => {
       const c = row.getCell(col);
       c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: resellerBg } };
       c.font = { size: 9, color: { argb: "FF" + NAVY } };
     });
-    // Red left border to visually separate reseller section
-    const sepCell = row.getCell(11);
+    const sepCell = row.getCell(7);
     sepCell.border = {
       ...sepCell.border,
       left: { style: "medium", color: { argb: "FF" + RED } },
@@ -267,11 +236,8 @@ export async function GET(
   // ── Products subtotal row ─────────────────────────────────────────────────────
   const totRow = ws.addRow([
     "PRODUCTS SUBTOTAL", "", "", "",
-    "", totals.totalUsd,
-    totals.totalAudCost,
     totals.totalAudSellExGst,
     totals.totalAudSellIncGst,
-    totals.totalGrossProfit,
     totals.totalResellerSellExGst,
     totals.totalResellerSellIncGst,
     totals.totalResellerProfit,
@@ -280,45 +246,41 @@ export async function GET(
   totRow.eachCell((cell: any, col: number) => {
     style(cell, { bg: NAVY, fg: WHITE, bold: true, size: 10, border: true, borderColor: NAVY });
     cell.font = { bold: true, size: 10, color: { argb: WHITE } };
-    if (col >= 4) {
+    if (col >= 5 && typeof cell.value === "number") {
       cell.alignment = { horizontal: "right", vertical: "middle" };
-      if (col >= 7 && typeof cell.value === "number") cell.numFmt = '"$"#,##0.00';
-      if ((col === 5 || col === 6) && typeof cell.value === "number") cell.numFmt = '"US$"#,##0.00';
+      cell.numFmt = '"$"#,##0.00';
     }
   });
   merge(`A${dataRowIndex}`, `D${dataRowIndex}`);
   dataRowIndex++;
 
-  // ── Installation & Services section (only if items exist) ────────────────────
-  const qb = quote.installationQuotedBy; // "lux" | "reseller" | "both"
-  const hasInstall = installItems.length > 0;
-  const resIncludesInstall = hasInstall && (qb === "reseller" || qb === "both");
-
-  if (hasInstall) {
+  // ── Installation & Services section (only if items exist and reseller quotes it) ──
+  if (resIncludesInstall) {
     // Spacer
     ws.addRow([]);
     dataRowIndex++;
 
     // Section header
-    const instHdrRow = ws.addRow(["Installation & Services (AUD)"]);
-    instHdrRow.height = 20;
-    merge(`A${dataRowIndex}`, `M${dataRowIndex}`);
-    style(ws.getCell(`A${dataRowIndex}`), { bg: "7B4F00", fg: WHITE, bold: true, size: 11 });
+    ws.addRow(["Installation & Services"]);
+    const instHdrRowNum = dataRowIndex;
+    ws.getRow(instHdrRowNum).height = 20;
+    merge(`A${instHdrRowNum}`, `I${instHdrRowNum}`);
+    style(ws.getCell(`A${instHdrRowNum}`), { bg: "7B4F00", fg: WHITE, bold: true, size: 11 });
     dataRowIndex++;
 
-    // Column sub-headers — include reseller columns when reseller quotes installation
-    const subHdrData = [
-      "Item", "", "Type", "Hours/Qty", "Rate / Cost", "",
-      "AUD Cost", "Sell ex-GST", "Sell inc-GST", "Profit",
-      ...(resIncludesInstall ? ["Res ex-GST", "Res inc-GST", "Res Markup $"] : []),
-    ];
-    const instSubHdr = ws.addRow(subHdrData);
+    // Column sub-headers
+    const instSubHdr = ws.addRow([
+      "Item", "", "Type", "",
+      "ex GST", "inc GST",
+      "Res ex GST", "Res inc GST", "Res Markup $",
+    ]);
     instSubHdr.height = 18;
-    const activeCols = resIncludesInstall ? [1, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13] : [1, 3, 4, 5, 7, 8, 9, 10];
     instSubHdr.eachCell((cell: any, col: number) => {
-      if (activeCols.includes(col)) {
-        const isSep = col >= 11;
-        style(cell, { bg: isSep ? RED : "A0651A", fg: WHITE, bold: true, size: 9, align: col >= 4 ? "right" : "left", border: true, borderColor: isSep ? RED : "8B5A14" });
+      if ([1, 3, 5, 6].includes(col)) {
+        style(cell, { bg: "A0651A", fg: WHITE, bold: true, size: 9, align: col >= 5 ? "right" : "left", border: true, borderColor: "8B5A14" });
+      }
+      if ([7, 8, 9].includes(col)) {
+        style(cell, { bg: RED, fg: WHITE, bold: true, size: 9, align: "right", border: true, borderColor: RED });
       }
     });
     dataRowIndex++;
@@ -333,10 +295,6 @@ export async function GET(
       instIsEven = !instIsEven;
 
       const typeLabel = item.type === "hourly" ? "Hourly" : "Fixed";
-      const hrsOrQty = item.type === "hourly" ? item.hours ?? 0 : "—";
-      const rateOrCost = item.type === "hourly"
-        ? (item.hourlyRate ?? installSettings.defaultHourlyRate)
-        : item.fixedCost ?? 0;
 
       // Reseller installation: mark up the LUX sell price by the reseller markup
       const resellerMarkup = quote.defaultResellerMargin;
@@ -344,81 +302,72 @@ export async function GET(
       const resInstIncGst = resInstExGst * (1 + quote.gstRate);
       const resInstProfit = resInstExGst - calc.sellExGst;
 
-      const rowData = [
-        item.itemName, "", typeLabel, hrsOrQty, rateOrCost, "",
-        item.isFree ? "" : calc.cost,
+      const instRow = ws.addRow([
+        item.itemName, "", typeLabel, "",
         item.isFree ? "" : calc.sellExGst,
         item.isFree ? "" : calc.sellIncGst,
-        item.isFree ? "" : calc.grossProfit,
-        ...(resIncludesInstall ? [
-          item.isFree ? "" : resInstExGst,
-          item.isFree ? "" : resInstIncGst,
-          item.isFree ? "" : resInstProfit,
-        ] : []),
-      ];
-
-      const instRow = ws.addRow(rowData);
+        item.isFree ? "" : resInstExGst,
+        item.isFree ? "" : resInstIncGst,
+        item.isFree ? "" : resInstProfit,
+      ]);
       instRow.height = 18;
       instRow.eachCell((cell: any, col: number) => {
         style(cell, { bg, border: true, borderColor: "DDDDDD" });
         cell.font = { size: 9, color: { argb: "FF" + NAVY } };
         if (col === 1) cell.alignment = { horizontal: "left", vertical: "middle" };
-        if ([4, 5].includes(col)) cell.alignment = { horizontal: "right", vertical: "middle" };
-        if (col >= 7 && typeof cell.value === "number") {
+        if (col >= 5 && typeof cell.value === "number") {
           cell.alignment = { horizontal: "right", vertical: "middle" };
           cell.numFmt = '"$"#,##0.00';
         }
       });
       // Reseller columns: warm tint + red left border
-      if (resIncludesInstall) {
-        const resellerBg = instIsEven ? "FFFFF0F0" : "FFFFFFFF";
-        [11, 12, 13].forEach((col) => {
-          const c = instRow.getCell(col);
-          c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: resellerBg } };
-          c.font = { size: 9, color: { argb: "FF" + NAVY } };
-        });
-        const sepCell = instRow.getCell(11);
-        sepCell.border = { ...sepCell.border, left: { style: "medium", color: { argb: "FF" + RED } } };
-      }
+      const resellerBg = instIsEven ? "FFFFF0F0" : "FFFFFFFF";
+      [7, 8, 9].forEach((col) => {
+        const c = instRow.getCell(col);
+        c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: resellerBg } };
+        c.font = { size: 9, color: { argb: "FF" + NAVY } };
+      });
+      const sepCell = instRow.getCell(7);
+      sepCell.border = { ...sepCell.border, left: { style: "medium", color: { argb: "FF" + RED } } };
       dataRowIndex++;
     }
 
-    // Installation totals row — compute reseller totals
+    // Installation totals row
     const resTotalInstExGst = installTotals.totalSellExGst * (1 + quote.defaultResellerMargin);
     const resTotalInstIncGst = resTotalInstExGst * (1 + quote.gstRate);
     const resTotalInstProfit = resTotalInstExGst - installTotals.totalSellExGst;
 
     const instTotRow = ws.addRow([
-      "INSTALLATION SUBTOTAL", "", "", "", "", "",
-      installTotals.totalCost,
+      "INSTALLATION SUBTOTAL", "", "", "",
       installTotals.totalSellExGst,
       installTotals.totalSellIncGst,
-      installTotals.totalGrossProfit,
-      ...(resIncludesInstall ? [resTotalInstExGst, resTotalInstIncGst, resTotalInstProfit] : []),
+      resTotalInstExGst,
+      resTotalInstIncGst,
+      resTotalInstProfit,
     ]);
     instTotRow.height = 22;
     instTotRow.eachCell((cell: any, col: number) => {
       style(cell, { bg: "7B4F00", fg: WHITE, bold: true, size: 10, border: true, borderColor: "7B4F00" });
       cell.font = { bold: true, size: 10, color: { argb: WHITE } };
-      if (col >= 7 && typeof cell.value === "number") {
+      if (col >= 5 && typeof cell.value === "number") {
         cell.alignment = { horizontal: "right", vertical: "middle" };
         cell.numFmt = '"$"#,##0.00';
       }
     });
-    merge(`A${dataRowIndex}`, `F${dataRowIndex}`);
+    merge(`A${dataRowIndex}`, `D${dataRowIndex}`);
     dataRowIndex++;
 
     // Grand total row
-    const grandResExGst = resIncludesInstall ? totals.totalResellerSellExGst + resTotalInstExGst : totals.totalResellerSellExGst;
-    const grandResIncGst = resIncludesInstall ? totals.totalResellerSellIncGst + resTotalInstIncGst : totals.totalResellerSellIncGst;
-    const grandResProfit = resIncludesInstall ? totals.totalResellerProfit + resTotalInstProfit : totals.totalResellerProfit;
+    const grandLuxExGst = totals.totalAudSellExGst + installTotals.totalSellExGst;
+    const grandLuxIncGst = totals.totalAudSellIncGst + installTotals.totalSellIncGst;
+    const grandResExGst = totals.totalResellerSellExGst + resTotalInstExGst;
+    const grandResIncGst = totals.totalResellerSellIncGst + resTotalInstIncGst;
+    const grandResProfit = totals.totalResellerProfit + resTotalInstProfit;
 
     const grandRow = ws.addRow([
-      "GRAND TOTAL (inc GST)", "", "", "", "", "",
-      grandTotal.totalAudCost,
-      grandTotal.totalAudSellExGst,
-      grandTotal.totalAudSellIncGst,
-      grandTotal.totalGrossProfit,
+      "GRAND TOTAL", "", "", "",
+      grandLuxExGst,
+      grandLuxIncGst,
       grandResExGst,
       grandResIncGst,
       grandResProfit,
@@ -427,12 +376,12 @@ export async function GET(
     grandRow.eachCell((cell: any, col: number) => {
       style(cell, { bg: RED, fg: WHITE, bold: true, size: 11, border: true, borderColor: RED });
       cell.font = { bold: true, size: 11, color: { argb: WHITE } };
-      if (col >= 7 && typeof cell.value === "number") {
+      if (col >= 5 && typeof cell.value === "number") {
         cell.alignment = { horizontal: "right", vertical: "middle" };
         cell.numFmt = '"$"#,##0.00';
       }
     });
-    merge(`A${dataRowIndex}`, `F${dataRowIndex}`);
+    merge(`A${dataRowIndex}`, `D${dataRowIndex}`);
     dataRowIndex++;
   }
 
@@ -447,12 +396,13 @@ export async function GET(
   merge(`A${pmtStart}`, `D${pmtStart}`);
   style(ws.getCell(`A${pmtStart}`), { bg: RED, fg: WHITE, bold: true, size: 11 });
 
-  const grandIncGst = grandTotal.totalAudSellIncGst;
+  // Payment schedule based on LUX sell price (what the reseller pays LUX)
+  const luxIncGst = totals.totalAudSellIncGst + (resIncludesInstall ? installTotals.totalSellIncGst : 0);
   const pmtRows = [
-    ["Deposit", pct(quote.depositPct), `$${aud(grandIncGst * quote.depositPct)}`],
-    ["Progress Payment", pct(quote.secondTranchePct), `$${aud(grandIncGst * quote.secondTranchePct)}`],
-    ["Balance on Delivery", pct(1 - quote.depositPct - quote.secondTranchePct), `$${aud(grandIncGst * (1 - quote.depositPct - quote.secondTranchePct))}`],
-    ["TOTAL (inc GST)", "", `$${aud(grandIncGst)}`],
+    ["Deposit", `${(quote.depositPct * 100).toFixed(0)}%`, `$${aud(luxIncGst * quote.depositPct)}`],
+    ["Progress Payment", `${(quote.secondTranchePct * 100).toFixed(0)}%`, `$${aud(luxIncGst * quote.secondTranchePct)}`],
+    ["Balance on Delivery", `${((1 - quote.depositPct - quote.secondTranchePct) * 100).toFixed(0)}%`, `$${aud(luxIncGst * (1 - quote.depositPct - quote.secondTranchePct))}`],
+    ["TOTAL (inc GST)", "", `$${aud(luxIncGst)}`],
   ];
 
   pmtRows.forEach((pmtData, i) => {
@@ -475,12 +425,12 @@ export async function GET(
     `Generated by LUX LED Screen Solutions · ${new Date().toLocaleDateString("en-AU")} · Confidential — for reseller use only`,
   ]);
   footerRow.height = 14;
-  merge(`A${pmtStart + pmtRows.length + 2}`, `M${pmtStart + pmtRows.length + 2}`);
+  merge(`A${pmtStart + pmtRows.length + 2}`, `I${pmtStart + pmtRows.length + 2}`);
   const fc = footerRow.getCell(1);
   fc.font = { size: 8, italic: true, color: { argb: DARK_GRAY } };
 
   // ── Freeze panes & return ────────────────────────────────────────────────────
-  ws.views = [{ state: "frozen", xSplit: 0, ySplit: 8 }]; // freeze header rows
+  ws.views = [{ state: "frozen", xSplit: 0, ySplit: 8 }];
 
   const buf = await wb.xlsx.writeBuffer();
 
