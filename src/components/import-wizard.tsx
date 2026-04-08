@@ -1110,7 +1110,7 @@ export function ImportWizard() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">LUX Margin %</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">LUX Markup %</label>
               <input
                 type="number"
                 step="1"
@@ -1120,7 +1120,7 @@ export function ImportWizard() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Reseller Margin %</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Reseller Markup %</label>
               <input
                 type="number"
                 step="1"
@@ -1294,11 +1294,11 @@ export function ImportWizard() {
                 <span className="font-medium text-gray-900">{fxRate}</span>
               </div>
               <div>
-                <span className="text-gray-500">LUX Margin:</span>{" "}
+                <span className="text-gray-500">LUX Markup:</span>{" "}
                 <span className="font-medium text-gray-900">{defaultMargin}%</span>
               </div>
               <div>
-                <span className="text-gray-500">Reseller Margin:</span>{" "}
+                <span className="text-gray-500">Reseller Markup:</span>{" "}
                 <span className="font-medium text-gray-900">{defaultResellerMargin}%</span>
               </div>
             </div>

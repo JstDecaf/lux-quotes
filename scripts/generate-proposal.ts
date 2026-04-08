@@ -64,12 +64,12 @@ function calcItem(item: ItemRow, s: CalcSettings) {
   const usdSub = isLocal ? 0 : item.qty * (item.usd_unit_price || 0);
   const audCost = isLocal ? (item.aud_local_cost || 0) : (s.fxRate > 0 ? usdSub / s.fxRate : 0);
 
-  const luxExGst = margin < 1 ? audCost / (1 - margin) : audCost;
+  const luxExGst = audCost * (1 + margin);
   const luxGst = luxExGst * s.gstRate;
   const luxIncGst = luxExGst + luxGst;
   const profit = luxExGst - audCost;
 
-  const resExGst = resellerMargin < 1 ? luxExGst / (1 - resellerMargin) : luxExGst;
+  const resExGst = luxExGst * (1 + resellerMargin);
   const resGst = resExGst * s.gstRate;
   const resIncGst = resExGst + resGst;
   const resProfit = resExGst - luxExGst;

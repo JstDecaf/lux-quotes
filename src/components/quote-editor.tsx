@@ -540,7 +540,7 @@ export function QuoteEditor({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">LUX Margin %</label>
+            <label className="block text-xs text-gray-500 mb-1">LUX Markup %</label>
             <NumericInput
               step="1"
               className="w-full border rounded px-3 py-2 text-sm"
@@ -550,7 +550,7 @@ export function QuoteEditor({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Reseller Margin %</label>
+            <label className="block text-xs text-gray-500 mb-1">Reseller Markup %</label>
             <NumericInput
               step="1"
               className="w-full border rounded px-3 py-2 text-sm"
@@ -615,7 +615,7 @@ export function QuoteEditor({
         const luxGrandSellExGst  = totals.totalAudSellExGst  + (luxIncludesInstall ? luxInstallSellExGst  : 0);
         const luxGrandCost       = totals.totalAudCost        + (luxIncludesInstall ? luxInstallCost       : 0);
         const luxGrandProfit     = totals.totalGrossProfit    + (luxIncludesInstall ? luxInstallProfit     : 0);
-        const luxGrandMargin     = luxGrandSellExGst > 0 ? luxGrandProfit / luxGrandSellExGst : 0;
+        const luxGrandMargin     = luxGrandCost > 0 ? luxGrandProfit / luxGrandCost : 0;
 
         // Reseller grand totals
         const resGrandSellIncGst = totals.totalResellerSellIncGst + (resIncludesInstall ? resInstallSellIncGst : 0);
@@ -666,7 +666,7 @@ export function QuoteEditor({
                     <span className="text-lg font-bold text-green-600">{fmt(luxGrandProfit)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Overall Margin</span>
+                    <span className="text-gray-500">Overall Markup</span>
                     <span className="font-semibold">{fmtPct(luxGrandMargin)}</span>
                   </div>
                 </div>
@@ -937,12 +937,12 @@ export function QuoteEditor({
                 <th className="px-2 py-2 text-right w-24">USD Unit</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/5">USD Sub</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/5">AUD Cost</th>
-                <th className="px-2 py-2 text-right w-20">LUX M%</th>
+                <th className="px-2 py-2 text-right w-20">LUX MU%</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/5">LUX exGST</th>
                 <th className="px-2 py-2 text-right w-20 bg-white/5">LUX GST</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/5">LUX incGST</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/5">Profit</th>
-                <th className="px-2 py-2 text-right w-20 bg-blue-500/20">Res M%</th>
+                <th className="px-2 py-2 text-right w-20 bg-blue-500/20">Res MU%</th>
                 <th className="px-2 py-2 text-right w-24 bg-blue-500/20">Res exGST</th>
                 <th className="px-2 py-2 text-right w-20 bg-blue-500/20">Res GST</th>
                 <th className="px-2 py-2 text-right w-24 bg-blue-500/20">Res incGST</th>
@@ -1195,7 +1195,7 @@ export function QuoteEditor({
                 value={quote.installationHourlyRate}
                 onChange={(v) => updateQuoteField("installationHourlyRate", v)}
               />
-              <label className="text-gray-500 ml-2">Margin %</label>
+              <label className="text-gray-500 ml-2">Markup %</label>
               <NumericInput
                 step="1"
                 className="w-16 border rounded px-2 py-1 text-sm text-right"
@@ -1217,7 +1217,7 @@ export function QuoteEditor({
                 <th className="px-2 py-2 text-right w-16">Hours</th>
                 <th className="px-2 py-2 text-right w-24">Rate ($/hr)</th>
                 <th className="px-2 py-2 text-right w-28">Fixed Cost</th>
-                <th className="px-2 py-2 text-right w-20">Margin %</th>
+                <th className="px-2 py-2 text-right w-20">Markup %</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/10">Cost</th>
                 <th className="px-2 py-2 text-right w-24 bg-white/10">Sell ex-GST</th>
                 <th className="px-2 py-2 text-right w-20 bg-white/10">GST</th>

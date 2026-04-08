@@ -144,8 +144,8 @@ export async function GET(
   // ── Rows 3–5: Quote metadata ─────────────────────────────────────────────────
   const meta = [
     ["Client", client?.name ?? "—", "", "", "Quote #", quote.quoteNumber, "", "", "FX Rate", `1 USD = ${(1 / quote.fxRate).toFixed(4)} AUD`],
-    ["Project", project?.name ?? "—", "", "", "Date", new Date().toLocaleDateString("en-AU"), "", "", "LUX Margin", pct(quote.defaultMargin)],
-    ["Quote", quote.name, "", "", "Valid Until", quote.validUntil ?? "—", "", "", "Reseller Margin", pct(quote.defaultResellerMargin)],
+    ["Project", project?.name ?? "—", "", "", "Date", new Date().toLocaleDateString("en-AU"), "", "", "LUX Markup", pct(quote.defaultMargin)],
+    ["Quote", quote.name, "", "", "Valid Until", quote.validUntil ?? "—", "", "", "Reseller Markup", pct(quote.defaultResellerMargin)],
   ];
   meta.forEach((rowData, i) => {
     const row = ws.addRow(rowData);
@@ -186,8 +186,8 @@ export async function GET(
   const hdrRow = ws.addRow([
     "Item", "Description", "Unit", "Qty",
     "USD Unit", "USD Total",
-    "AUD Cost", "Sell ex GST", "Sell inc GST", "LUX Margin $",
-    "Sell ex GST", "Sell inc GST", "Margin $",
+    "AUD Cost", "Sell ex GST", "Sell inc GST", "LUX Markup $",
+    "Sell ex GST", "Sell inc GST", "Markup $",
   ]);
   hdrRow.height = 22;
   hdrRow.eachCell((cell: any) => {

@@ -61,15 +61,13 @@ export function calculateLineItem(
       : 0;
 
   // LUX sell price (what LUX charges the reseller)
-  const audSellExGst = margin < 1 ? audCost / (1 - margin) : audCost;
+  const audSellExGst = audCost * (1 + margin);
   const gst = audSellExGst * settings.gstRate;
   const audSellIncGst = audSellExGst + gst;
   const grossProfit = audSellExGst - audCost;
 
   // Reseller sell price (what the reseller charges the end client)
-  const resellerSellExGst = resellerMargin < 1
-    ? audSellExGst / (1 - resellerMargin)
-    : audSellExGst;
+  const resellerSellExGst = audSellExGst * (1 + resellerMargin);
   const resellerGst = resellerSellExGst * settings.gstRate;
   const resellerSellIncGst = resellerSellExGst + resellerGst;
   const resellerProfit = resellerSellExGst - audSellExGst;
@@ -135,7 +133,7 @@ export function calculateQuoteTotals(
   }
 
   const overallMargin =
-    totalAudSellExGst > 0 ? totalGrossProfit / totalAudSellExGst : 0;
+    totalAudCost > 0 ? totalGrossProfit / totalAudCost : 0;
 
   // Deposit calculations based on LUX sell inc-GST (what LUX collects from the reseller)
   const depositAmount = totalAudSellIncGst * settings.depositPct;
@@ -197,7 +195,7 @@ export function calculateInstallationItem(
   const cost = item.type === "hourly" ? item.hours * rate : item.fixedCost;
   const margin = item.marginOverride ?? settings.defaultInstallationMargin;
 
-  const sellExGst = margin < 1 ? cost / (1 - margin) : cost;
+  const sellExGst = cost * (1 + margin);
   const gst = sellExGst * settings.gstRate;
   const sellIncGst = sellExGst + gst;
   const grossProfit = sellExGst - cost;
