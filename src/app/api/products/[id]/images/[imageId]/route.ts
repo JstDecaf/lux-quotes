@@ -10,11 +10,13 @@ export async function PUT(
 ) {
   const { imageId } = await params;
   const body = await req.json();
-  await db.update(productImages).set({
-    name: body.name,
-    sortOrder: body.sortOrder,
-    updatedAt: new Date().toISOString(),
-  }).where(eq(productImages.id, Number(imageId))).run();
+  const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+  if (body.name !== undefined) updates.name = body.name;
+  if (body.sortOrder !== undefined) updates.sortOrder = body.sortOrder;
+  if (body.tag !== undefined) updates.tag = body.tag; // null clears the tag
+
+  await db.update(productImages).set(updates)
+    .where(eq(productImages.id, Number(imageId))).run();
   return NextResponse.json({ ok: true });
 }
 

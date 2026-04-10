@@ -11,6 +11,7 @@ export interface ProductImage {
   originalDocumentId: number | null;
   sortOrder: number;
   fileType: string;
+  tag: string | null;
   fileSize: number | null;
   width: number | null;
   height: number | null;
@@ -27,6 +28,28 @@ const SOURCE_BADGES: Record<string, { label: string; className: string }> = {
   "pdf-extract": { label: "From PDF", className: "bg-emerald-100 text-emerald-700" },
 };
 
+const TAG_OPTIONS = [
+  { value: null, label: "No tag", className: "" },
+  { value: "preferred", label: "Preferred", className: "bg-amber-100 text-amber-700 border-amber-300" },
+  { value: "hero", label: "Hero", className: "bg-purple-100 text-purple-700 border-purple-300" },
+  { value: "detail", label: "Detail", className: "bg-cyan-100 text-cyan-700 border-cyan-300" },
+  { value: "install", label: "Install", className: "bg-orange-100 text-orange-700 border-orange-300" },
+] as const;
+
+const TAG_STYLES: Record<string, string> = {
+  preferred: "bg-amber-100 text-amber-700",
+  hero: "bg-purple-100 text-purple-700",
+  detail: "bg-cyan-100 text-cyan-700",
+  install: "bg-orange-100 text-orange-700",
+};
+
+const TAG_LABELS: Record<string, string> = {
+  preferred: "★ Preferred",
+  hero: "Hero",
+  detail: "Detail",
+  install: "Install",
+};
+
 export function ProductImageGallery({ productId, initialImages, onImagesChanged }: Props) {
   const [images, setImages] = useState<ProductImage[]>(initialImages);
   const [uploading, setUploading] = useState(false);
@@ -37,11 +60,22 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
   const [editName, setEditName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Multi-select state
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [selectMode, setSelectMode] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkDownloading, setBulkDownloading] = useState(false);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+
+  // Tag picker state
+  const [tagPickerId, setTagPickerId] = useState<number | null>(null);
+
   const updateImages = (updated: ProductImage[]) => {
     setImages(updated);
     onImagesChanged?.(updated);
   };
 
+  // ---- Upload ----
   const uploadFile = async (file: File) => {
     setUploadError(null);
     setUploading(true);
@@ -85,6 +119,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
     for (let i = 0; i < files.length; i++) uploadFile(files[i]);
   };
 
+  // ---- Single actions ----
   const deleteImage = async (imageId: number) => {
     await fetch(`/api/products/${productId}/images/${imageId}`, { method: "DELETE" });
     updateImages(images.filter((img) => img.id !== imageId));
@@ -107,14 +142,85 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
     setEditingId(null);
   };
 
-  // Called externally when images are extracted from a PDF
-  const addExtractedImages = (newImages: ProductImage[]) => {
-    updateImages([...images, ...newImages]);
+  // ---- Tags ----
+  const setTag = async (imageId: number, tag: string | null) => {
+    await fetch(`/api/products/${productId}/images/${imageId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tag }),
+    });
+    updateImages(images.map((img) => img.id === imageId ? { ...img, tag } : img));
+    setTagPickerId(null);
   };
 
-  // Expose addExtractedImages via a ref pattern isn't ideal in React,
-  // so we export this component and let the parent manage state instead.
-  // The parent will update initialImages or call onImagesChanged.
+  // ---- Multi-select ----
+  const toggleSelect = (id: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => setSelected(new Set(images.map((img) => img.id)));
+  const selectNone = () => { setSelected(new Set()); setConfirmBulkDelete(false); };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelected(new Set());
+    setConfirmBulkDelete(false);
+  };
+
+  // ---- Bulk actions ----
+  const bulkDelete = async () => {
+    if (selected.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      await fetch(`/api/products/${productId}/images/bulk-delete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageIds: Array.from(selected) }),
+      });
+      updateImages(images.filter((img) => !selected.has(img.id)));
+      exitSelectMode();
+    } catch {
+      alert("Bulk delete failed.");
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const bulkDownload = async () => {
+    if (selected.size === 0) return;
+    setBulkDownloading(true);
+    try {
+      const res = await fetch(`/api/products/${productId}/images/bulk-download`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageIds: Array.from(selected) }),
+      });
+
+      if (!res.ok) {
+        alert("Download failed.");
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = res.headers.get("content-disposition")?.match(/filename="(.+)"/)?.[1] || "images.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      alert("Download failed.");
+    } finally {
+      setBulkDownloading(false);
+    }
+  };
 
   return (
     <div
@@ -123,6 +229,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
     >
+      {/* Header */}
       <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
         <h2 className="font-bold text-gray-800">Image Library ({images.length})</h2>
         <div className="flex items-center gap-2">
@@ -136,6 +243,14 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
             multiple
             onChange={handleFileSelect}
           />
+          {images.length > 0 && !selectMode && (
+            <button
+              onClick={() => setSelectMode(true)}
+              className="px-3 py-1.5 text-xs text-gray-500 border rounded hover:bg-gray-50"
+            >
+              Select
+            </button>
+          )}
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
@@ -146,26 +261,127 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
         </div>
       </div>
 
+      {/* Bulk actions toolbar */}
+      {selectMode && (
+        <div className="px-4 py-2.5 border-b bg-blue-50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-blue-800">
+              {selected.size} selected
+            </span>
+            <button onClick={selectAll} className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+              Select all
+            </button>
+            <button onClick={selectNone} className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+              Select none
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            {selected.size > 0 && (
+              <>
+                <button
+                  onClick={bulkDownload}
+                  disabled={bulkDownloading}
+                  className="px-3 py-1.5 text-xs bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42] disabled:opacity-50"
+                >
+                  {bulkDownloading ? "Zipping..." : `↓ Download (${selected.size})`}
+                </button>
+                {confirmBulkDelete ? (
+                  <span className="flex items-center gap-1.5 text-xs">
+                    <span className="text-red-600 font-medium">Delete {selected.size}?</span>
+                    <button
+                      onClick={bulkDelete}
+                      disabled={bulkDeleting}
+                      className="text-red-600 font-bold hover:text-red-800"
+                    >
+                      {bulkDeleting ? "..." : "Yes"}
+                    </button>
+                    <button onClick={() => setConfirmBulkDelete(false)} className="text-gray-400 hover:text-gray-600">
+                      No
+                    </button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setConfirmBulkDelete(true)}
+                    className="px-3 py-1.5 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
+                  >
+                    Delete ({selected.size})
+                  </button>
+                )}
+              </>
+            )}
+            <button
+              onClick={exitSelectMode}
+              className="px-3 py-1.5 text-xs text-gray-500 border rounded hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {images.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 p-4">
           {images.map((img) => {
             const badge = SOURCE_BADGES[img.source] || SOURCE_BADGES.upload;
+            const isSelected = selected.has(img.id);
+            const tagStyle = img.tag ? TAG_STYLES[img.tag] : null;
+
             return (
-              <div key={img.id} className="border rounded-lg overflow-hidden bg-gray-50 group">
+              <div
+                key={img.id}
+                className={`border rounded-lg overflow-hidden bg-gray-50 group relative ${
+                  isSelected ? "ring-2 ring-blue-500 border-blue-400" : ""
+                }`}
+              >
+                {/* Select checkbox overlay */}
+                {selectMode && (
+                  <button
+                    onClick={() => toggleSelect(img.id)}
+                    className={`absolute top-2 left-2 z-10 w-6 h-6 rounded border-2 flex items-center justify-center transition-colors ${
+                      isSelected
+                        ? "bg-blue-500 border-blue-500 text-white"
+                        : "bg-white/80 border-gray-300 hover:border-blue-400"
+                    }`}
+                  >
+                    {isSelected && <span className="text-xs font-bold">✓</span>}
+                  </button>
+                )}
+
+                {/* Tag badge overlay */}
+                {img.tag && (
+                  <div className={`absolute top-2 right-2 z-10 text-[10px] font-bold px-1.5 py-0.5 rounded ${tagStyle}`}>
+                    {TAG_LABELS[img.tag]}
+                  </div>
+                )}
+
                 {/* Thumbnail */}
-                <a
-                  href={`/api/products/${productId}/images/${img.id}/download`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
-                  <img
-                    src={`/api/products/${productId}/images/${img.id}/download`}
-                    alt={img.name}
-                    className="w-full h-36 object-cover bg-gray-200"
-                    loading="lazy"
-                  />
-                </a>
+                {selectMode ? (
+                  <div
+                    onClick={() => toggleSelect(img.id)}
+                    className="cursor-pointer"
+                  >
+                    <img
+                      src={`/api/products/${productId}/images/${img.id}/download`}
+                      alt={img.name}
+                      className="w-full h-36 object-cover bg-gray-200"
+                      loading="lazy"
+                    />
+                  </div>
+                ) : (
+                  <a
+                    href={`/api/products/${productId}/images/${img.id}/download`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <img
+                      src={`/api/products/${productId}/images/${img.id}/download`}
+                      alt={img.name}
+                      className="w-full h-36 object-cover bg-gray-200"
+                      loading="lazy"
+                    />
+                  </a>
+                )}
 
                 {/* Info */}
                 <div className="p-2.5">
@@ -192,23 +408,60 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
                   )}
 
                   <div className="flex items-center justify-between">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${badge.className}`}>
-                      {badge.label}
-                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${badge.className}`}>
+                        {badge.label}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1.5">
-                      {showDeleteId === img.id ? (
-                        <span className="flex items-center gap-1 text-[10px]">
-                          <button onClick={() => deleteImage(img.id)} className="text-red-600 font-medium">Yes</button>
-                          <button onClick={() => setShowDeleteId(null)} className="text-gray-400">No</button>
-                        </span>
-                      ) : (
+                      {/* Tag button */}
+                      <div className="relative">
                         <button
-                          onClick={() => setShowDeleteId(img.id)}
-                          className="text-gray-300 hover:text-red-500 text-sm transition-colors"
-                          title="Delete"
+                          onClick={() => setTagPickerId(tagPickerId === img.id ? null : img.id)}
+                          className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
+                            img.tag
+                              ? TAG_STYLES[img.tag] + " border-current"
+                              : "text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-300"
+                          }`}
+                          title="Set tag"
                         >
-                          ×
+                          {img.tag ? TAG_LABELS[img.tag] : "Tag"}
                         </button>
+
+                        {/* Tag picker dropdown */}
+                        {tagPickerId === img.id && (
+                          <div className="absolute bottom-full right-0 mb-1 bg-white border rounded-lg shadow-lg py-1 z-20 min-w-[120px]">
+                            {TAG_OPTIONS.map((opt) => (
+                              <button
+                                key={opt.value ?? "none"}
+                                onClick={() => setTag(img.id, opt.value)}
+                                className={`block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${
+                                  img.tag === opt.value ? "font-bold" : ""
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Delete */}
+                      {!selectMode && (
+                        showDeleteId === img.id ? (
+                          <span className="flex items-center gap-1 text-[10px]">
+                            <button onClick={() => deleteImage(img.id)} className="text-red-600 font-medium">Yes</button>
+                            <button onClick={() => setShowDeleteId(null)} className="text-gray-400">No</button>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => setShowDeleteId(img.id)}
+                            className="text-gray-300 hover:text-red-500 text-sm transition-colors"
+                            title="Delete"
+                          >
+                            ×
+                          </button>
+                        )
                       )}
                     </div>
                   </div>
@@ -229,5 +482,4 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
   );
 }
 
-// Re-export the addExtractedImages capability
 export type { Props as ProductImageGalleryProps };

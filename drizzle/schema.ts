@@ -147,6 +147,7 @@ export const productImages = sqliteTable("product_images", {
   originalDocumentId: integer("original_document_id").references(() => productDocuments.id, { onDelete: "set null" }),
   sortOrder: integer("sort_order").notNull().default(0),
   fileType: text("file_type").notNull().default("png"),
+  tag: text("tag"), // "preferred" | "hero" | "detail" | "install" | null
   fileSize: integer("file_size"),
   width: integer("width"),
   height: integer("height"),
