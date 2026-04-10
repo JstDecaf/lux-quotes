@@ -86,7 +86,7 @@ const VARIANT_FIELDS: { key: keyof Variant; label: string; type: "text" | "numbe
 ];
 
 const DOC_TYPES = ["brochure", "manual", "spec_sheet", "video", "link"] as const;
-const FILE_TYPES = ["pdf", "xlsx", "mp4", "web"] as const;
+const FILE_TYPES = ["pdf", "xlsx", "mp4", "jpg", "png", "webp", "web"] as const;
 
 const TYPE_ICONS: Record<string, string> = {
   brochure: "\uD83D\uDCCB",
@@ -133,6 +133,12 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
   const [addingDoc, setAddingDoc] = useState(false);
   const [newDocDraft, setNewDocDraft] = useState<Document>(emptyDoc(product.id));
   const [showDeleteDoc, setShowDeleteDoc] = useState<number | null>(null);
+
+  // File upload state
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
@@ -300,6 +306,70 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
       setSaving(false);
     }
   };
+
+  // ---- File upload ----
+  const uploadFile = async (file: File, docType?: string) => {
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("name", file.name.replace(/\.[^/.]+$/, ""));
+      formData.append("type", docType || guessDocType(file));
+
+      const res = await fetch(`/api/products/${product.id}/documents/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        setUploadError(err.error || "Upload failed");
+        return;
+      }
+
+      const data = await res.json();
+      setDocuments([...documents, {
+        id: Number(data.id),
+        name: file.name.replace(/\.[^/.]+$/, ""),
+        type: docType || guessDocType(file),
+        url: data.url,
+        fileType: data.fileType,
+        notes: null,
+      }]);
+    } catch {
+      setUploadError("Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    for (let i = 0; i < files.length; i++) {
+      uploadFile(files[i]);
+    }
+    e.target.value = "";
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const files = e.dataTransfer.files;
+    for (let i = 0; i < files.length; i++) {
+      uploadFile(files[i]);
+    }
+  };
+
+  function guessDocType(file: File): string {
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (file.type === "application/pdf" || ext === "pdf") return "brochure";
+    if (file.type.startsWith("video/") || ext === "mp4") return "video";
+    if (ext === "xlsx" || ext === "xls") return "spec_sheet";
+    if (file.type.startsWith("image/")) return "brochure";
+    return "link";
+  }
 
   // ---- Render helpers ----
   const renderDocRow = (doc: Document, isNew: boolean, draft: Document, setDraft: (d: Document) => void, onSave: () => void, onCancel: () => void) => (
@@ -687,17 +757,41 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
       </div>
 
       {/* Documents & Links */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div
+        className={`bg-white rounded-lg border overflow-hidden ${dragOver ? "ring-2 ring-blue-400 bg-blue-50/30" : ""}`}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+      >
         <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
           <h2 className="font-bold text-gray-800">Documents & Links ({documents.length})</h2>
-          {!addingDoc && (
+          <div className="flex items-center gap-2">
+            {uploading && <span className="text-xs text-blue-600 animate-pulse">Uploading...</span>}
+            {uploadError && <span className="text-xs text-red-600">{uploadError}</span>}
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.xlsx,.xls,.mp4,.jpg,.jpeg,.png,.webp"
+              multiple
+              onChange={handleFileSelect}
+            />
             <button
-              onClick={() => setAddingDoc(true)}
-              className="px-3 py-1.5 text-xs bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42]"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              + Add Document
+              ↑ Upload File
             </button>
-          )}
+            {!addingDoc && (
+              <button
+                onClick={() => setAddingDoc(true)}
+                className="px-3 py-1.5 text-xs bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42]"
+              >
+                + Add Link
+              </button>
+            )}
+          </div>
         </div>
 
         {documents.length > 0 || addingDoc ? (
@@ -712,6 +806,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
               }
 
               const isNAS = doc.url.startsWith("file:///Volumes/BUSINESS/");
+              const isBlob = doc.url.includes(".vercel-storage.com");
               return (
                 <div key={doc.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -726,6 +821,9 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                           <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 uppercase">
                             {doc.fileType}
                           </span>
+                        )}
+                        {isBlob && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">Stored</span>
                         )}
                         {isNAS && (
                           <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">NAS</span>
@@ -781,7 +879,10 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
         ) : (
           <div className="px-4 py-8 text-center text-gray-400 text-sm">
             No documents or links added yet.{" "}
-            <button onClick={() => setAddingDoc(true)} className="text-blue-600 hover:underline">Add one</button>
+            <button onClick={() => fileInputRef.current?.click()} className="text-blue-600 hover:underline">Upload a file</button>
+            {" "}or{" "}
+            <button onClick={() => setAddingDoc(true)} className="text-blue-600 hover:underline">add a link</button>
+            <p className="text-xs text-gray-300 mt-2">You can also drag and drop files here</p>
           </div>
         )}
       </div>
