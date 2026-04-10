@@ -176,3 +176,21 @@ export const quoteHistory = sqliteTable("quote_history", {
   details: text("details"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
+
+export const fxRateHistory = sqliteTable("fx_rate_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  date: text("date").notNull().unique(), // YYYY-MM-DD
+  rateAudUsd: real("rate_aud_usd").notNull(), // 1 AUD = X USD
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+export const quoteFxSnapshots = sqliteTable("quote_fx_snapshots", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  quoteId: integer("quote_id").notNull().references(() => quotes.id, { onDelete: "cascade" }),
+  date: text("date").notNull(), // YYYY-MM-DD
+  marketRate: real("market_rate").notNull(), // AUD/USD market rate that day
+  quotedRate: real("quoted_rate").notNull(), // the quote's fxRate at time of snapshot
+  totalUsdCost: real("total_usd_cost").notNull(),
+  plImpactAud: real("pl_impact_aud").notNull(), // positive = favorable, negative = unfavorable
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});

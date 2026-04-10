@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { calculateLineItem, calculateQuoteTotals, calculateInstallationItem, calculateInstallationTotals, computeScreenSqm, computeAspectRatio, computeTotalPanels, computeTotalWeightKg, reconcileScreenSqm, type LineItemInput, type QuoteSettings, type InstallationItemInput, type InstallationSettings } from "@/lib/calculations";
 import { NumericInput } from "@/components/numeric-input";
+import { FxTracker } from "./fx-tracker";
 import { FreightCalculator } from "@/components/freight-calculator";
 import { ProductPicker } from "@/components/product-picker";
 
@@ -91,6 +92,11 @@ interface QuoteData {
   cachedTotalAudSellExGst: number | null;
   cachedTotalAudSellIncGst: number | null;
   cachedTotalGrossProfit: number | null;
+  validUntil: string | null;
+  supplierQuoteDate: string | null;
+  supplierQuoteRef: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const STATUS_OPTIONS = [
@@ -590,7 +596,64 @@ export function QuoteEditor({
             />
           </div>
         </div>
+
+        {/* Date row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 pt-3 border-t border-gray-100">
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Quote Created</label>
+            <p className="text-sm text-gray-700">
+              {new Date(quote.createdAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
+              <span className="text-xs text-gray-400 ml-1">
+                ({Math.floor((Date.now() - new Date(quote.createdAt).getTime()) / 86400000)}d ago)
+              </span>
+            </p>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Valid Until</label>
+            <input
+              type="date"
+              className="w-full border rounded px-3 py-1.5 text-sm"
+              value={quote.validUntil ?? ""}
+              onChange={(e) => updateQuoteField("validUntil", e.target.value || null)}
+            />
+            {quote.validUntil && (() => {
+              const daysLeft = Math.ceil((new Date(quote.validUntil).getTime() - Date.now()) / 86400000);
+              return (
+                <p className={`text-xs mt-1 ${daysLeft < 0 ? "text-red-500 font-medium" : daysLeft <= 7 ? "text-amber-500" : "text-gray-400"}`}>
+                  {daysLeft < 0 ? `Expired ${Math.abs(daysLeft)}d ago` : daysLeft === 0 ? "Expires today" : `${daysLeft}d remaining`}
+                </p>
+              );
+            })()}
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Supplier Quote Date</label>
+            <input
+              type="date"
+              className="w-full border rounded px-3 py-1.5 text-sm"
+              value={quote.supplierQuoteDate ?? ""}
+              onChange={(e) => updateQuoteField("supplierQuoteDate", e.target.value || null)}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Supplier Quote Ref</label>
+            <input
+              type="text"
+              className="w-full border rounded px-3 py-1.5 text-sm"
+              value={quote.supplierQuoteRef ?? ""}
+              onChange={(e) => updateQuoteField("supplierQuoteRef", e.target.value || null)}
+              placeholder="e.g. LY-2026-001"
+            />
+          </div>
+        </div>
       </div>
+
+      {/* FX Rate Tracker */}
+      <FxTracker
+        quoteId={quote.id}
+        quotedRate={quote.fxRate}
+        totalUsd={quote.cachedTotalUsd ?? 0}
+        createdAt={quote.createdAt}
+      />
 
       {/* Three Summary Cards */}
       {(() => {
