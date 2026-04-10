@@ -10,6 +10,6 @@ export const config = {
      * - /_next/image (image optimization)
      * - /favicon.ico, /lux-logo.svg, and other public assets
      */
-    "/((?!login|api/auth|api/mcp|api/fx|_next/static|_next/image|favicon\\.ico|.*\\.svg).*)",
+    "/((?!login|api/auth|api/mcp|api/fx/update|_next/static|_next/image|favicon\\.ico|.*\\.svg).*)",
   ],
 };

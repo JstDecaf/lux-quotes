@@ -532,8 +532,11 @@ export function QuoteEditor({
         )}
       </div>
 
+      {/* Settings + FX Tracker side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+
       {/* Settings Card */}
-      <div className="bg-white rounded-lg border p-5 mb-4">
+      <div className="bg-white rounded-lg border p-5">
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Quote Settings</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div>
@@ -654,6 +657,8 @@ export function QuoteEditor({
         totalUsd={quote.cachedTotalUsd ?? 0}
         createdAt={quote.createdAt}
       />
+
+      </div>{/* end grid */}
 
       {/* Three Summary Cards */}
       {(() => {
