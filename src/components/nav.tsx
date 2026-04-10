@@ -10,6 +10,7 @@ const links = [
   { href: "/quotes", label: "Quotes", icon: "Q" },
   { href: "/clients", label: "Clients", icon: "C" },
   { href: "/products", label: "Products", icon: "K" },
+  { href: "/shipping", label: "Shipping", icon: "S" },
   { href: "/import", label: "Import XLS", icon: "I" },
 ];
 

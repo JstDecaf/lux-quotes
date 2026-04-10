@@ -184,6 +184,24 @@ export const fxRateHistory = sqliteTable("fx_rate_history", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+export const shippingCosts = sqliteTable("shipping_costs", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  date: text("date").notNull(), // YYYY-MM-DD
+  mode: text("mode").notNull().default("sea_fcl"), // "sea_fcl" | "sea_lcl" | "air"
+  origin: text("origin").notNull().default("China"),
+  destination: text("destination").notNull().default("Australia"),
+  weightKg: real("weight_kg"),
+  volumeCbm: real("volume_cbm"),
+  totalCostAud: real("total_cost_aud").notNull(),
+  costPerKg: real("cost_per_kg"),
+  costPerCbm: real("cost_per_cbm"),
+  transitDays: integer("transit_days"),
+  forwarder: text("forwarder"),
+  quoteId: integer("quote_id").references(() => quotes.id, { onDelete: "set null" }),
+  notes: text("notes"),
+  ...timestamps,
+});
+
 export const quoteFxSnapshots = sqliteTable("quote_fx_snapshots", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   quoteId: integer("quote_id").notNull().references(() => quotes.id, { onDelete: "cascade" }),
