@@ -323,8 +323,14 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        setUploadError(err.error || "Upload failed");
+        let msg = `Upload failed (${res.status})`;
+        try {
+          const err = await res.json();
+          msg = err.error || msg;
+        } catch {
+          // response wasn't JSON
+        }
+        setUploadError(msg);
         return;
       }
 

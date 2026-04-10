@@ -39,10 +39,17 @@ export async function POST(
   const fileType = FILE_TYPE_MAP[file.type] || file.name.split(".").pop() || "bin";
   const blobPath = `products/${productId}/${Date.now()}-${file.name}`;
 
-  const blob = await put(blobPath, file, {
-    access: "public",
-    addRandomSuffix: false,
-  });
+  let blob;
+  try {
+    blob = await put(blobPath, file, {
+      access: "public",
+      addRandomSuffix: false,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Blob upload failed:", message);
+    return NextResponse.json({ error: `Upload to storage failed: ${message}` }, { status: 500 });
+  }
 
   const [result] = await db.insert(productDocuments).values({
     productId,
