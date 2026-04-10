@@ -494,18 +494,18 @@ export function QuoteEditor({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <a href="/quotes" className="text-gray-500 hover:text-gray-700 text-sm">&larr; Back to Quotes</a>
+          <a href="/quotes" className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] text-sm">&larr; Back to Quotes</a>
         </div>
         <div className="flex items-center gap-2">
-          {saving && <span className="text-xs text-gray-400">Saving...</span>}
+          {saving && <span className="text-xs text-[var(--text-faint)]">Saving...</span>}
         </div>
       </div>
 
       {/* Quote Title Row */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
-        <span className="text-sm font-mono text-gray-500">{quote.quoteNumber}</span>
+        <span className="text-sm font-mono text-[var(--text-muted)]">{quote.quoteNumber}</span>
         <input
-          className="text-xl sm:text-2xl font-archivo font-bold text-[#0D1B2A] bg-transparent border-b border-transparent hover:border-gray-300 focus:border-[#DB412B] focus:outline-none px-1 flex-1 min-w-0"
+          className="text-xl sm:text-2xl font-archivo font-bold text-[var(--text-primary)] bg-transparent border-b border-transparent hover:border-gray-300 focus:border-[#DB412B] focus:outline-none px-1 flex-1 min-w-0"
           value={quote.name}
           onChange={(e) => updateQuoteField("name", e.target.value)}
         />
@@ -522,7 +522,7 @@ export function QuoteEditor({
       </div>
 
       {/* Client & Project links */}
-      <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 sm:mb-6 text-sm text-gray-600">
+      <div className="flex flex-wrap gap-2 sm:gap-4 mb-4 sm:mb-6 text-sm text-[var(--text-muted)]">
         {quote.clientName && (
           <a href={`/clients/${quote.clientId}`} className="hover:text-[#DB412B]">
             Client: <span className="font-medium">{quote.clientName}</span>
@@ -539,11 +539,11 @@ export function QuoteEditor({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
 
       {/* Settings Card */}
-      <div className="bg-white rounded-lg border p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Quote Settings</h3>
+      <div className="card p-5">
+        <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Quote Settings</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">FX Rate (USD/AUD)</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">FX Rate (USD/AUD)</label>
             <NumericInput
               step="0.001"
               className="w-full border rounded px-3 py-2 text-sm"
@@ -552,7 +552,7 @@ export function QuoteEditor({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">LUX Markup %</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">LUX Markup %</label>
             <NumericInput
               step="1"
               className="w-full border rounded px-3 py-2 text-sm"
@@ -562,7 +562,7 @@ export function QuoteEditor({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Reseller Markup %</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">Reseller Markup %</label>
             <NumericInput
               step="1"
               className="w-full border rounded px-3 py-2 text-sm"
@@ -572,7 +572,7 @@ export function QuoteEditor({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">GST Rate %</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">GST Rate %</label>
             <NumericInput
               step="1"
               className="w-full border rounded px-3 py-2 text-sm"
@@ -582,7 +582,7 @@ export function QuoteEditor({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Deposit %</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">Deposit %</label>
             <NumericInput
               step="1"
               className="w-full border rounded px-3 py-2 text-sm"
@@ -592,7 +592,7 @@ export function QuoteEditor({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">2nd Tranche %</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">2nd Tranche %</label>
             <NumericInput
               step="1"
               className="w-full border rounded px-3 py-2 text-sm"
@@ -606,16 +606,16 @@ export function QuoteEditor({
         {/* Date row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 pt-3 border-t border-gray-100">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Quote Created</label>
-            <p className="text-sm text-gray-700">
+            <label className="block text-xs text-[var(--text-muted)] mb-1">Quote Created</label>
+            <p className="text-sm text-[var(--text-secondary)]">
               {new Date(quote.createdAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
-              <span className="text-xs text-gray-400 ml-1">
+              <span className="text-xs text-[var(--text-faint)] ml-1">
                 ({Math.floor((Date.now() - new Date(quote.createdAt).getTime()) / 86400000)}d ago)
               </span>
             </p>
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Valid Until</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">Valid Until</label>
             <input
               type="date"
               className="w-full border rounded px-3 py-1.5 text-sm"
@@ -625,14 +625,14 @@ export function QuoteEditor({
             {quote.validUntil && (() => {
               const daysLeft = Math.ceil((new Date(quote.validUntil).getTime() - Date.now()) / 86400000);
               return (
-                <p className={`text-xs mt-1 ${daysLeft < 0 ? "text-red-500 font-medium" : daysLeft <= 7 ? "text-amber-500" : "text-gray-400"}`}>
+                <p className={`text-xs mt-1 ${daysLeft < 0 ? "text-red-500 font-medium" : daysLeft <= 7 ? "text-amber-500" : "text-[var(--text-faint)]"}`}>
                   {daysLeft < 0 ? `Expired ${Math.abs(daysLeft)}d ago` : daysLeft === 0 ? "Expires today" : `${daysLeft}d remaining`}
                 </p>
               );
             })()}
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Supplier Quote Date</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">Supplier Quote Date</label>
             <input
               type="date"
               className="w-full border rounded px-3 py-1.5 text-sm"
@@ -641,7 +641,7 @@ export function QuoteEditor({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Supplier Quote Ref</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">Supplier Quote Ref</label>
             <input
               type="text"
               className="w-full border rounded px-3 py-1.5 text-sm"
@@ -655,7 +655,7 @@ export function QuoteEditor({
         {/* Source file */}
         {quote.sourceFileUrl && (
           <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3">
-            <span className="text-xs text-gray-500">Leyard Source File:</span>
+            <span className="text-xs text-[var(--text-muted)]">Leyard Source File:</span>
             {quote.sourceFilePreviewUrl && (
               <button
                 onClick={() => setShowSourcePreview(true)}
@@ -666,7 +666,7 @@ export function QuoteEditor({
             )}
             <a
               href={`/api/quotes/${quote.id}/source-file/download`}
-              className="text-xs text-gray-500 hover:text-gray-700 border rounded px-2.5 py-1 hover:bg-gray-50"
+              className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] border rounded px-2.5 py-1 hover:bg-[var(--table-header-bg)]"
             >
               ↓ Download XLS
             </a>
@@ -685,17 +685,17 @@ export function QuoteEditor({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-3 border-b">
-              <h3 className="text-sm font-semibold text-gray-700">Leyard Source Quote — {quote.quoteNumber}</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-secondary)]">Leyard Source Quote — {quote.quoteNumber}</h3>
               <div className="flex items-center gap-2">
                 <a
                   href={`/api/quotes/${quote.id}/source-file/download`}
-                  className="text-xs text-gray-500 hover:text-gray-700 border rounded px-2.5 py-1 hover:bg-gray-50"
+                  className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] border rounded px-2.5 py-1 hover:bg-[var(--table-header-bg)]"
                 >
                   ↓ Download XLS
                 </a>
                 <button
                   onClick={() => setShowSourcePreview(false)}
-                  className="text-gray-400 hover:text-gray-600 text-lg"
+                  className="text-[var(--text-faint)] hover:text-[var(--text-muted)] text-lg"
                 >
                   ✕
                 </button>
@@ -759,15 +759,15 @@ export function QuoteEditor({
         return (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* LUX Pricing Card */}
-            <div className="bg-white rounded-lg border border-l-4 border-l-gray-400 p-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">LUX Pricing</h3>
+            <div className="card border-l-4 border-l-gray-400 p-4">
+              <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">LUX Pricing</h3>
               <div className="space-y-1.5">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Total USD</span>
+                  <span className="text-[var(--text-muted)]">Total USD</span>
                   <span className="font-medium">US${totals.totalUsd.toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Products sell inc-GST</span>
+                  <span className="text-[var(--text-muted)]">Products sell inc-GST</span>
                   <span className="font-medium">{fmt(totals.totalAudSellIncGst)}</span>
                 </div>
                 {luxIncludesInstall && (
@@ -777,15 +777,15 @@ export function QuoteEditor({
                   </div>
                 )}
                 <div className={`flex justify-between text-sm ${luxIncludesInstall ? "border-t pt-1.5 mt-0.5" : ""}`}>
-                  <span className={luxIncludesInstall ? "font-semibold" : "text-gray-500"}>{luxIncludesInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
+                  <span className={luxIncludesInstall ? "font-semibold" : "text-[var(--text-muted)]"}>{luxIncludesInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
                   <span className="font-bold">{fmt(luxGrandSellIncGst)}</span>
                 </div>
                 <div className="border-t pt-2 mt-1 space-y-1">
-                  <div className="flex justify-between text-xs text-gray-400">
+                  <div className="flex justify-between text-xs text-[var(--text-faint)]">
                     <span>Products cost</span><span>{fmt(totals.totalAudCost)}</span>
                   </div>
                   {luxIncludesInstall && (
-                    <div className="flex justify-between text-xs text-gray-400">
+                    <div className="flex justify-between text-xs text-[var(--text-faint)]">
                       <span>Installation cost</span><span>{fmt(luxInstallCost)}</span>
                     </div>
                   )}
@@ -794,7 +794,7 @@ export function QuoteEditor({
                     <span className="text-lg font-bold text-green-600">{fmt(luxGrandProfit)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Overall Markup</span>
+                    <span className="text-[var(--text-muted)]">Overall Markup</span>
                     <span className="font-semibold">{fmtPct(luxGrandMargin)}</span>
                   </div>
                 </div>
@@ -802,11 +802,11 @@ export function QuoteEditor({
             </div>
 
             {/* Reseller Pricing Card */}
-            <div className="bg-white rounded-lg border border-l-4 border-l-blue-400 p-4">
+            <div className="card border-l-4 border-l-blue-400 p-4">
               <h3 className="text-sm font-semibold text-blue-700 mb-3">Reseller Pricing</h3>
               <div className="space-y-1.5">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Products sell inc-GST</span>
+                  <span className="text-[var(--text-muted)]">Products sell inc-GST</span>
                   <span className="font-medium text-blue-700">{fmt(totals.totalResellerSellIncGst)}</span>
                 </div>
                 {resIncludesInstall && (
@@ -816,15 +816,15 @@ export function QuoteEditor({
                   </div>
                 )}
                 <div className={`flex justify-between text-sm ${resIncludesInstall ? "border-t pt-1.5 mt-0.5" : ""}`}>
-                  <span className={resIncludesInstall ? "font-semibold" : "text-gray-500"}>{resIncludesInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
+                  <span className={resIncludesInstall ? "font-semibold" : "text-[var(--text-muted)]"}>{resIncludesInstall ? "Total inc-GST" : "Sell inc-GST"}</span>
                   <span className="font-bold text-blue-800">{fmt(resGrandSellIncGst)}</span>
                 </div>
                 <div className="border-t pt-2 mt-1 space-y-1">
-                  <div className="flex justify-between text-xs text-gray-400">
+                  <div className="flex justify-between text-xs text-[var(--text-faint)]">
                     <span>Products ex-GST</span><span>{fmt(totals.totalResellerSellExGst)}</span>
                   </div>
                   {resIncludesInstall && (
-                    <div className="flex justify-between text-xs text-gray-400">
+                    <div className="flex justify-between text-xs text-[var(--text-faint)]">
                       <span>Installation ex-GST</span><span>{fmt(resInstallSellExGst)}</span>
                     </div>
                   )}
@@ -837,25 +837,25 @@ export function QuoteEditor({
             </div>
 
             {/* Payment Schedule Card */}
-            <div className="bg-white rounded-lg border border-l-4 border-l-purple-400 p-4">
+            <div className="card border-l-4 border-l-purple-400 p-4">
               <h3 className="text-sm font-semibold text-purple-700 mb-3">Payment Schedule</h3>
               {luxIncludesInstall && (
-                <div className="flex justify-between text-xs text-gray-400 mb-2 pb-2 border-b">
+                <div className="flex justify-between text-xs text-[var(--text-faint)] mb-2 pb-2 border-b">
                   <span>Total inc-GST (LUX)</span>
                   <span className="font-medium">{fmt(pmtBase)}</span>
                 </div>
               )}
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Deposit ({(quote.depositPct * 100).toFixed(0)}%)</span>
+                  <span className="text-[var(--text-muted)]">Deposit ({(quote.depositPct * 100).toFixed(0)}%)</span>
                   <span className="font-medium text-purple-700">{fmt(pmtDeposit)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">2nd Payment ({(quote.secondTranchePct * 100).toFixed(0)}%)</span>
+                  <span className="text-[var(--text-muted)]">2nd Payment ({(quote.secondTranchePct * 100).toFixed(0)}%)</span>
                   <span className="font-medium text-purple-700">{fmt(pmtSecond)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Balance ({(balancePct * 100).toFixed(0)}%)</span>
+                  <span className="text-[var(--text-muted)]">Balance ({(balancePct * 100).toFixed(0)}%)</span>
                   <span className="font-medium text-purple-700">{fmt(pmtBalance)}</span>
                 </div>
               </div>
@@ -878,12 +878,12 @@ export function QuoteEditor({
         const recon = reconcileScreenSqm(quote.screenWidthMm, quote.screenHeightMm, items);
 
         return (
-          <details className="bg-white rounded-lg border mb-4 group" open={!!hasAnyScreenData}>
-            <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 select-none flex items-center justify-between">
+          <details className="card mb-4 group" open={!!hasAnyScreenData}>
+            <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--table-header-bg)] select-none flex items-center justify-between">
               <span className="flex items-center gap-2">
                 Screen Information
                 {screenSqm != null && (
-                  <span className="text-xs font-normal text-gray-400">
+                  <span className="text-xs font-normal text-[var(--text-faint)]">
                     {screenSqm.toFixed(2)} sqm
                     {recon.match === "mismatch" && (
                       <span className="text-amber-600 ml-1" title={`Line items: ${recon.lineItemSqm?.toFixed(2)} sqm`}>
@@ -894,53 +894,53 @@ export function QuoteEditor({
                   </span>
                 )}
               </span>
-              <span className="text-gray-400 text-xs group-open:rotate-180 transition-transform">&#9660;</span>
+              <span className="text-[var(--text-faint)] text-xs group-open:rotate-180 transition-transform">&#9660;</span>
             </summary>
             <div className="px-4 pb-4">
               {/* Editable fields grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3 mb-4">
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Screen Width (mm)</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Screen Width (mm)</label>
                   <NumericInput value={quote.screenWidthMm ?? 0} onChange={(v) => updateQuoteField("screenWidthMm", v || null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Screen Height (mm)</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Screen Height (mm)</label>
                   <NumericInput value={quote.screenHeightMm ?? 0} onChange={(v) => updateQuoteField("screenHeightMm", v || null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Pixel Pitch (mm)</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Pixel Pitch (mm)</label>
                   <NumericInput value={quote.pixelPitchMm ?? 0} onChange={(v) => updateQuoteField("pixelPitchMm", v || null)} step={0.1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Brightness (nits)</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Brightness (nits)</label>
                   <NumericInput value={quote.brightnessNits ?? 0} onChange={(v) => updateQuoteField("brightnessNits", v ? Math.round(v) : null)} step={100} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Panels Wide</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Panels Wide</label>
                   <NumericInput value={quote.panelCountW ?? 0} onChange={(v) => updateQuoteField("panelCountW", v ? Math.round(v) : null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Panels High</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Panels High</label>
                   <NumericInput value={quote.panelCountH ?? 0} onChange={(v) => updateQuoteField("panelCountH", v ? Math.round(v) : null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Resolution W (px)</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Resolution W (px)</label>
                   <NumericInput value={quote.resolutionW ?? 0} onChange={(v) => updateQuoteField("resolutionW", v ? Math.round(v) : null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Resolution H (px)</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Resolution H (px)</label>
                   <NumericInput value={quote.resolutionH ?? 0} onChange={(v) => updateQuoteField("resolutionH", v ? Math.round(v) : null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Cabinet Width (mm)</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Cabinet Width (mm)</label>
                   <NumericInput value={quote.cabinetWidthMm ?? 0} onChange={(v) => updateQuoteField("cabinetWidthMm", v || null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Cabinet Height (mm)</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Cabinet Height (mm)</label>
                   <NumericInput value={quote.cabinetHeightMm ?? 0} onChange={(v) => updateQuoteField("cabinetHeightMm", v || null)} step={1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold uppercase text-gray-400 mb-1">Cabinet Weight (kg)</label>
+                  <label className="block text-[10px] font-semibold uppercase text-[var(--text-faint)] mb-1">Cabinet Weight (kg)</label>
                   <NumericInput value={quote.cabinetWeightKg ?? 0} onChange={(v) => updateQuoteField("cabinetWeightKg", v || null)} step={0.1} className="w-full border rounded px-2 py-1.5 text-sm" />
                 </div>
               </div>
@@ -950,10 +950,10 @@ export function QuoteEditor({
                 <div className="border-t pt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
                   {screenSqm != null && (
                     <div>
-                      <span className="text-gray-400 text-xs uppercase font-semibold">Screen Area</span>
-                      <p className="font-medium text-gray-700">
+                      <span className="text-[var(--text-faint)] text-xs uppercase font-semibold">Screen Area</span>
+                      <p className="font-medium text-[var(--text-secondary)]">
                         {screenSqm.toFixed(2)} sqm
-                        <span className="text-gray-400 font-normal ml-1">
+                        <span className="text-[var(--text-faint)] font-normal ml-1">
                           ({((quote.screenWidthMm ?? 0) / 1000).toFixed(2)}m × {((quote.screenHeightMm ?? 0) / 1000).toFixed(2)}m)
                         </span>
                       </p>
@@ -961,25 +961,25 @@ export function QuoteEditor({
                   )}
                   {aspectRatio && (
                     <div>
-                      <span className="text-gray-400 text-xs uppercase font-semibold">Aspect Ratio</span>
-                      <p className="font-medium text-gray-700">{aspectRatio}</p>
+                      <span className="text-[var(--text-faint)] text-xs uppercase font-semibold">Aspect Ratio</span>
+                      <p className="font-medium text-[var(--text-secondary)]">{aspectRatio}</p>
                     </div>
                   )}
                   {totalPanels != null && (
                     <div>
-                      <span className="text-gray-400 text-xs uppercase font-semibold">Total Panels</span>
-                      <p className="font-medium text-gray-700">{totalPanels}</p>
+                      <span className="text-[var(--text-faint)] text-xs uppercase font-semibold">Total Panels</span>
+                      <p className="font-medium text-[var(--text-secondary)]">{totalPanels}</p>
                     </div>
                   )}
                   {totalWeight != null && (
                     <div>
-                      <span className="text-gray-400 text-xs uppercase font-semibold">Est. Total Weight</span>
-                      <p className="font-medium text-gray-700">{totalWeight.toFixed(1)} kg</p>
+                      <span className="text-[var(--text-faint)] text-xs uppercase font-semibold">Est. Total Weight</span>
+                      <p className="font-medium text-[var(--text-secondary)]">{totalWeight.toFixed(1)} kg</p>
                     </div>
                   )}
                   {recon.match !== "no_data" && (
                     <div>
-                      <span className="text-gray-400 text-xs uppercase font-semibold">SQM Reconciliation</span>
+                      <span className="text-[var(--text-faint)] text-xs uppercase font-semibold">SQM Reconciliation</span>
                       <p className={`font-medium ${recon.match === "ok" ? "text-green-700" : "text-amber-600"}`}>
                         Screen: {recon.screenSqm?.toFixed(2)} sqm / Line Items: {recon.lineItemSqm?.toFixed(2)} sqm
                         {recon.match === "ok" ? " ✓" : " ⚠"}
@@ -994,10 +994,10 @@ export function QuoteEditor({
       })()}
 
       {/* Notes - Collapsible */}
-      <details className="bg-white rounded-lg border mb-6 group">
-        <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-gray-700 hover:bg-gray-50 select-none flex items-center justify-between">
+      <details className="card mb-6 group">
+        <summary className="px-4 py-3 cursor-pointer text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--table-header-bg)] select-none flex items-center justify-between">
           <span>Notes</span>
-          <span className="text-gray-400 text-xs group-open:rotate-180 transition-transform">&#9660;</span>
+          <span className="text-[var(--text-faint)] text-xs group-open:rotate-180 transition-transform">&#9660;</span>
         </summary>
         <div className="px-4 pb-4">
           <textarea
@@ -1026,7 +1026,7 @@ export function QuoteEditor({
         <button
           onClick={downloadProposal}
           disabled={exporting !== null}
-          className="px-4 py-2 bg-[#0D1B2A] text-white rounded-lg hover:bg-[#1a2d42] text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-4 py-2 bg-lux-black text-white rounded-lg hover:bg-lux-navy text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {exporting === "proposal" ? (
             <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -1053,13 +1053,13 @@ export function QuoteEditor({
       </div>
 
       {/* Line Items Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#0D1B2A] text-white text-xs">
+              <tr className="bg-lux-black text-white text-xs">
                 <th className="px-2 py-2 text-left w-14"></th>
-                <th className="px-2 py-2 text-left min-w-[180px] sticky left-0 bg-[#0D1B2A] z-10">Item Name</th>
+                <th className="px-2 py-2 text-left min-w-[180px] sticky left-0 bg-lux-black z-10">Item Name</th>
                 <th className="px-2 py-2 text-left w-16">Unit</th>
                 <th className="px-2 py-2 text-right w-16">Qty</th>
                 <th className="px-2 py-2 text-right w-24">USD Unit</th>
@@ -1090,16 +1090,16 @@ export function QuoteEditor({
                   : "bg-white";
 
                 return (
-                  <tr key={item.id} className={`${rowBg} border-b border-gray-100 hover:bg-gray-50/50`}>
+                  <tr key={item.id} className={`${rowBg} border-b border-gray-100 hover:bg-[var(--table-header-bg)]/50`}>
                     <td className="px-1 py-1">
                       <div className="flex flex-col items-center gap-0.5">
-                        <button onClick={() => moveItem(idx, -1)} disabled={idx === 0} className="text-gray-300 hover:text-gray-600 disabled:opacity-20 leading-none text-xs" title="Move up">▲</button>
-                        <button onClick={() => moveItem(idx, 1)} disabled={idx === items.length - 1} className="text-gray-300 hover:text-gray-600 disabled:opacity-20 leading-none text-xs" title="Move down">▼</button>
+                        <button onClick={() => moveItem(idx, -1)} disabled={idx === 0} className="text-gray-300 hover:text-[var(--text-muted)] disabled:opacity-20 leading-none text-xs" title="Move up">▲</button>
+                        <button onClick={() => moveItem(idx, 1)} disabled={idx === items.length - 1} className="text-gray-300 hover:text-[var(--text-muted)] disabled:opacity-20 leading-none text-xs" title="Move down">▼</button>
                       </div>
                     </td>
                     <td className={`px-2 py-1 sticky left-0 z-10 ${rowBg} border-r border-gray-200`}>
                       <input
-                        className={`w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-blue-400 focus:outline-none rounded px-1 py-0.5 ${isFree ? "line-through text-gray-400" : ""}`}
+                        className={`w-full bg-transparent border border-transparent hover:border-gray-200 focus:border-blue-400 focus:outline-none rounded px-1 py-0.5 ${isFree ? "line-through text-[var(--text-faint)]" : ""}`}
                         value={item.itemName}
                         onChange={(e) => updateItem(idx, "itemName", e.target.value)}
                       />
@@ -1108,13 +1108,13 @@ export function QuoteEditor({
                           <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded px-1.5 py-0.5 font-medium">
                             {item.productName}{item.pixelPitch ? ` • ${item.pixelPitch}mm` : ''}
                           </span>
-                          <button onClick={() => unlinkProduct(idx)} className="text-xs text-gray-400 hover:text-red-500" title="Unlink product">&times;</button>
+                          <button onClick={() => unlinkProduct(idx)} className="text-xs text-[var(--text-faint)] hover:text-red-500" title="Unlink product">&times;</button>
                         </div>
                       )}
                       {!item.productName && (
                         <button
                           onClick={() => setShowProductPicker({ mode: 'link', itemIdx: idx })}
-                          className="text-xs text-gray-400 hover:text-blue-600 mt-0.5 flex items-center gap-0.5"
+                          className="text-xs text-[var(--text-faint)] hover:text-blue-600 mt-0.5 flex items-center gap-0.5"
                           title="Link to product catalog"
                         >
                           🔗 Link product
@@ -1149,10 +1149,10 @@ export function QuoteEditor({
                         onChange={(v) => updateItem(idx, "usdUnitPrice", v)}
                       />
                     </td>
-                    <td className={`px-2 py-1 text-right bg-gray-50 text-gray-600 ${isFree ? "line-through" : ""}`}>
+                    <td className={`px-2 py-1 text-right bg-[var(--table-header-bg)] text-[var(--text-muted)] ${isFree ? "line-through" : ""}`}>
                       {fmt(calc.usdSubtotal)}
                     </td>
-                    <td className="px-2 py-1 text-right bg-gray-50">
+                    <td className="px-2 py-1 text-right bg-[var(--table-header-bg)]">
                       {isLocal ? (
                         <NumericInput
                           step="0.01"
@@ -1161,7 +1161,7 @@ export function QuoteEditor({
                           onChange={(v) => updateItem(idx, "audLocalCost", v)}
                         />
                       ) : (
-                        <span className={`text-gray-600 ${isFree ? "line-through" : ""}`}>{fmt(calc.audCost)}</span>
+                        <span className={`text-[var(--text-muted)] ${isFree ? "line-through" : ""}`}>{fmt(calc.audCost)}</span>
                       )}
                     </td>
                     <td className="px-2 py-1">
@@ -1177,16 +1177,16 @@ export function QuoteEditor({
                         }}
                       />
                     </td>
-                    <td className={`px-2 py-1 text-right bg-gray-50 text-gray-600 ${isFree ? "line-through" : ""}`}>
+                    <td className={`px-2 py-1 text-right bg-[var(--table-header-bg)] text-[var(--text-muted)] ${isFree ? "line-through" : ""}`}>
                       {fmt(calc.audSellExGst)}
                     </td>
-                    <td className={`px-2 py-1 text-right bg-gray-50 text-gray-600 ${isFree ? "line-through" : ""}`}>
+                    <td className={`px-2 py-1 text-right bg-[var(--table-header-bg)] text-[var(--text-muted)] ${isFree ? "line-through" : ""}`}>
                       {fmt(calc.gst)}
                     </td>
-                    <td className={`px-2 py-1 text-right bg-gray-50 text-gray-600 ${isFree ? "line-through" : ""}`}>
+                    <td className={`px-2 py-1 text-right bg-[var(--table-header-bg)] text-[var(--text-muted)] ${isFree ? "line-through" : ""}`}>
                       {fmt(calc.audSellIncGst)}
                     </td>
-                    <td className={`px-2 py-1 text-right bg-gray-50 text-gray-600 ${isFree ? "line-through" : ""}`}>
+                    <td className={`px-2 py-1 text-right bg-[var(--table-header-bg)] text-[var(--text-muted)] ${isFree ? "line-through" : ""}`}>
                       {fmt(calc.grossProfit)}
                     </td>
                     {/* Reseller columns */}
@@ -1229,7 +1229,7 @@ export function QuoteEditor({
               })}
 
               {/* Totals row */}
-              <tr className="border-t-2 border-[#0D1B2A] font-bold bg-gray-50">
+              <tr className="border-t-2 border-[#0D1B2A] font-bold bg-[var(--table-header-bg)]">
                 <td className="px-2 py-2" colSpan={5}>
                   TOTALS
                 </td>
@@ -1252,10 +1252,10 @@ export function QuoteEditor({
         </div>
 
         {/* Action buttons */}
-        <div className="flex flex-wrap gap-2 p-3 border-t bg-gray-50">
+        <div className="flex flex-wrap gap-2 p-3 border-t bg-[var(--table-header-bg)]">
           <button
             onClick={() => addItem()}
-            className="px-3 py-2 sm:py-1.5 text-sm bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42] transition-colors"
+            className="px-3 py-2 sm:py-1.5 text-sm bg-lux-black text-white rounded hover:bg-lux-navy transition-colors"
           >
             + Add Item
           </button>
@@ -1278,7 +1278,7 @@ export function QuoteEditor({
             🔗 From Catalog
           </button>
 
-          <div className="hidden sm:flex ml-auto gap-2 text-xs text-gray-500">
+          <div className="hidden sm:flex ml-auto gap-2 text-xs text-[var(--text-muted)]">
             <label className="flex items-center gap-1">
               <span>Tip: Leave margin blank to use quote default</span>
             </label>
@@ -1287,7 +1287,7 @@ export function QuoteEditor({
       </div>
 
       {/* Installation & Services Section */}
-      <div className="bg-white rounded-lg border overflow-hidden mt-6">
+      <div className="card overflow-hidden mt-6">
         <div className="flex items-center justify-between px-4 py-3 bg-amber-50 border-b border-amber-200">
           <div className="flex items-center gap-3">
             <h3 className="text-sm font-semibold text-amber-900">Installation & Services</h3>
@@ -1296,7 +1296,7 @@ export function QuoteEditor({
           <div className="flex items-center gap-4 flex-wrap">
             {/* Quoted by toggle */}
             <div className="flex items-center gap-1 text-xs">
-              <span className="text-gray-500 mr-1">Quoted by</span>
+              <span className="text-[var(--text-muted)] mr-1">Quoted by</span>
               {(["lux", "reseller", "both"] as const).map((opt) => {
                 const labels = { lux: "LUX", reseller: "Reseller", both: "Both" };
                 const active = quote.installationQuotedBy === opt;
@@ -1316,14 +1316,14 @@ export function QuoteEditor({
               })}
             </div>
             <div className="flex items-center gap-2 text-xs text-amber-800">
-              <label className="text-gray-500">Hourly Rate $</label>
+              <label className="text-[var(--text-muted)]">Hourly Rate $</label>
               <NumericInput
                 step="1"
                 className="w-20 border rounded px-2 py-1 text-sm text-right"
                 value={quote.installationHourlyRate}
                 onChange={(v) => updateQuoteField("installationHourlyRate", v)}
               />
-              <label className="text-gray-500 ml-2">Markup %</label>
+              <label className="text-[var(--text-muted)] ml-2">Markup %</label>
               <NumericInput
                 step="1"
                 className="w-16 border rounded px-2 py-1 text-sm text-right"
@@ -1423,11 +1423,11 @@ export function QuoteEditor({
                         }}
                       />
                     </td>
-                    <td className="px-2 py-1 text-right bg-gray-50 text-gray-600">{fmt(calc.cost)}</td>
-                    <td className="px-2 py-1 text-right bg-gray-50 text-gray-600">{fmt(calc.sellExGst)}</td>
-                    <td className="px-2 py-1 text-right bg-gray-50 text-gray-600">{fmt(calc.gst)}</td>
-                    <td className="px-2 py-1 text-right bg-gray-50 text-gray-600 font-medium">{fmt(calc.sellIncGst)}</td>
-                    <td className="px-2 py-1 text-right bg-gray-50 text-green-600">{fmt(calc.grossProfit)}</td>
+                    <td className="px-2 py-1 text-right bg-[var(--table-header-bg)] text-[var(--text-muted)]">{fmt(calc.cost)}</td>
+                    <td className="px-2 py-1 text-right bg-[var(--table-header-bg)] text-[var(--text-muted)]">{fmt(calc.sellExGst)}</td>
+                    <td className="px-2 py-1 text-right bg-[var(--table-header-bg)] text-[var(--text-muted)]">{fmt(calc.gst)}</td>
+                    <td className="px-2 py-1 text-right bg-[var(--table-header-bg)] text-[var(--text-muted)] font-medium">{fmt(calc.sellIncGst)}</td>
+                    <td className="px-2 py-1 text-right bg-[var(--table-header-bg)] text-green-600">{fmt(calc.grossProfit)}</td>
                     <td className="px-2 py-1">
                       <button
                         onClick={() => deleteInstallItem(idx)}
@@ -1443,7 +1443,7 @@ export function QuoteEditor({
 
               {installItems.length === 0 && (
                 <tr>
-                  <td colSpan={12} className="px-4 py-6 text-center text-gray-400 text-sm">
+                  <td colSpan={12} className="px-4 py-6 text-center text-[var(--text-faint)] text-sm">
                     No installation items yet.
                   </td>
                 </tr>
@@ -1477,7 +1477,7 @@ export function QuoteEditor({
           >
             ↓ Load Defaults
           </button>
-          <div className="hidden sm:flex ml-auto gap-2 text-xs text-gray-500 items-center">
+          <div className="hidden sm:flex ml-auto gap-2 text-xs text-[var(--text-muted)] items-center">
             <span>Tip: Leave margin blank to use section default · Hourly rate uses quote default when blank</span>
           </div>
         </div>

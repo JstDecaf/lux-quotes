@@ -99,11 +99,11 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
   };
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
+    <div className="card overflow-hidden">
       {/* Product Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <div
-          className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-gray-50 -mx-4 -my-3 px-4 py-3"
+          className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-[var(--table-header-bg)] -mx-4 -my-3 px-4 py-3"
           onClick={onToggle}
         >
           <div className="text-lg">
@@ -131,14 +131,14 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
                   onChange={(e) => setProduct({ ...product, name: e.target.value })}
                 />
               ) : (
-                <h3 className="font-bold text-gray-900">{product.name}</h3>
+                <h3 className="font-bold text-[var(--text-primary)]">{product.name}</h3>
               )}
               {!editing && (
                 <>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[product.status] || "bg-gray-100 text-gray-600"}`}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[product.status] || "bg-gray-100 text-[var(--text-muted)]"}`}>
                     {product.status}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-[var(--text-muted)]">
                     {product.category}
                   </span>
                   {product.subBrand === "Vteam" && (
@@ -147,7 +147,7 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
                 </>
               )}
             </div>
-            {!editing && <p className="text-sm text-gray-500 mt-0.5 truncate">{product.description}</p>}
+            {!editing && <p className="text-sm text-[var(--text-muted)] mt-0.5 truncate">{product.description}</p>}
           </div>
         </div>
         <div className="flex items-center gap-3 flex-shrink-0 ml-3">
@@ -156,13 +156,13 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
               <button
                 onClick={saveProduct}
                 disabled={saving}
-                className="px-3 py-1.5 text-xs bg-[#0D1B2A] text-white rounded disabled:opacity-50"
+                className="px-3 py-1.5 text-xs bg-lux-black text-white rounded disabled:opacity-50"
               >
                 {saving ? "Saving..." : "Save"}
               </button>
               <button
                 onClick={() => { setProduct(initialProduct); setEditing(false); }}
-                className="px-3 py-1.5 text-xs text-gray-500 border rounded"
+                className="px-3 py-1.5 text-xs text-[var(--text-muted)] border rounded"
               >
                 Cancel
               </button>
@@ -170,17 +170,17 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
           ) : (
             <button
               onClick={(e) => { e.stopPropagation(); setEditing(true); }}
-              className="px-3 py-1.5 text-xs text-gray-400 hover:text-gray-600 border rounded hover:bg-gray-50"
+              className="px-3 py-1.5 text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] border rounded hover:bg-[var(--table-header-bg)]"
             >
               Edit
             </button>
           )}
           <div className="text-right">
-            <span className="text-sm font-medium text-gray-500">
+            <span className="text-sm font-medium text-[var(--text-muted)]">
               {product.variants.length} variant{product.variants.length !== 1 ? "s" : ""}
             </span>
             {product.variants.some((v) => v.pricePerSqmUsd) && (
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-[var(--text-faint)]">
                 {fmt(Math.min(...product.variants.filter((v) => v.pricePerSqmUsd).map((v) => v.pricePerSqmUsd!)))}
                 {" \u2013 "}
                 {fmt(Math.max(...product.variants.filter((v) => v.pricePerSqmUsd).map((v) => v.pricePerSqmUsd!)))}
@@ -193,10 +193,10 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
 
       {/* Inline Edit Fields */}
       {editing && (
-        <div className="border-t px-4 py-3 bg-gray-50" onClick={(e) => e.stopPropagation()}>
+        <div className="border-t px-4 py-3 bg-[var(--table-header-bg)]" onClick={(e) => e.stopPropagation()}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Brand</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Brand</label>
               <input
                 className="w-full border rounded px-2 py-1.5 text-sm"
                 value={product.brand ?? ""}
@@ -204,7 +204,7 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Sub-Brand</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Sub-Brand</label>
               <input
                 className="w-full border rounded px-2 py-1.5 text-sm"
                 value={product.subBrand ?? ""}
@@ -212,7 +212,7 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Category</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Category</label>
               <select
                 className="w-full border rounded px-2 py-1.5 text-sm"
                 value={product.category ?? ""}
@@ -224,7 +224,7 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Status</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Status</label>
               <select
                 className="w-full border rounded px-2 py-1.5 text-sm"
                 value={product.status}
@@ -237,7 +237,7 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
             </div>
           </div>
           <div className="mt-3">
-            <label className="block text-xs text-gray-500 mb-1">Description</label>
+            <label className="block text-xs text-[var(--text-muted)] mb-1">Description</label>
             <textarea
               className="w-full border rounded px-2 py-1.5 text-sm min-h-[60px]"
               value={product.description ?? ""}
@@ -252,8 +252,8 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
         <div className="border-t">
           {/* Applications */}
           {product.applications.length > 0 && (
-            <div className="px-4 py-2 bg-gray-50 border-b">
-              <span className="text-xs text-gray-500 mr-2">Applications:</span>
+            <div className="px-4 py-2 bg-[var(--table-header-bg)] border-b">
+              <span className="text-xs text-[var(--text-muted)] mr-2">Applications:</span>
               {product.applications.map((app) => (
                 <span key={app} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded mr-1">{app}</span>
               ))}
@@ -262,8 +262,8 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
 
           {/* Documents & Links */}
           {product.documents.length > 0 && (
-            <div className="px-4 py-2 bg-gray-50 border-b flex items-center gap-3 flex-wrap">
-              <span className="text-xs text-gray-500">Resources:</span>
+            <div className="px-4 py-2 bg-[var(--table-header-bg)] border-b flex items-center gap-3 flex-wrap">
+              <span className="text-xs text-[var(--text-muted)]">Resources:</span>
               {product.documents.map((doc) => {
                 const isNAS = doc.url.startsWith("file:///");
                 const icons: Record<string, string> = {
@@ -290,7 +290,7 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
               })}
               <a
                 href={`/products/${product.id}`}
-                className="text-xs text-gray-400 hover:text-blue-600 ml-auto"
+                className="text-xs text-[var(--text-faint)] hover:text-blue-600 ml-auto"
               >
                 View all &rarr;
               </a>
@@ -301,54 +301,54 @@ function ProductCardComponent({ product: initialProduct, isExpanded, onToggle }:
           {product.variants.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-gray-50 border-b">
+                <thead className="bg-[var(--table-header-bg)] border-b">
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Variant</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Pitch</th>
-                    <th className="px-3 py-2 text-right font-medium text-gray-600">USD/sqm</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">GOB</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Cabinet</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Resolution</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Brightness</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Contrast</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Refresh</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Viewing</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Weight</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Power (Avg/Max)</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">IP</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Temp</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Variant</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Pitch</th>
+                    <th className="px-3 py-2 text-right font-medium text-[var(--text-muted)]">USD/sqm</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">GOB</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Cabinet</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Resolution</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Brightness</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Contrast</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Refresh</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Viewing</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Weight</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Power (Avg/Max)</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">IP</th>
+                    <th className="px-3 py-2 text-left font-medium text-[var(--text-muted)]">Temp</th>
                   </tr>
                 </thead>
                 <tbody>
                   {product.variants.map((v) => (
                     <tr key={v.id} className="border-b last:border-b-0 hover:bg-blue-50/30">
-                      <td className="px-3 py-2 font-medium text-gray-900">{v.name}</td>
-                      <td className="px-3 py-2 text-gray-700">{v.pixelPitch || "\u2014"}</td>
+                      <td className="px-3 py-2 font-medium text-[var(--text-primary)]">{v.name}</td>
+                      <td className="px-3 py-2 text-[var(--text-secondary)]">{v.pixelPitch || "\u2014"}</td>
                       <td className="px-3 py-2 text-right font-mono font-medium text-green-700">
                         {v.pricePerSqmUsd ? `$${v.pricePerSqmUsd.toLocaleString()}` : "\u2014"}
                       </td>
                       <td className="px-3 py-2">
                         {v.gob ? <span className="text-green-600 font-bold">&#10003;</span> : ""}
                       </td>
-                      <td className="px-3 py-2 text-gray-600">{v.cabinetSize || "\u2014"}</td>
-                      <td className="px-3 py-2 text-gray-600">{v.cabinetResolution || "\u2014"}</td>
-                      <td className="px-3 py-2 text-gray-600">{v.brightness || "\u2014"}</td>
-                      <td className="px-3 py-2 text-gray-600">{v.contrastRatio || "\u2014"}</td>
-                      <td className="px-3 py-2 text-gray-600">{v.refreshRate || "\u2014"}</td>
-                      <td className="px-3 py-2 text-gray-600">{v.viewingAngle || "\u2014"}</td>
-                      <td className="px-3 py-2 text-gray-600">{v.weight || "\u2014"}</td>
-                      <td className="px-3 py-2 text-gray-600">
+                      <td className="px-3 py-2 text-[var(--text-muted)]">{v.cabinetSize || "\u2014"}</td>
+                      <td className="px-3 py-2 text-[var(--text-muted)]">{v.cabinetResolution || "\u2014"}</td>
+                      <td className="px-3 py-2 text-[var(--text-muted)]">{v.brightness || "\u2014"}</td>
+                      <td className="px-3 py-2 text-[var(--text-muted)]">{v.contrastRatio || "\u2014"}</td>
+                      <td className="px-3 py-2 text-[var(--text-muted)]">{v.refreshRate || "\u2014"}</td>
+                      <td className="px-3 py-2 text-[var(--text-muted)]">{v.viewingAngle || "\u2014"}</td>
+                      <td className="px-3 py-2 text-[var(--text-muted)]">{v.weight || "\u2014"}</td>
+                      <td className="px-3 py-2 text-[var(--text-muted)]">
                         {v.powerAvg || v.powerMax ? `${v.powerAvg || "\u2014"} / ${v.powerMax || "\u2014"}` : "\u2014"}
                       </td>
-                      <td className="px-3 py-2 text-gray-600">{v.ipRating || "\u2014"}</td>
-                      <td className="px-3 py-2 text-gray-600">{v.operatingTemp || "\u2014"}</td>
+                      <td className="px-3 py-2 text-[var(--text-muted)]">{v.ipRating || "\u2014"}</td>
+                      <td className="px-3 py-2 text-[var(--text-muted)]">{v.operatingTemp || "\u2014"}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <div className="px-4 py-6 text-center text-gray-400 text-sm">
+            <div className="px-4 py-6 text-center text-[var(--text-faint)] text-sm">
               No variants configured yet
             </div>
           )}
@@ -384,8 +384,8 @@ export default function ProductCatalog({ initialProducts }: { initialProducts: P
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
                 selectedCategory === cat
-                  ? "bg-[#0D1B2A] text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-lux-black text-white"
+                  : "bg-gray-100 text-[var(--text-muted)] hover:bg-gray-200"
               }`}
             >
               {cat} ({count})
@@ -417,7 +417,7 @@ export default function ProductCatalog({ initialProducts }: { initialProducts: P
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-[var(--text-faint)]">
           No products match your filters
         </div>
       )}

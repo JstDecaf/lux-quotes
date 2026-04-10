@@ -99,13 +99,13 @@ export function ShippingList({ initialEntries }: { initialEntries: ShippingEntry
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-archivo text-2xl font-bold text-gray-900">Shipping Costs</h1>
-          <p className="text-sm text-gray-500 mt-1">Track your freight costs from China to Australia</p>
+          <h1 className="font-archivo text-2xl font-bold text-[var(--text-primary)]">Shipping Costs</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1">Track your freight costs from China to Australia</p>
         </div>
         {!adding && (
           <button
             onClick={() => setAdding(true)}
-            className="px-4 py-2 bg-[#0D1B2A] text-white rounded-lg text-sm font-medium hover:bg-[#1a2d42]"
+            className="px-4 py-2 bg-lux-black text-white rounded-lg text-sm font-medium hover:bg-lux-navy"
           >
             + Add Entry
           </button>
@@ -114,10 +114,10 @@ export function ShippingList({ initialEntries }: { initialEntries: ShippingEntry
 
       {/* Cost per CBM chart */}
       {(seaEntries.length > 1 || airEntries.length > 1) && (
-        <div className="bg-white rounded-lg border p-5 mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Cost per CBM Over Time</h3>
+        <div className="card p-5 mb-6">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3">Cost per CBM Over Time</h3>
           <ShippingChart seaData={seaEntries} airData={airEntries} />
-          <div className="flex gap-4 mt-2 text-xs text-gray-500">
+          <div className="flex gap-4 mt-2 text-xs text-[var(--text-muted)]">
             {seaEntries.length > 0 && (
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-0.5 bg-blue-500 inline-block" /> Sea
@@ -134,15 +134,15 @@ export function ShippingList({ initialEntries }: { initialEntries: ShippingEntry
 
       {/* Add form */}
       {adding && (
-        <div className="bg-white rounded-lg border p-5 mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">New Shipping Entry</h3>
+        <div className="card p-5 mb-6">
+          <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4">New Shipping Entry</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Date *</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Date *</label>
               <input type="date" className="w-full border rounded px-3 py-2 text-sm" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Mode *</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Mode *</label>
               <select className="w-full border rounded px-3 py-2 text-sm" value={form.mode} onChange={(e) => setForm({ ...form, mode: e.target.value })}>
                 <option value="sea_fcl">Sea (FCL)</option>
                 <option value="sea_lcl">Sea (LCL)</option>
@@ -150,35 +150,35 @@ export function ShippingList({ initialEntries }: { initialEntries: ShippingEntry
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Total Cost AUD *</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Total Cost AUD *</label>
               <input type="number" step="0.01" className="w-full border rounded px-3 py-2 text-sm" placeholder="0.00" value={form.totalCostAud} onChange={(e) => setForm({ ...form, totalCostAud: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Volume (CBM)</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Volume (CBM)</label>
               <input type="number" step="0.01" className="w-full border rounded px-3 py-2 text-sm" placeholder="0.00" value={form.volumeCbm} onChange={(e) => setForm({ ...form, volumeCbm: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Weight (kg)</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Weight (kg)</label>
               <input type="number" step="0.1" className="w-full border rounded px-3 py-2 text-sm" placeholder="0.0" value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Transit Days</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Transit Days</label>
               <input type="number" className="w-full border rounded px-3 py-2 text-sm" placeholder="0" value={form.transitDays} onChange={(e) => setForm({ ...form, transitDays: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Forwarder</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Forwarder</label>
               <input type="text" className="w-full border rounded px-3 py-2 text-sm" placeholder="e.g. DHL, Flexport" value={form.forwarder} onChange={(e) => setForm({ ...form, forwarder: e.target.value })} />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Notes</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Notes</label>
               <input type="text" className="w-full border rounded px-3 py-2 text-sm" placeholder="Optional" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleAdd} disabled={saving || !form.totalCostAud} className="px-4 py-2 bg-[#0D1B2A] text-white rounded text-sm hover:bg-[#1a2d42] disabled:opacity-50">
+            <button onClick={handleAdd} disabled={saving || !form.totalCostAud} className="px-4 py-2 bg-lux-black text-white rounded text-sm hover:bg-lux-navy disabled:opacity-50">
               {saving ? "Saving..." : "Save"}
             </button>
-            <button onClick={() => { setAdding(false); setForm(emptyForm); }} className="px-4 py-2 text-gray-500 border rounded text-sm hover:bg-gray-50">
+            <button onClick={() => { setAdding(false); setForm(emptyForm); }} className="px-4 py-2 text-[var(--text-muted)] border rounded text-sm hover:bg-[var(--table-header-bg)]">
               Cancel
             </button>
           </div>
@@ -186,44 +186,44 @@ export function ShippingList({ initialEntries }: { initialEntries: ShippingEntry
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mode</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total AUD</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">CBM</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">$/CBM</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Weight</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">$/kg</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Transit</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Forwarder</th>
+              <tr className="border-b border-[var(--card-border)] bg-[var(--table-header-bg)]">
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">Mode</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] uppercase">Total AUD</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] uppercase">CBM</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] uppercase">$/CBM</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] uppercase">Weight</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] uppercase">$/kg</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] uppercase">Transit</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase">Forwarder</th>
                 <th className="px-4 py-3 w-10"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {entries.map((e) => (
-                <tr key={e.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-700">{e.date}</td>
+                <tr key={e.id} className="hover:bg-[var(--table-header-bg)]">
+                  <td className="px-4 py-3 text-[var(--text-secondary)]">{e.date}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${MODE_COLORS[e.mode] || "bg-gray-100"}`}>
                       {MODE_LABELS[e.mode] || e.mode}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right font-medium">{fmt(e.totalCostAud)}</td>
-                  <td className="px-4 py-3 text-right text-gray-600">{e.volumeCbm?.toFixed(2) ?? "—"}</td>
+                  <td className="px-4 py-3 text-right text-[var(--text-muted)]">{e.volumeCbm?.toFixed(2) ?? "—"}</td>
                   <td className="px-4 py-3 text-right font-medium text-blue-600">{e.costPerCbm ? fmtDec(e.costPerCbm) : "—"}</td>
-                  <td className="px-4 py-3 text-right text-gray-600">{e.weightKg?.toFixed(0) ?? "—"}</td>
-                  <td className="px-4 py-3 text-right text-gray-600">{e.costPerKg ? fmtDec(e.costPerKg) : "—"}</td>
-                  <td className="px-4 py-3 text-right text-gray-500">{e.transitDays ? `${e.transitDays}d` : "—"}</td>
-                  <td className="px-4 py-3 text-gray-600 text-xs">{e.forwarder ?? "—"}</td>
+                  <td className="px-4 py-3 text-right text-[var(--text-muted)]">{e.weightKg?.toFixed(0) ?? "—"}</td>
+                  <td className="px-4 py-3 text-right text-[var(--text-muted)]">{e.costPerKg ? fmtDec(e.costPerKg) : "—"}</td>
+                  <td className="px-4 py-3 text-right text-[var(--text-muted)]">{e.transitDays ? `${e.transitDays}d` : "—"}</td>
+                  <td className="px-4 py-3 text-[var(--text-muted)] text-xs">{e.forwarder ?? "—"}</td>
                   <td className="px-4 py-3">
                     {deleteId === e.id ? (
                       <span className="flex items-center gap-1 text-xs">
                         <button onClick={() => handleDelete(e.id)} className="text-red-600 font-medium">Yes</button>
-                        <button onClick={() => setDeleteId(null)} className="text-gray-400">No</button>
+                        <button onClick={() => setDeleteId(null)} className="text-[var(--text-faint)]">No</button>
                       </span>
                     ) : (
                       <button onClick={() => setDeleteId(e.id)} className="text-gray-300 hover:text-red-500">×</button>
@@ -233,7 +233,7 @@ export function ShippingList({ initialEntries }: { initialEntries: ShippingEntry
               ))}
               {entries.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  <td colSpan={10} className="px-4 py-8 text-center text-[var(--text-faint)] text-sm">
                     No shipping entries yet.{" "}
                     <button onClick={() => setAdding(true)} className="text-blue-600 hover:underline">Add your first entry</button>
                   </td>

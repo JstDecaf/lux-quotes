@@ -117,7 +117,7 @@ export function ProductPicker({ onSelect, onClose }: ProductPickerProps) {
           <h2 className="text-lg font-bold text-[#0D1B2A] font-archivo">Select from Product Catalog</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+            className="text-[var(--text-faint)] hover:text-[var(--text-muted)] text-2xl leading-none"
             aria-label="Close"
           >
             &times;
@@ -139,10 +139,10 @@ export function ProductPicker({ onSelect, onClose }: ProductPickerProps) {
         {/* Product list */}
         <div className="overflow-y-auto flex-1 px-5 py-3 space-y-2">
           {loading && (
-            <div className="text-center text-gray-400 py-12 text-sm">Loading products...</div>
+            <div className="text-center text-[var(--text-faint)] py-12 text-sm">Loading products...</div>
           )}
           {!loading && filtered.length === 0 && (
-            <div className="text-center text-gray-400 py-12 text-sm">No products found</div>
+            <div className="text-center text-[var(--text-faint)] py-12 text-sm">No products found</div>
           )}
           {!loading && filtered.map((product) => {
             const isExpanded = expandedProductId === product.id;
@@ -155,25 +155,25 @@ export function ProductPicker({ onSelect, onClose }: ProductPickerProps) {
               >
                 {/* Product card header */}
                 <button
-                  className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors"
+                  className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-[var(--table-header-bg)] transition-colors"
                   onClick={() => setExpandedProductId(isExpanded ? null : product.id)}
                 >
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-[#0D1B2A] text-sm truncate">{product.name}</div>
                     <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                       {product.category && (
-                        <span className="text-xs text-gray-500 bg-gray-100 rounded px-1.5 py-0.5">{product.category}</span>
+                        <span className="text-xs text-[var(--text-muted)] bg-gray-100 rounded px-1.5 py-0.5">{product.category}</span>
                       )}
                       {pitches && (
-                        <span className="text-xs text-gray-500">{pitches}mm pitch</span>
+                        <span className="text-xs text-[var(--text-muted)]">{pitches}mm pitch</span>
                       )}
                       {product.variants.length > 0 && (
-                        <span className="text-xs text-gray-400">{product.variants.length} variant{product.variants.length !== 1 ? "s" : ""}</span>
+                        <span className="text-xs text-[var(--text-faint)]">{product.variants.length} variant{product.variants.length !== 1 ? "s" : ""}</span>
                       )}
                     </div>
                   </div>
                   <svg
-                    className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 text-[var(--text-faint)] flex-shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
                     fill="none" stroke="currentColor" viewBox="0 0 24 24"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -182,11 +182,11 @@ export function ProductPicker({ onSelect, onClose }: ProductPickerProps) {
 
                 {/* Expanded variant list */}
                 {isExpanded && (
-                  <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 space-y-2">
+                  <div className="border-t border-gray-100 bg-[var(--table-header-bg)] px-4 py-3 space-y-2">
                     {/* Link product only */}
                     <button
                       onClick={() => handleSelectProductOnly(product)}
-                      className="w-full text-left text-xs text-gray-500 hover:text-[#DB412B] py-1 flex items-center gap-1.5 italic"
+                      className="w-full text-left text-xs text-[var(--text-muted)] hover:text-[#DB412B] py-1 flex items-center gap-1.5 italic"
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
@@ -195,7 +195,7 @@ export function ProductPicker({ onSelect, onClose }: ProductPickerProps) {
                     </button>
 
                     {product.variants.length === 0 && (
-                      <div className="text-xs text-gray-400 italic">No variants configured</div>
+                      <div className="text-xs text-[var(--text-faint)] italic">No variants configured</div>
                     )}
 
                     {/* Variant buttons */}
@@ -210,7 +210,7 @@ export function ProductPicker({ onSelect, onClose }: ProductPickerProps) {
                             <div className="font-medium text-sm text-[#0D1B2A] group-hover:text-[#DB412B] truncate">
                               {variant.name}
                             </div>
-                            <div className="flex items-center gap-3 mt-0.5 flex-wrap text-xs text-gray-500">
+                            <div className="flex items-center gap-3 mt-0.5 flex-wrap text-xs text-[var(--text-muted)]">
                               {variant.pixelPitch && (
                                 <span>{variant.pixelPitch}mm pitch</span>
                               )}
@@ -228,7 +228,7 @@ export function ProductPicker({ onSelect, onClose }: ProductPickerProps) {
                                 US${variant.pricePerSqmUsd.toLocaleString("en-AU", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}/sqm
                               </span>
                             ) : (
-                              <span className="text-xs text-gray-400">No price</span>
+                              <span className="text-xs text-[var(--text-faint)]">No price</span>
                             )}
                           </div>
                         </div>
@@ -242,10 +242,10 @@ export function ProductPicker({ onSelect, onClose }: ProductPickerProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t bg-gray-50 rounded-b-xl flex justify-end">
+        <div className="px-5 py-3 border-t bg-[var(--table-header-bg)] rounded-b-xl flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
           >
             Cancel
           </button>

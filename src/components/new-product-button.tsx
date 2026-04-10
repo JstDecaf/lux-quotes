@@ -26,7 +26,7 @@ export function NewProductButton() {
     <button
       onClick={createProduct}
       disabled={creating}
-      className="px-4 py-2 text-sm bg-[#0D1B2A] text-white rounded-lg hover:bg-[#1a2d42] disabled:opacity-50 font-medium"
+      className="px-4 py-2 text-sm bg-lux-black text-white rounded-lg hover:bg-lux-navy disabled:opacity-50 font-medium"
     >
       {creating ? "Creating..." : "+ New Product"}
     </button>

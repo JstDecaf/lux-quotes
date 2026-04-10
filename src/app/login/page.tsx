@@ -33,28 +33,29 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0D1B2A] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-lux-black flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
-        <div className="bg-white rounded-xl shadow-2xl p-8">
+        <div className="card p-8 shadow-2xl">
           {/* Logo */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-8">
             <Image
-              src="/lux-logo.svg"
-              alt="LUX LED Screen Solutions"
-              width={160}
-              height={62}
+              src="/lux-logo.png"
+              alt="LUX LED Solutions"
+              width={180}
+              height={90}
+              className="h-16 w-auto"
               priority
             />
           </div>
 
           {/* Heading */}
-          <h1 className="font-archivo text-xl font-bold text-gray-900 text-center mb-6">
-            Sign in to <span className="text-[#DB412B]">LUX</span> Quotes
+          <h1 className="font-archivo text-xl font-bold text-[var(--text-primary)] text-center mb-6">
+            Sign in to <span className="text-lux-red">LUX</span> Quotes
           </h1>
 
           {/* Error message */}
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 text-center">
+            <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 text-center">
               {error}
             </div>
           )}
@@ -62,10 +63,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="email" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
                 Email
               </label>
               <input
@@ -75,16 +73,13 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#DB412B]/50 focus:border-[#DB412B] transition-colors"
+                className="w-full px-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-lux-red/50 focus:border-lux-red"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
+              <label htmlFor="password" className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
                 Password
               </label>
               <input
@@ -94,7 +89,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#DB412B]/50 focus:border-[#DB412B] transition-colors"
+                className="w-full px-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-lux-red/50 focus:border-lux-red"
                 placeholder="Enter your password"
               />
             </div>
@@ -102,7 +97,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-[#DB412B] hover:bg-[#c23824] text-white font-medium text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2.5 px-4 bg-lux-red hover:bg-[#c23824] text-white font-medium text-sm rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
@@ -110,7 +105,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="mt-6 text-center text-xs text-gray-500">
+        <p className="mt-6 text-center text-xs text-white/30">
           LUX LED Solutions
         </p>
       </div>

@@ -48,7 +48,7 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
   return (
     <div>
       <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <h1 className="font-archivo text-xl sm:text-2xl font-bold text-gray-900">Clients</h1>
+        <h1 className="font-archivo text-xl sm:text-2xl font-bold text-[var(--text-primary)]">Clients</h1>
         <button
           onClick={() => setShowForm(!showForm)}
           className="px-4 py-2 bg-[#DB412B] text-white rounded-lg hover:bg-[#c23823] transition-colors text-sm font-medium"
@@ -58,11 +58,11 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg border p-4 mb-6">
+        <div className="card p-4 mb-6">
           <h2 className="font-medium text-sm mb-3">Add New Client</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Company Name *</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Company Name *</label>
               <input
                 className="w-full border rounded px-3 py-2 text-sm"
                 value={newName}
@@ -71,7 +71,7 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Contact Name</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Contact Name</label>
               <input
                 className="w-full border rounded px-3 py-2 text-sm"
                 value={newContact}
@@ -80,7 +80,7 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Email</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Email</label>
               <input
                 className="w-full border rounded px-3 py-2 text-sm"
                 value={newEmail}
@@ -89,7 +89,7 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Phone</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Phone</label>
               <input
                 className="w-full border rounded px-3 py-2 text-sm"
                 value={newPhone}
@@ -102,11 +102,11 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
             <button
               onClick={createClient}
               disabled={!newName.trim()}
-              className="px-4 py-2 bg-[#0D1B2A] text-white rounded text-sm hover:bg-[#1a2d42] disabled:opacity-50"
+              className="px-4 py-2 bg-lux-black text-white rounded text-sm hover:bg-lux-navy disabled:opacity-50"
             >
               Create
             </button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 text-gray-500 text-sm">
+            <button onClick={() => setShowForm(false)} className="px-4 py-2 text-[var(--text-muted)] text-sm">
               Cancel
             </button>
           </div>
@@ -114,10 +114,10 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
       )}
 
       {/* Desktop Table */}
-      <div className="hidden sm:block bg-white rounded-lg border overflow-hidden">
+      <div className="hidden sm:block card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
+            <tr className="bg-[var(--table-header-bg)] border-b text-xs text-[var(--text-muted)] uppercase">
               <th className="px-4 py-3 text-left">Name</th>
               <th className="px-4 py-3 text-left">Contact</th>
               <th className="px-4 py-3 text-left">Email</th>
@@ -127,7 +127,7 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
           <tbody>
             {clients.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={4} className="px-4 py-8 text-center text-[var(--text-faint)]">
                   No clients yet. Add your first client to get started.
                 </td>
               </tr>
@@ -136,12 +136,12 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
                 <tr
                   key={c.id}
                   onClick={() => router.push(`/clients/${c.id}`)}
-                  className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="border-b hover:bg-[var(--table-header-bg)] cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3 font-medium">{c.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{c.contactName ?? "-"}</td>
-                  <td className="px-4 py-3 text-gray-600">{c.contactEmail ?? "-"}</td>
-                  <td className="px-4 py-3 text-gray-600">{c.contactPhone ?? "-"}</td>
+                  <td className="px-4 py-3 text-[var(--text-muted)]">{c.contactName ?? "-"}</td>
+                  <td className="px-4 py-3 text-[var(--text-muted)]">{c.contactEmail ?? "-"}</td>
+                  <td className="px-4 py-3 text-[var(--text-muted)]">{c.contactPhone ?? "-"}</td>
                 </tr>
               ))
             )}
@@ -152,7 +152,7 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
       {/* Mobile Cards */}
       <div className="sm:hidden space-y-2">
         {clients.length === 0 ? (
-          <div className="bg-white rounded-lg border p-6 text-center text-gray-400 text-sm">
+          <div className="card p-6 text-center text-[var(--text-faint)] text-sm">
             No clients yet. Add your first client to get started.
           </div>
         ) : (
@@ -160,11 +160,11 @@ export function ClientsList({ clients: initialClients }: { clients: Client[] }) 
             <div
               key={c.id}
               onClick={() => router.push(`/clients/${c.id}`)}
-              className="bg-white rounded-lg border p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              className="card p-4 cursor-pointer hover:bg-[var(--table-header-bg)] active:bg-gray-100 transition-colors"
             >
-              <p className="font-medium text-gray-900">{c.name}</p>
-              {c.contactName && <p className="text-sm text-gray-600 mt-1">{c.contactName}</p>}
-              <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-500">
+              <p className="font-medium text-[var(--text-primary)]">{c.name}</p>
+              {c.contactName && <p className="text-sm text-[var(--text-muted)] mt-1">{c.contactName}</p>}
+              <div className="flex flex-wrap gap-3 mt-1 text-xs text-[var(--text-muted)]">
                 {c.contactEmail && <span>{c.contactEmail}</span>}
                 {c.contactPhone && <span>{c.contactPhone}</span>}
               </div>

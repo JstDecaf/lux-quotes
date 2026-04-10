@@ -35,8 +35,8 @@ export default async function ProductsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-archivo text-2xl font-bold text-gray-900">Product Catalog</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="font-archivo text-2xl font-bold text-[var(--text-primary)]">Product Catalog</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1">
             {rows.length} product families · {totalVariants} variants
           </p>
         </div>

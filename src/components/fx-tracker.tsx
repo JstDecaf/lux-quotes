@@ -82,9 +82,9 @@ export function FxTracker({ quoteId, quotedRate, totalUsd, createdAt }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-lg border p-5">
+    <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-700">FX Rate Tracker</h3>
+        <h3 className="text-sm font-semibold text-[var(--text-secondary)]">FX Rate Tracker</h3>
         {hasGaps && (
           <button
             onClick={handleBackfill}
@@ -97,32 +97,32 @@ export function FxTracker({ quoteId, quotedRate, totalUsd, createdAt }: Props) {
       </div>
 
       {loading ? (
-        <p className="text-xs text-gray-400 animate-pulse">Loading FX data...</p>
+        <p className="text-xs text-[var(--text-faint)] animate-pulse">Loading FX data...</p>
       ) : (
         <>
           {/* Summary row */}
           <div className="flex flex-wrap gap-5 mb-4">
             <div>
-              <span className="text-[10px] text-gray-500 uppercase tracking-wide">Quoted</span>
-              <p className="text-base font-mono font-bold text-gray-900">{quotedRate.toFixed(4)}</p>
+              <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Quoted</span>
+              <p className="text-base font-mono font-bold text-[var(--text-primary)]">{quotedRate.toFixed(4)}</p>
             </div>
             {latestRate && (
               <div>
-                <span className="text-[10px] text-gray-500 uppercase tracking-wide">Market</span>
-                <p className="text-base font-mono font-bold text-gray-900">{latestRate.toFixed(4)}</p>
+                <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Market</span>
+                <p className="text-base font-mono font-bold text-[var(--text-primary)]">{latestRate.toFixed(4)}</p>
               </div>
             )}
             {plDisplay !== null && (
               <div>
-                <span className="text-[10px] text-gray-500 uppercase tracking-wide">P/L Impact</span>
+                <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">P/L Impact</span>
                 <p className={`text-base font-mono font-bold ${plDisplay >= 0 ? "text-green-600" : "text-red-600"}`}>
                   {fmt(plDisplay)}
                 </p>
               </div>
             )}
             <div>
-              <span className="text-[10px] text-gray-500 uppercase tracking-wide">USD Exposure</span>
-              <p className="text-base font-mono font-bold text-gray-700">
+              <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">USD Exposure</span>
+              <p className="text-base font-mono font-bold text-[var(--text-secondary)]">
                 US${totalUsd.toLocaleString("en-AU", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </p>
             </div>
@@ -134,7 +134,7 @@ export function FxTracker({ quoteId, quotedRate, totalUsd, createdAt }: Props) {
           )}
 
           {rateHistory.length <= 1 && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[var(--text-faint)]">
               {rateHistory.length === 0
                 ? "No FX history data yet. Click 'Backfill History' or wait for the daily update."
                 : "Need at least 2 data points for a chart."}

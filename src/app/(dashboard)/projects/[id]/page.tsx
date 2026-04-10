@@ -31,7 +31,7 @@ export default async function ProjectDetailPage({
   if (!project) {
     return (
       <div className="p-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Project not found</h1>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Project not found</h1>
         <a href="/projects" className="text-[#DB412B] hover:underline mt-4 inline-block">Back to Projects</a>
       </div>
     );

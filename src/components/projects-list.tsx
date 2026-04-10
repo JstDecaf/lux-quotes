@@ -34,14 +34,14 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-archivo text-2xl font-bold text-gray-900">Projects</h1>
+        <h1 className="font-archivo text-2xl font-bold text-[var(--text-primary)]">Projects</h1>
       </div>
 
       {/* Desktop: Table */}
-      <div className="hidden md:block bg-white rounded-lg border overflow-hidden">
+      <div className="hidden md:block card overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b text-xs text-gray-500 uppercase">
+            <tr className="bg-[var(--table-header-bg)] border-b text-xs text-[var(--text-muted)] uppercase">
               <th className="px-4 py-3 text-left">Project Name</th>
               <th className="px-4 py-3 text-left">Client</th>
               <th className="px-4 py-3 text-left">Status</th>
@@ -51,7 +51,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
           <tbody>
             {projects.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={4} className="px-4 py-8 text-center text-[var(--text-faint)]">
                   No projects yet. Create a project from a client page.
                 </td>
               </tr>
@@ -60,16 +60,16 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
                 <tr
                   key={p.id}
                   onClick={() => router.push(`/projects/${p.id}`)}
-                  className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="border-b hover:bg-[var(--table-header-bg)] cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-3 font-medium">{p.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{p.clientName ?? "-"}</td>
+                  <td className="px-4 py-3 text-[var(--text-muted)]">{p.clientName ?? "-"}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[p.status] || "bg-gray-100 text-gray-600"}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[p.status] || "bg-gray-100 text-[var(--text-muted)]"}`}>
                       {PROJECT_STATUSES[p.status] || p.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">{p.createdAt?.slice(0, 10)}</td>
+                  <td className="px-4 py-3 text-[var(--text-muted)] text-xs">{p.createdAt?.slice(0, 10)}</td>
                 </tr>
               ))
             )}
@@ -80,7 +80,7 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
       {/* Mobile: Cards */}
       <div className="md:hidden space-y-3">
         {projects.length === 0 ? (
-          <div className="bg-white rounded-lg border p-8 text-center text-gray-400">
+          <div className="card p-8 text-center text-[var(--text-faint)]">
             No projects yet. Create a project from a client page.
           </div>
         ) : (
@@ -88,18 +88,18 @@ export function ProjectsList({ projects }: { projects: Project[] }) {
             <div
               key={p.id}
               onClick={() => router.push(`/projects/${p.id}`)}
-              className="bg-white rounded-lg border p-4 cursor-pointer hover:bg-gray-50 transition-colors active:bg-gray-100"
+              className="card p-4 cursor-pointer hover:bg-[var(--table-header-bg)] transition-colors active:bg-gray-100"
             >
               <div className="flex items-start justify-between gap-2 mb-1">
-                <h3 className="font-medium text-gray-900">{p.name}</h3>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${STATUS_COLORS[p.status] || "bg-gray-100 text-gray-600"}`}>
+                <h3 className="font-medium text-[var(--text-primary)]">{p.name}</h3>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${STATUS_COLORS[p.status] || "bg-gray-100 text-[var(--text-muted)]"}`}>
                   {PROJECT_STATUSES[p.status] || p.status}
                 </span>
               </div>
               {p.description && (
-                <p className="text-sm text-gray-500 mb-2 line-clamp-2">{p.description}</p>
+                <p className="text-sm text-[var(--text-muted)] mb-2 line-clamp-2">{p.description}</p>
               )}
-              <div className="flex items-center justify-between text-xs text-gray-400">
+              <div className="flex items-center justify-between text-xs text-[var(--text-faint)]">
                 <span>{p.clientName ?? "-"}</span>
                 <span>{p.createdAt?.slice(0, 10)}</span>
               </div>

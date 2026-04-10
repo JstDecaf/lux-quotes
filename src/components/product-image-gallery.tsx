@@ -246,14 +246,14 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
 
   return (
     <div
-      className={`bg-white rounded-lg border overflow-hidden ${dragOver ? "ring-2 ring-blue-400 bg-blue-50/30" : ""}`}
+      className={`card overflow-hidden ${dragOver ? "ring-2 ring-blue-400 bg-blue-50/30" : ""}`}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
-        <h2 className="font-bold text-gray-800">Image Library ({images.length})</h2>
+      <div className="px-4 py-3 border-b border-[var(--card-border)] bg-[var(--table-header-bg)] flex items-center justify-between">
+        <h2 className="font-bold text-[var(--text-primary)]">Image Library ({images.length})</h2>
         <div className="flex items-center gap-2">
           {uploading && <span className="text-xs text-blue-600 animate-pulse">Uploading...</span>}
           {uploadError && <span className="text-xs text-red-600">{uploadError}</span>}
@@ -268,7 +268,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
           {images.length > 0 && !selectMode && (
             <button
               onClick={() => setSelectMode(true)}
-              className="px-3 py-1.5 text-xs text-gray-500 border rounded hover:bg-gray-50"
+              className="px-3 py-1.5 text-xs text-[var(--text-muted)] border rounded hover:bg-[var(--table-header-bg)]"
             >
               Select
             </button>
@@ -303,7 +303,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
                 <button
                   onClick={bulkDownload}
                   disabled={bulkDownloading}
-                  className="px-3 py-1.5 text-xs bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42] disabled:opacity-50"
+                  className="px-3 py-1.5 text-xs bg-lux-black text-white rounded hover:bg-lux-navy disabled:opacity-50"
                 >
                   {bulkDownloading ? "Zipping..." : `↓ Download (${selected.size})`}
                 </button>
@@ -317,7 +317,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
                     >
                       {bulkDeleting ? "..." : "Yes"}
                     </button>
-                    <button onClick={() => setConfirmBulkDelete(false)} className="text-gray-400 hover:text-gray-600">
+                    <button onClick={() => setConfirmBulkDelete(false)} className="text-[var(--text-faint)] hover:text-[var(--text-muted)]">
                       No
                     </button>
                   </span>
@@ -333,7 +333,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
             )}
             <button
               onClick={exitSelectMode}
-              className="px-3 py-1.5 text-xs text-gray-500 border rounded hover:bg-gray-50"
+              className="px-3 py-1.5 text-xs text-[var(--text-muted)] border rounded hover:bg-[var(--table-header-bg)]"
             >
               Cancel
             </button>
@@ -351,7 +351,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
             return (
               <div
                 key={img.id}
-                className={`border rounded-lg overflow-hidden bg-gray-50 group relative ${
+                className={`border rounded-lg overflow-hidden bg-[var(--table-header-bg)] group relative ${
                   isSelected ? "ring-2 ring-blue-500 border-blue-400" : ""
                 }`}
               >
@@ -401,11 +401,11 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
                         autoFocus
                       />
                       <button onClick={saveEdit} className="text-xs text-blue-600 hover:text-blue-800">✓</button>
-                      <button onClick={() => setEditingId(null)} className="text-xs text-gray-400">✕</button>
+                      <button onClick={() => setEditingId(null)} className="text-xs text-[var(--text-faint)]">✕</button>
                     </div>
                   ) : (
                     <p
-                      className="text-xs font-medium text-gray-800 truncate mb-1.5 cursor-pointer hover:text-blue-600"
+                      className="text-xs font-medium text-[var(--text-primary)] truncate mb-1.5 cursor-pointer hover:text-blue-600"
                       onClick={() => startEdit(img)}
                       title="Click to rename"
                     >
@@ -427,7 +427,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
                           className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
                             img.tag
                               ? TAG_STYLES[img.tag] + " border-current"
-                              : "text-gray-400 border-gray-200 hover:text-gray-600 hover:border-gray-300"
+                              : "text-[var(--text-faint)] border-gray-200 hover:text-[var(--text-muted)] hover:border-gray-300"
                           }`}
                           title="Set tag"
                         >
@@ -441,7 +441,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
                               <button
                                 key={opt.value ?? "none"}
                                 onClick={() => setTag(img.id, opt.value)}
-                                className={`block w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${
+                                className={`block w-full text-left px-3 py-1.5 text-xs hover:bg-[var(--table-header-bg)] ${
                                   img.tag === opt.value ? "font-bold" : ""
                                 }`}
                               >
@@ -457,7 +457,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
                         showDeleteId === img.id ? (
                           <span className="flex items-center gap-1 text-[10px]">
                             <button onClick={() => deleteImage(img.id)} className="text-red-600 font-medium">Yes</button>
-                            <button onClick={() => setShowDeleteId(null)} className="text-gray-400">No</button>
+                            <button onClick={() => setShowDeleteId(null)} className="text-[var(--text-faint)]">No</button>
                           </span>
                         ) : (
                           <button
@@ -477,7 +477,7 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
           })}
         </div>
       ) : (
-        <div className="px-4 py-8 text-center text-gray-400 text-sm">
+        <div className="px-4 py-8 text-center text-[var(--text-faint)] text-sm">
           No images yet.{" "}
           <button onClick={() => fileInputRef.current?.click()} className="text-blue-600 hover:underline">Upload images</button>
           {" "}or extract them from uploaded PDFs.

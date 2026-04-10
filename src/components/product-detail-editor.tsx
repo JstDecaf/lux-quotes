@@ -109,7 +109,7 @@ const TYPE_COLORS: Record<string, string> = {
   manual: "bg-blue-100 text-blue-700",
   spec_sheet: "bg-green-100 text-green-700",
   video: "bg-purple-100 text-purple-700",
-  link: "bg-gray-100 text-gray-600",
+  link: "bg-gray-100 text-[var(--text-muted)]",
 };
 
 function emptyDoc(productId: number): Document {
@@ -455,13 +455,13 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
         <button
           onClick={onSave}
           disabled={!draft.name || !draft.url}
-          className="px-3 py-1.5 text-xs bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42] disabled:opacity-50"
+          className="px-3 py-1.5 text-xs bg-lux-black text-white rounded hover:bg-lux-navy disabled:opacity-50"
         >
           Save
         </button>
         <button
           onClick={onCancel}
-          className="px-3 py-1.5 text-xs text-gray-500 border rounded hover:bg-gray-50"
+          className="px-3 py-1.5 text-xs text-[var(--text-muted)] border rounded hover:bg-[var(--table-header-bg)]"
         >
           Cancel
         </button>
@@ -471,10 +471,10 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
 
   return (
     <div>
-      <a href="/products" className="text-sm text-gray-500 hover:text-gray-700 mb-4 inline-block">&larr; Back to catalog</a>
+      <a href="/products" className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] mb-4 inline-block">&larr; Back to catalog</a>
 
       {/* Product Header */}
-      <div className="bg-white rounded-lg border p-5 sm:p-6 mb-6">
+      <div className="card p-5 sm:p-6 mb-6">
         <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5">
           {product.imageUrl ? (
             <img
@@ -492,12 +492,12 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
               <div className="flex items-center gap-3 flex-wrap">
                 {editing ? (
                   <input
-                    className="border rounded px-3 py-1.5 text-xl sm:text-2xl font-archivo font-bold text-[#0D1B2A] w-full sm:w-auto"
+                    className="border rounded px-3 py-1.5 text-xl sm:text-2xl font-archivo font-bold text-[var(--text-primary)] w-full sm:w-auto"
                     value={product.name}
                     onChange={(e) => setProduct({ ...product, name: e.target.value })}
                   />
                 ) : (
-                  <h1 className="font-archivo text-xl sm:text-2xl font-bold text-gray-900">{product.name}</h1>
+                  <h1 className="font-archivo text-xl sm:text-2xl font-bold text-[var(--text-primary)]">{product.name}</h1>
                 )}
                 {!editing && (
                   <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[product.status] || "bg-gray-100"}`}>
@@ -506,19 +506,19 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {saving && <span className="text-xs text-gray-400">Saving...</span>}
+                {saving && <span className="text-xs text-[var(--text-faint)]">Saving...</span>}
                 {editing ? (
                   <>
                     <button
                       onClick={saveProduct}
                       disabled={saving}
-                      className="px-4 py-1.5 bg-[#0D1B2A] text-white rounded text-sm hover:bg-[#1a2d42] disabled:opacity-50"
+                      className="px-4 py-1.5 bg-lux-black text-white rounded text-sm hover:bg-lux-navy disabled:opacity-50"
                     >
                       Save
                     </button>
                     <button
                       onClick={() => { setProduct(initialProduct); setEditing(false); }}
-                      className="px-4 py-1.5 text-gray-500 text-sm border rounded hover:bg-gray-50"
+                      className="px-4 py-1.5 text-[var(--text-muted)] text-sm border rounded hover:bg-[var(--table-header-bg)]"
                     >
                       Cancel
                     </button>
@@ -527,7 +527,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                   <>
                     <button
                       onClick={() => setEditing(true)}
-                      className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 border rounded hover:bg-gray-50"
+                      className="px-3 py-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] border rounded hover:bg-[var(--table-header-bg)]"
                     >
                       Edit
                     </button>
@@ -535,7 +535,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                       <span className="flex items-center gap-1 text-xs">
                         <span className="text-red-600">Delete product?</span>
                         <button onClick={deleteProduct} className="text-red-600 font-bold hover:text-red-800">Yes</button>
-                        <button onClick={() => setShowDeleteProduct(false)} className="text-gray-400 hover:text-gray-600">No</button>
+                        <button onClick={() => setShowDeleteProduct(false)} className="text-[var(--text-faint)] hover:text-[var(--text-muted)]">No</button>
                       </span>
                     ) : (
                       <button
@@ -560,7 +560,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                 />
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Brand</label>
+                    <label className="block text-xs text-[var(--text-muted)] mb-1">Brand</label>
                     <input
                       className="w-full border rounded px-2 py-1.5 text-sm"
                       value={product.brand ?? ""}
@@ -568,7 +568,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Sub-Brand</label>
+                    <label className="block text-xs text-[var(--text-muted)] mb-1">Sub-Brand</label>
                     <input
                       className="w-full border rounded px-2 py-1.5 text-sm"
                       value={product.subBrand ?? ""}
@@ -576,7 +576,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Category</label>
+                    <label className="block text-xs text-[var(--text-muted)] mb-1">Category</label>
                     <select
                       className="w-full border rounded px-2 py-1.5 text-sm"
                       value={product.category ?? ""}
@@ -589,7 +589,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Status</label>
+                    <label className="block text-xs text-[var(--text-muted)] mb-1">Status</label>
                     <select
                       className="w-full border rounded px-2 py-1.5 text-sm"
                       value={product.status}
@@ -604,7 +604,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
 
                 {/* Image URL */}
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Image URL</label>
+                  <label className="block text-xs text-[var(--text-muted)] mb-1">Image URL</label>
                   <div className="flex gap-2 items-start">
                     <input
                       className="flex-1 border rounded px-2 py-1.5 text-sm"
@@ -625,7 +625,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
 
                 {/* Applications editor */}
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Applications</label>
+                  <label className="block text-xs text-[var(--text-muted)] mb-1">Applications</label>
                   <div className="flex flex-wrap gap-1 mb-2">
                     {product.applications.map((app) => (
                       <span key={app} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded flex items-center gap-1">
@@ -650,8 +650,8 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
               </div>
             ) : (
               <>
-                <p className="text-gray-600 mb-3">{product.description}</p>
-                <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                <p className="text-[var(--text-muted)] mb-3">{product.description}</p>
+                <div className="flex flex-wrap gap-4 text-sm text-[var(--text-muted)]">
                   <span><strong>Brand:</strong> {product.brand}</span>
                   <span><strong>Sub-brand:</strong> {product.subBrand}</span>
                   <span><strong>Category:</strong> {product.category}</span>
@@ -663,7 +663,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
 
         {!editing && product.applications.length > 0 && (
           <div className="mt-4 pt-4 border-t">
-            <span className="text-sm text-gray-500 mr-2">Applications:</span>
+            <span className="text-sm text-[var(--text-muted)] mr-2">Applications:</span>
             {product.applications.map((app) => (
               <span key={app} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded mr-1">{app}</span>
             ))}
@@ -672,12 +672,12 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
       </div>
 
       {/* Variants - Editable Table */}
-      <div className="bg-white rounded-lg border overflow-hidden mb-6">
-        <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
-          <h2 className="font-bold text-gray-800">Variants ({variants.length})</h2>
+      <div className="card overflow-hidden mb-6">
+        <div className="px-4 py-3 border-b border-[var(--card-border)] bg-[var(--table-header-bg)] flex items-center justify-between">
+          <h2 className="font-bold text-[var(--text-primary)]">Variants ({variants.length})</h2>
           <button
             onClick={addVariant}
-            className="px-3 py-1.5 text-xs bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42]"
+            className="px-3 py-1.5 text-xs bg-lux-black text-white rounded hover:bg-lux-navy"
           >
             + Add Variant
           </button>
@@ -686,10 +686,10 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
         {variants.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-[var(--table-header-bg)] border-b">
                 <tr>
                   {VARIANT_FIELDS.map((f) => (
-                    <th key={f.key} className={`px-3 py-2 text-left font-medium text-gray-600 text-xs ${f.width}`}>
+                    <th key={f.key} className={`px-3 py-2 text-left font-medium text-[var(--text-muted)] text-xs ${f.width}`}>
                       {f.label}
                     </th>
                   ))}
@@ -744,9 +744,9 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                         <td
                           key={f.key}
                           className={`px-3 py-2 cursor-pointer hover:bg-green-50 rounded ${
-                            f.key === "name" ? "font-medium text-gray-900" :
+                            f.key === "name" ? "font-medium text-[var(--text-primary)]" :
                             f.key === "pricePerSqmUsd" ? "text-right font-mono font-bold text-green-700" :
-                            "text-gray-600"
+                            "text-[var(--text-muted)]"
                           }`}
                           onClick={() => setEditingCell({ variantId: v.id, field: f.key })}
                         >
@@ -767,7 +767,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                           </button>
                           <button
                             onClick={() => setShowDeleteVariant(null)}
-                            className="text-xs text-gray-400"
+                            className="text-xs text-[var(--text-faint)]"
                           >
                             No
                           </button>
@@ -788,7 +788,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
             </table>
           </div>
         ) : (
-          <div className="px-4 py-8 text-center text-gray-400">
+          <div className="px-4 py-8 text-center text-[var(--text-faint)]">
             No variants configured.{" "}
             <button onClick={addVariant} className="text-blue-600 hover:underline">Add one</button>
           </div>
@@ -797,13 +797,13 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
 
       {/* Documents & Links */}
       <div
-        className={`bg-white rounded-lg border overflow-hidden ${dragOver ? "ring-2 ring-blue-400 bg-blue-50/30" : ""}`}
+        className={`card overflow-hidden ${dragOver ? "ring-2 ring-blue-400 bg-blue-50/30" : ""}`}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={handleDrop}
       >
-        <div className="px-4 py-3 border-b bg-gray-50 flex items-center justify-between">
-          <h2 className="font-bold text-gray-800">Documents & Links ({documents.length})</h2>
+        <div className="px-4 py-3 border-b border-[var(--card-border)] bg-[var(--table-header-bg)] flex items-center justify-between">
+          <h2 className="font-bold text-[var(--text-primary)]">Documents & Links ({documents.length})</h2>
           <div className="flex items-center gap-2">
             {uploading && <span className="text-xs text-blue-600 animate-pulse">Uploading...</span>}
             {uploadError && <span className="text-xs text-red-600">{uploadError}</span>}
@@ -825,7 +825,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
             {!addingDoc && (
               <button
                 onClick={() => setAddingDoc(true)}
-                className="px-3 py-1.5 text-xs bg-[#0D1B2A] text-white rounded hover:bg-[#1a2d42]"
+                className="px-3 py-1.5 text-xs bg-lux-black text-white rounded hover:bg-lux-navy"
               >
                 + Add Link
               </button>
@@ -847,17 +847,17 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
               const isNAS = doc.url.startsWith("file:///Volumes/BUSINESS/");
               const isBlob = doc.url.includes(".vercel-storage.com");
               return (
-                <div key={doc.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50">
+                <div key={doc.id} className="flex items-center justify-between px-4 py-3 hover:bg-[var(--table-header-bg)]">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <span className="text-lg flex-shrink-0">{TYPE_ICONS[doc.type] || "\uD83D\uDCC4"}</span>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-gray-900 text-sm">{doc.name}</span>
+                        <span className="font-medium text-[var(--text-primary)] text-sm">{doc.name}</span>
                         <span className={`text-xs px-1.5 py-0.5 rounded ${TYPE_COLORS[doc.type] || "bg-gray-100"}`}>
                           {TYPE_LABELS[doc.type] || doc.type}
                         </span>
                         {doc.fileType && (
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 uppercase">
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-[var(--text-muted)] uppercase">
                             {doc.fileType}
                           </span>
                         )}
@@ -868,7 +868,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                           <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700">NAS</span>
                         )}
                       </div>
-                      {doc.notes && <p className="text-xs text-gray-500 mt-0.5">{doc.notes}</p>}
+                      {doc.notes && <p className="text-xs text-[var(--text-muted)] mt-0.5">{doc.notes}</p>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 ml-3">
@@ -891,14 +891,14 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                     )}
                     <button
                       onClick={() => startEditDoc(doc)}
-                      className="text-xs text-gray-400 hover:text-gray-600 border rounded px-2 py-1 hover:bg-gray-50"
+                      className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] border rounded px-2 py-1 hover:bg-[var(--table-header-bg)]"
                     >
                       Edit
                     </button>
                     {showDeleteDoc === doc.id ? (
                       <span className="flex items-center gap-1 text-xs">
                         <button onClick={() => deleteDoc(doc.id)} className="text-red-600 font-medium hover:text-red-800">Yes</button>
-                        <button onClick={() => setShowDeleteDoc(null)} className="text-gray-400">No</button>
+                        <button onClick={() => setShowDeleteDoc(null)} className="text-[var(--text-faint)]">No</button>
                       </span>
                     ) : (
                       <button
@@ -925,7 +925,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
             )}
           </div>
         ) : (
-          <div className="px-4 py-8 text-center text-gray-400 text-sm">
+          <div className="px-4 py-8 text-center text-[var(--text-faint)] text-sm">
             No documents or links added yet.{" "}
             <button onClick={() => fileInputRef.current?.click()} className="text-blue-600 hover:underline">Upload a file</button>
             {" "}or{" "}

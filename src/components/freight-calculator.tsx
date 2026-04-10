@@ -130,10 +130,10 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <div>
-            <h2 className="font-archivo text-lg font-bold text-gray-900">Freight Calculator</h2>
-            <p className="text-sm text-gray-500">{quoteName}</p>
+            <h2 className="font-archivo text-lg font-bold text-[var(--text-primary)]">Freight Calculator</h2>
+            <p className="text-sm text-[var(--text-muted)]">{quoteName}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-[var(--text-faint)] hover:text-[var(--text-muted)] text-2xl leading-none">&times;</button>
         </div>
 
         <div className="overflow-y-auto flex-1 px-6 py-5 space-y-5">
@@ -141,15 +141,15 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
           {/* Mode + Rates */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Mode selector */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">Freight Mode</p>
+            <div className="bg-[var(--table-header-bg)] rounded-lg p-4">
+              <p className="text-xs font-semibold text-[var(--text-muted)] mb-3 uppercase tracking-wide">Freight Mode</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setMode("sea")}
                   className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium border transition-colors ${
                     mode === "sea"
-                      ? "bg-[#0D1B2A] text-white border-[#0D1B2A]"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                      ? "bg-lux-black text-white border-[#0D1B2A]"
+                      : "bg-white text-[var(--text-muted)] border-gray-200 hover:border-gray-400"
                   }`}
                 >
                   🚢 Sea Freight
@@ -158,8 +158,8 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
                   onClick={() => setMode("air")}
                   className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium border transition-colors ${
                     mode === "air"
-                      ? "bg-[#0D1B2A] text-white border-[#0D1B2A]"
-                      : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                      ? "bg-lux-black text-white border-[#0D1B2A]"
+                      : "bg-white text-[var(--text-muted)] border-gray-200 hover:border-gray-400"
                   }`}
                 >
                   ✈ Air Freight
@@ -168,11 +168,11 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
             </div>
 
             {/* Rates */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">Rates</p>
+            <div className="bg-[var(--table-header-bg)] rounded-lg p-4">
+              <p className="text-xs font-semibold text-[var(--text-muted)] mb-3 uppercase tracking-wide">Rates</p>
               {mode === "sea" ? (
                 <div className="space-y-2">
-                  <label className="block text-xs text-gray-500">
+                  <label className="block text-xs text-[var(--text-muted)]">
                     Sea rate (USD / revenue tonne)
                     <NumericInput
                       value={seaRatePerCbm}
@@ -181,11 +181,11 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
                       className="mt-1 w-full border rounded px-3 py-2 text-sm bg-white"
                     />
                   </label>
-                  <p className="text-xs text-gray-400">Revenue tonne = max(gross weight ÷ 1000, CBM)</p>
+                  <p className="text-xs text-[var(--text-faint)]">Revenue tonne = max(gross weight ÷ 1000, CBM)</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <label className="block text-xs text-gray-500">
+                  <label className="block text-xs text-[var(--text-muted)]">
                     Air rate (USD / chargeable kg)
                     <NumericInput
                       value={airRatePerKg}
@@ -194,7 +194,7 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
                       className="mt-1 w-full border rounded px-3 py-2 text-sm bg-white"
                     />
                   </label>
-                  <label className="block text-xs text-gray-500">
+                  <label className="block text-xs text-[var(--text-muted)]">
                     Volumetric factor (kg / CBM)
                     <NumericInput
                       value={volFactor}
@@ -210,13 +210,13 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
 
           {/* Line items table */}
           <div>
-            <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Items</p>
+            <p className="text-xs font-semibold text-[var(--text-muted)] mb-2 uppercase tracking-wide">Items</p>
             {loading ? (
-              <p className="text-sm text-gray-400 py-4 text-center">Loading…</p>
+              <p className="text-sm text-[var(--text-faint)] py-4 text-center">Loading…</p>
             ) : (
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
+                  <thead className="bg-[var(--table-header-bg)] text-xs text-[var(--text-muted)] uppercase">
                     <tr>
                       <th className="text-left px-3 py-2 font-medium">Item</th>
                       <th className="text-right px-3 py-2 font-medium">Qty</th>
@@ -231,12 +231,12 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
                       const totalKg = row.qty * row.unitWeightKg;
                       const totalCbm = row.qty * row.unitVolumeCbm;
                       return (
-                        <tr key={row.lineItemId} className="hover:bg-gray-50">
-                          <td className="px-3 py-2 text-gray-800">
+                        <tr key={row.lineItemId} className="hover:bg-[var(--table-header-bg)]">
+                          <td className="px-3 py-2 text-[var(--text-primary)]">
                             <span className="font-medium">{row.itemName}</span>
-                            <span className="text-gray-400 ml-1">× {row.qty} {row.unit}</span>
+                            <span className="text-[var(--text-faint)] ml-1">× {row.qty} {row.unit}</span>
                           </td>
-                          <td className="px-3 py-2 text-right text-gray-600">{row.qty}</td>
+                          <td className="px-3 py-2 text-right text-[var(--text-muted)]">{row.qty}</td>
                           <td className="px-3 py-2">
                             <NumericInput
                               value={row.unitWeightKg}
@@ -245,7 +245,7 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
                               className="w-full text-right border rounded px-2 py-1 text-sm bg-white"
                             />
                           </td>
-                          <td className="px-3 py-2 text-right text-gray-700 font-medium">
+                          <td className="px-3 py-2 text-right text-[var(--text-secondary)] font-medium">
                             {totalKg > 0 ? fmt(totalKg, 1) : "—"}
                           </td>
                           <td className="px-3 py-2">
@@ -256,20 +256,20 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
                               className="w-full text-right border rounded px-2 py-1 text-sm bg-white"
                             />
                           </td>
-                          <td className="px-3 py-2 text-right text-gray-700 font-medium">
+                          <td className="px-3 py-2 text-right text-[var(--text-secondary)] font-medium">
                             {totalCbm > 0 ? fmt(totalCbm, 2) : "—"}
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
-                  <tfoot className="bg-gray-50 text-sm font-semibold border-t-2 border-gray-200">
+                  <tfoot className="bg-[var(--table-header-bg)] text-sm font-semibold border-t-2 border-gray-200">
                     <tr>
-                      <td className="px-3 py-2 text-gray-700" colSpan={2}>Totals</td>
+                      <td className="px-3 py-2 text-[var(--text-secondary)]" colSpan={2}>Totals</td>
                       <td className="px-3 py-2" />
-                      <td className="px-3 py-2 text-right text-gray-900">{fmt(grossWeightKg, 1)} kg</td>
+                      <td className="px-3 py-2 text-right text-[var(--text-primary)]">{fmt(grossWeightKg, 1)} kg</td>
                       <td className="px-3 py-2" />
-                      <td className="px-3 py-2 text-right text-gray-900">{fmt(totalVolumeCbm, 2)} CBM</td>
+                      <td className="px-3 py-2 text-right text-[var(--text-primary)]">{fmt(totalVolumeCbm, 2)} CBM</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -280,43 +280,43 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
           {/* Calculation breakdown */}
           {!loading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+              <div className="bg-[var(--table-header-bg)] rounded-lg p-4 space-y-2 text-sm">
+                <p className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-3">
                   {mode === "air" ? "Air Calculation" : "Sea Calculation"}
                 </p>
                 {mode === "air" ? (
                   <>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Gross weight</span>
                       <span>{fmt(grossWeightKg, 1)} kg</span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Volume ({fmt(totalVolumeCbm, 2)} CBM × {volFactor})</span>
                       <span>{fmt(airVolumetricKg, 1)} kg</span>
                     </div>
-                    <div className="flex justify-between font-semibold text-gray-800 border-t pt-2">
+                    <div className="flex justify-between font-semibold text-[var(--text-primary)] border-t pt-2">
                       <span>Chargeable weight {airVolumetricKg > grossWeightKg ? "(vol)" : "(wt)"}</span>
                       <span>{fmt(airChargeableKg, 1)} kg</span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-[var(--text-muted)]">
                       <span>× US${airRatePerKg}/kg</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Gross weight</span>
                       <span>{fmt(grossWeightKg / 1000, 3)} t</span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-[var(--text-muted)]">
                       <span>Volume</span>
                       <span>{fmt(totalVolumeCbm, 2)} CBM</span>
                     </div>
-                    <div className="flex justify-between font-semibold text-gray-800 border-t pt-2">
+                    <div className="flex justify-between font-semibold text-[var(--text-primary)] border-t pt-2">
                       <span>Revenue tonnes {grossWeightKg / 1000 > totalVolumeCbm ? "(wt)" : "(vol)"}</span>
                       <span>{fmt(seaRevenueTonnes, 3)}</span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-[var(--text-muted)]">
                       <span>× US${seaRatePerCbm}/revenue tonne</span>
                     </div>
                   </>
@@ -324,7 +324,7 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
               </div>
 
               {/* Result */}
-              <div className="bg-[#0D1B2A] rounded-lg p-4 text-white space-y-3">
+              <div className="bg-lux-black rounded-lg p-4 text-white space-y-3">
                 <p className="text-xs font-semibold text-blue-300 uppercase tracking-wide">Estimated Freight Cost</p>
                 <div>
                   <p className="text-3xl font-bold">{fmtCurrency(freightUsd)}</p>
@@ -340,7 +340,7 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">Notes</label>
+            <label className="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-1">Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
@@ -355,7 +355,7 @@ export function FreightCalculator({ quoteName, fxRate, lineItems, onClose }: Fre
         <div className="px-6 py-4 border-t flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+            className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-[var(--text-secondary)] rounded-lg text-sm font-medium transition-colors"
           >
             Close
           </button>

@@ -559,12 +559,12 @@ function StepIndicator({ current }: { current: number }) {
                     ? "bg-green-500 text-white"
                     : isActive
                     ? "bg-[#DB412B] text-white"
-                    : "bg-gray-200 text-gray-500"
+                    : "bg-gray-200 text-[var(--text-muted)]"
                 }`}
               >
                 {isDone ? "✓" : num}
               </div>
-              <span className={`text-xs mt-1 ${isActive ? "text-[#DB412B] font-medium" : "text-gray-400"}`}>
+              <span className={`text-xs mt-1 ${isActive ? "text-[#DB412B] font-medium" : "text-[var(--text-faint)]"}`}>
                 {label}
               </span>
             </div>
@@ -855,14 +855,14 @@ export function ImportWizard() {
 
       {/* ── STEP 1: Upload ── */}
       {step === 1 && (
-        <div className="bg-white rounded-lg border p-6">
-          <h2 className="font-archivo text-lg font-semibold text-gray-900 mb-4">Upload Leyard Quote File</h2>
+        <div className="card p-6">
+          <h2 className="font-archivo text-lg font-semibold text-[var(--text-primary)] mb-4">Upload Leyard Quote File</h2>
 
           <div
             className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
               dragging
                 ? "border-[#DB412B] bg-red-50"
-                : "border-gray-300 bg-[#0D1B2A]/5 hover:border-[#DB412B] hover:bg-red-50"
+                : "border-gray-300 bg-lux-black/5 hover:border-[#DB412B] hover:bg-red-50"
             }`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -870,8 +870,8 @@ export function ImportWizard() {
             onClick={() => fileInputRef.current?.click()}
           >
             <div className="text-5xl mb-3 text-gray-300">📄</div>
-            <p className="text-gray-600 font-medium mb-1">Drag & drop your .xls or .xlsx file here</p>
-            <p className="text-sm text-gray-400">or click to browse</p>
+            <p className="text-[var(--text-muted)] font-medium mb-1">Drag & drop your .xls or .xlsx file here</p>
+            <p className="text-sm text-[var(--text-faint)]">or click to browse</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -889,22 +889,22 @@ export function ImportWizard() {
 
           {parsedQuotes.length > 0 && (
             <div className="mt-6 space-y-3">
-              <p className="text-sm font-medium text-gray-700">
+              <p className="text-sm font-medium text-[var(--text-secondary)]">
                 Found {parsedQuotes.length} sheet{parsedQuotes.length > 1 ? "s" : ""}:
               </p>
               {parsedQuotes.map((q, i) => (
-                <div key={i} className="border rounded-lg p-4 bg-gray-50">
+                <div key={i} className="border rounded-lg p-4 bg-[var(--table-header-bg)]">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="font-medium text-gray-900 text-sm">{q.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Sheet: {q.sheetName}</p>
+                      <p className="font-medium text-[var(--text-primary)] text-sm">{q.name}</p>
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">Sheet: {q.sheetName}</p>
                     </div>
                     <div className="text-right text-sm">
-                      <p className="font-semibold text-gray-900">{fmtUsd(q.totalUsd)} USD</p>
-                      <p className="text-xs text-gray-500">{q.lineItems.length} line items</p>
+                      <p className="font-semibold text-[var(--text-primary)]">{fmtUsd(q.totalUsd)} USD</p>
+                      <p className="text-xs text-[var(--text-muted)]">{q.lineItems.length} line items</p>
                     </div>
                   </div>
-                  <div className="mt-2 text-xs text-gray-500 space-y-0.5">
+                  <div className="mt-2 text-xs text-[var(--text-muted)] space-y-0.5">
                     {q.screenSize && <p>Screen: {q.screenSize}</p>}
                     {q.panelConfig && <p>Panels: {q.panelConfig}</p>}
                     {q.supplierQuoteDate && <p>Date: {q.supplierQuoteDate}</p>}
@@ -927,12 +927,12 @@ export function ImportWizard() {
 
       {/* ── STEP 2: Context ── */}
       {step === 2 && (
-        <div className="bg-white rounded-lg border p-6 space-y-6">
-          <h2 className="font-archivo text-lg font-semibold text-gray-900">Set Context</h2>
+        <div className="card p-6 space-y-6">
+          <h2 className="font-archivo text-lg font-semibold text-[var(--text-primary)]">Set Context</h2>
 
           {/* Client */}
           <div>
-            <p className="text-sm font-semibold text-gray-700 mb-2">Client</p>
+            <p className="text-sm font-semibold text-[var(--text-secondary)] mb-2">Client</p>
             <div className="flex gap-4 mb-3">
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input
@@ -984,7 +984,7 @@ export function ImportWizard() {
           {/* Project (only once client is chosen) */}
           {clientReady && (
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-2">Project</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-2">Project</p>
               <div className="flex gap-4 mb-3">
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input
@@ -1036,7 +1036,7 @@ export function ImportWizard() {
           {/* Quote action (only once project is chosen) */}
           {clientReady && projectReady && (
             <div>
-              <p className="text-sm font-semibold text-gray-700 mb-2">Quote Action</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)] mb-2">Quote Action</p>
               {parsedQuotes.length > 1 ? (
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
                   {parsedQuotes.length} options will be imported as separate quotes
@@ -1084,7 +1084,7 @@ export function ImportWizard() {
                   )}
                 </>
               ) : (
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
+                <div className="p-3 bg-[var(--table-header-bg)] border border-gray-200 rounded-md text-sm text-[var(--text-muted)]">
                   A new quote will be created
                 </div>
               )}
@@ -1094,7 +1094,7 @@ export function ImportWizard() {
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setStep(1)}
-              className="px-5 py-2 bg-[#0D1B2A] text-white rounded-lg hover:bg-[#1a2e44] transition-colors text-sm font-medium"
+              className="px-5 py-2 bg-lux-black text-white rounded-lg hover:bg-[#1a2e44] transition-colors text-sm font-medium"
             >
               ← Back
             </button>
@@ -1111,12 +1111,12 @@ export function ImportWizard() {
 
       {/* ── STEP 3: Settings ── */}
       {step === 3 && (
-        <div className="bg-white rounded-lg border p-6 space-y-5">
-          <h2 className="font-archivo text-lg font-semibold text-gray-900">Quote Settings</h2>
+        <div className="card p-6 space-y-5">
+          <h2 className="font-archivo text-lg font-semibold text-[var(--text-primary)]">Quote Settings</h2>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">FX Rate (USD → AUD)</label>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">FX Rate (USD → AUD)</label>
               <input
                 type="number"
                 step="0.001"
@@ -1126,7 +1126,7 @@ export function ImportWizard() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">LUX Markup %</label>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">LUX Markup %</label>
               <input
                 type="number"
                 step="1"
@@ -1136,7 +1136,7 @@ export function ImportWizard() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Reseller Markup %</label>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Reseller Markup %</label>
               <input
                 type="number"
                 step="1"
@@ -1146,7 +1146,7 @@ export function ImportWizard() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Valid Until (optional)</label>
+              <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Valid Until (optional)</label>
               <input
                 type="date"
                 className="w-full border rounded-md px-3 py-2 text-sm"
@@ -1167,12 +1167,12 @@ export function ImportWizard() {
               return (
                 <div key={i} className="border rounded-lg p-4 space-y-3">
                   {parsedQuotes.length > 1 && (
-                    <p className="text-xs text-gray-500 font-medium">Sheet: {q.sheetName}</p>
+                    <p className="text-xs text-[var(--text-muted)] font-medium">Sheet: {q.sheetName}</p>
                   )}
 
                   {/* Quote name */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Quote Name</label>
+                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Quote Name</label>
                     <input
                       type="text"
                       className="w-full border rounded-md px-3 py-2 text-sm"
@@ -1187,7 +1187,7 @@ export function ImportWizard() {
 
                   {/* Product / Variant selection */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Product</label>
+                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Product</label>
                     <div className="grid grid-cols-2 gap-3">
                       <select
                         className="border rounded-md px-3 py-2 text-sm"
@@ -1206,7 +1206,7 @@ export function ImportWizard() {
                         ))}
                       </select>
                       <select
-                        className="border rounded-md px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                        className="border rounded-md px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-[var(--text-faint)]"
                         value={sel.variantId ?? ""}
                         disabled={!sel.productId || !selectedProduct?.variants.length}
                         onChange={(e) => {
@@ -1258,7 +1258,7 @@ export function ImportWizard() {
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setStep(2)}
-              className="px-5 py-2 bg-[#0D1B2A] text-white rounded-lg hover:bg-[#1a2e44] transition-colors text-sm font-medium"
+              className="px-5 py-2 bg-lux-black text-white rounded-lg hover:bg-[#1a2e44] transition-colors text-sm font-medium"
             >
               ← Back
             </button>
@@ -1274,30 +1274,30 @@ export function ImportWizard() {
 
       {/* ── STEP 4: Confirm ── */}
       {step === 4 && (
-        <div className="bg-white rounded-lg border p-6 space-y-5">
-          <h2 className="font-archivo text-lg font-semibold text-gray-900">Confirm & Import</h2>
+        <div className="card p-6 space-y-5">
+          <h2 className="font-archivo text-lg font-semibold text-[var(--text-primary)]">Confirm & Import</h2>
 
-          <div className="rounded-lg border bg-gray-50 p-4 space-y-3 text-sm">
+          <div className="rounded-lg border bg-[var(--table-header-bg)] p-4 space-y-3 text-sm">
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
               <div>
-                <span className="text-gray-500">Client:</span>{" "}
-                <span className="font-medium text-gray-900">
+                <span className="text-[var(--text-muted)]">Client:</span>{" "}
+                <span className="font-medium text-[var(--text-primary)]">
                   {clientMode === "new"
                     ? `${newClientName} (new)`
                     : clients.find((c) => c.id === selectedClientId)?.name ?? "—"}
                 </span>
               </div>
               <div>
-                <span className="text-gray-500">Project:</span>{" "}
-                <span className="font-medium text-gray-900">
+                <span className="text-[var(--text-muted)]">Project:</span>{" "}
+                <span className="font-medium text-[var(--text-primary)]">
                   {projectMode === "new"
                     ? `${newProjectName} (new)`
                     : projects.find((p) => p.id === selectedProjectId)?.name ?? "—"}
                 </span>
               </div>
               <div>
-                <span className="text-gray-500">Action:</span>{" "}
-                <span className="font-medium text-gray-900">
+                <span className="text-[var(--text-muted)]">Action:</span>{" "}
+                <span className="font-medium text-[var(--text-primary)]">
                   {quoteAction === "update"
                     ? `Update quote ${existingQuotes.find((q) => q.id === selectedExistingQuoteId)?.quoteNumber ?? ""}`
                     : parsedQuotes.length > 1
@@ -1306,16 +1306,16 @@ export function ImportWizard() {
                 </span>
               </div>
               <div>
-                <span className="text-gray-500">FX Rate:</span>{" "}
-                <span className="font-medium text-gray-900">{fxRate}</span>
+                <span className="text-[var(--text-muted)]">FX Rate:</span>{" "}
+                <span className="font-medium text-[var(--text-primary)]">{fxRate}</span>
               </div>
               <div>
-                <span className="text-gray-500">LUX Markup:</span>{" "}
-                <span className="font-medium text-gray-900">{defaultMargin}%</span>
+                <span className="text-[var(--text-muted)]">LUX Markup:</span>{" "}
+                <span className="font-medium text-[var(--text-primary)]">{defaultMargin}%</span>
               </div>
               <div>
-                <span className="text-gray-500">Reseller Markup:</span>{" "}
-                <span className="font-medium text-gray-900">{defaultResellerMargin}%</span>
+                <span className="text-[var(--text-muted)]">Reseller Markup:</span>{" "}
+                <span className="font-medium text-[var(--text-primary)]">{defaultResellerMargin}%</span>
               </div>
             </div>
 
@@ -1330,8 +1330,8 @@ export function ImportWizard() {
                 <div key={i}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">{quoteNames[i] ?? q.name}</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="font-medium text-[var(--text-primary)]">{quoteNames[i] ?? q.name}</p>
+                      <p className="text-xs text-[var(--text-muted)]">
                         {q.lineItems.length} line items
                         {selVariant && (
                           <> · {selProduct?.name} / {selVariant.name}</>
@@ -1339,7 +1339,7 @@ export function ImportWizard() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">{fmtUsd(q.totalUsd)} USD</p>
+                      <p className="font-semibold text-[var(--text-primary)]">{fmtUsd(q.totalUsd)} USD</p>
                       {mismatch && (
                         <p className="text-xs text-amber-600">XLS total: {fmtUsd(q.xlsTotalUsd)}</p>
                       )}
@@ -1365,7 +1365,7 @@ export function ImportWizard() {
             <button
               onClick={() => setStep(3)}
               disabled={importing}
-              className="px-5 py-2 bg-[#0D1B2A] text-white rounded-lg hover:bg-[#1a2e44] transition-colors text-sm font-medium disabled:opacity-40"
+              className="px-5 py-2 bg-lux-black text-white rounded-lg hover:bg-[#1a2e44] transition-colors text-sm font-medium disabled:opacity-40"
             >
               ← Back
             </button>

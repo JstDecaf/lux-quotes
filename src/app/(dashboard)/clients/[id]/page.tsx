@@ -16,7 +16,7 @@ export default async function ClientDetailPage({
   if (!client) {
     return (
       <div className="p-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Client not found</h1>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Client not found</h1>
         <a href="/clients" className="text-[#DB412B] hover:underline mt-4 inline-block">Back to Clients</a>
       </div>
     );

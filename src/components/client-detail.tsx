@@ -83,7 +83,7 @@ function ProjectCard({ project: initialProject }: { project: Project }) {
   };
 
   return (
-    <div className="bg-white rounded-lg border p-4">
+    <div className="card p-4">
       <div className="flex items-start justify-between gap-2 mb-2">
         <div className="flex-1 min-w-0">
           {editing ? (
@@ -110,7 +110,7 @@ function ProjectCard({ project: initialProject }: { project: Project }) {
               ))}
             </select>
           ) : (
-            <span className={`text-xs px-2 py-0.5 rounded-full ${PROJECT_STATUS_COLORS[project.status] || "bg-gray-100 text-gray-600"}`}>
+            <span className={`text-xs px-2 py-0.5 rounded-full ${PROJECT_STATUS_COLORS[project.status] || "bg-gray-100 text-[var(--text-muted)]"}`}>
               {PROJECT_STATUSES.find((s) => s.value === project.status)?.label || project.status}
             </span>
           )}
@@ -119,13 +119,13 @@ function ProjectCard({ project: initialProject }: { project: Project }) {
               <button
                 onClick={saveProject}
                 disabled={saving}
-                className="px-2 py-1 text-xs bg-[#0D1B2A] text-white rounded disabled:opacity-50"
+                className="px-2 py-1 text-xs bg-lux-black text-white rounded disabled:opacity-50"
               >
                 {saving ? "..." : "Save"}
               </button>
               <button
                 onClick={() => { setProject(initialProject); setEditing(false); }}
-                className="px-2 py-1 text-xs text-gray-500 border rounded"
+                className="px-2 py-1 text-xs text-[var(--text-muted)] border rounded"
               >
                 Cancel
               </button>
@@ -133,7 +133,7 @@ function ProjectCard({ project: initialProject }: { project: Project }) {
           ) : (
             <button
               onClick={(e) => { e.preventDefault(); setEditing(true); }}
-              className="text-xs text-gray-400 hover:text-gray-600"
+              className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)]"
             >
               Edit
             </button>
@@ -143,18 +143,18 @@ function ProjectCard({ project: initialProject }: { project: Project }) {
 
       {editing ? (
         <textarea
-          className="w-full border rounded px-2 py-1 text-sm text-gray-600 mb-3 min-h-[40px]"
+          className="w-full border rounded px-2 py-1 text-sm text-[var(--text-muted)] mb-3 min-h-[40px]"
           value={project.description ?? ""}
           onChange={(e) => setProject({ ...project, description: e.target.value || null })}
           placeholder="Project description..."
         />
       ) : (
-        project.description && <p className="text-sm text-gray-500 mb-3">{project.description}</p>
+        project.description && <p className="text-sm text-[var(--text-muted)] mb-3">{project.description}</p>
       )}
 
       {/* Link to project detail */}
       <div className="flex items-center justify-between mb-2">
-        <a href={`/projects/${project.id}`} className="text-xs text-gray-400 hover:text-[#DB412B]">
+        <a href={`/projects/${project.id}`} className="text-xs text-[var(--text-faint)] hover:text-[#DB412B]">
           View project &rarr;
         </a>
       </div>
@@ -165,10 +165,10 @@ function ProjectCard({ project: initialProject }: { project: Project }) {
             <a
               key={q.id}
               href={`/quotes/${q.id}`}
-              className="flex items-center justify-between text-sm py-1.5 px-3 rounded hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between text-sm py-1.5 px-3 rounded hover:bg-[var(--table-header-bg)] transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="font-mono text-xs text-gray-400">{q.quoteNumber}</span>
+                <span className="font-mono text-xs text-[var(--text-faint)]">{q.quoteNumber}</span>
                 <span>{q.name}</span>
                 <span
                   className="text-xs px-1.5 py-0.5 rounded-full font-medium"
@@ -185,7 +185,7 @@ function ProjectCard({ project: initialProject }: { project: Project }) {
           ))}
         </div>
       ) : (
-        <p className="text-xs text-gray-400">No quotes yet</p>
+        <p className="text-xs text-[var(--text-faint)]">No quotes yet</p>
       )}
     </div>
   );
@@ -221,12 +221,12 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
 
   return (
     <div>
-      <a href="/clients" className="text-gray-500 hover:text-gray-700 text-sm mb-4 inline-block">&larr; Back to Clients</a>
+      <a href="/clients" className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] text-sm mb-4 inline-block">&larr; Back to Clients</a>
 
       {/* Client Info Card */}
-      <div className="bg-white rounded-lg border p-5 mb-6">
+      <div className="card p-5 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="font-archivo text-2xl font-bold text-gray-900">
+          <h1 className="font-archivo text-2xl font-bold text-[var(--text-primary)]">
             {editing ? (
               <input
                 className="border rounded px-2 py-1 text-2xl font-bold"
@@ -239,17 +239,17 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
           </h1>
           {editing ? (
             <div className="flex gap-2">
-              <button onClick={saveClient} className="px-3 py-1.5 bg-[#0D1B2A] text-white rounded text-sm">Save</button>
-              <button onClick={() => { setClient(initialClient); setEditing(false); }} className="px-3 py-1.5 text-gray-500 text-sm">Cancel</button>
+              <button onClick={saveClient} className="px-3 py-1.5 bg-lux-black text-white rounded text-sm">Save</button>
+              <button onClick={() => { setClient(initialClient); setEditing(false); }} className="px-3 py-1.5 text-[var(--text-muted)] text-sm">Cancel</button>
             </div>
           ) : (
-            <button onClick={() => setEditing(true)} className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 border rounded">Edit</button>
+            <button onClick={() => setEditing(true)} className="px-3 py-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] border rounded">Edit</button>
           )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-gray-500">Contact:</span>{" "}
+            <span className="text-[var(--text-muted)]">Contact:</span>{" "}
             {editing ? (
               <input className="border rounded px-2 py-1 ml-1" value={client.contactName ?? ""} onChange={(e) => setClient({ ...client, contactName: e.target.value || null })} />
             ) : (
@@ -257,7 +257,7 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
             )}
           </div>
           <div>
-            <span className="text-gray-500">Email:</span>{" "}
+            <span className="text-[var(--text-muted)]">Email:</span>{" "}
             {editing ? (
               <input className="border rounded px-2 py-1 ml-1" value={client.contactEmail ?? ""} onChange={(e) => setClient({ ...client, contactEmail: e.target.value || null })} />
             ) : (
@@ -265,7 +265,7 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
             )}
           </div>
           <div>
-            <span className="text-gray-500">Phone:</span>{" "}
+            <span className="text-[var(--text-muted)]">Phone:</span>{" "}
             {editing ? (
               <input className="border rounded px-2 py-1 ml-1" value={client.contactPhone ?? ""} onChange={(e) => setClient({ ...client, contactPhone: e.target.value || null })} />
             ) : (
@@ -273,7 +273,7 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
             )}
           </div>
           <div>
-            <span className="text-gray-500">Address:</span>{" "}
+            <span className="text-[var(--text-muted)]">Address:</span>{" "}
             {editing ? (
               <input className="border rounded px-2 py-1 ml-1" value={client.address ?? ""} onChange={(e) => setClient({ ...client, address: e.target.value || null })} />
             ) : (
@@ -284,7 +284,7 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
 
         {(editing || client.notes) && (
           <div className="mt-4 pt-4 border-t">
-            <span className="text-xs text-gray-500">Notes</span>
+            <span className="text-xs text-[var(--text-muted)]">Notes</span>
             {editing ? (
               <textarea
                 className="w-full border rounded px-2 py-1 mt-1 text-sm"
@@ -292,7 +292,7 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
                 onChange={(e) => setClient({ ...client, notes: e.target.value || null })}
               />
             ) : (
-              <p className="text-sm text-gray-600 mt-1">{client.notes}</p>
+              <p className="text-sm text-[var(--text-muted)] mt-1">{client.notes}</p>
             )}
           </div>
         )}
@@ -300,7 +300,7 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
 
       {/* Projects */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-archivo text-lg font-bold text-gray-900">Projects</h2>
+        <h2 className="font-archivo text-lg font-bold text-[var(--text-primary)]">Projects</h2>
         <button
           onClick={() => setShowProjectForm(!showProjectForm)}
           className="px-3 py-1.5 bg-[#DB412B] text-white rounded text-sm hover:bg-[#c23823]"
@@ -310,10 +310,10 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
       </div>
 
       {showProjectForm && (
-        <div className="bg-white rounded-lg border p-4 mb-4">
+        <div className="card p-4 mb-4">
           <div className="flex gap-3 items-end">
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 mb-1">Project Name</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1">Project Name</label>
               <input
                 className="w-full border rounded px-3 py-2 text-sm"
                 value={newProjectName}
@@ -321,14 +321,14 @@ export function ClientDetail({ client: initialClient, projects }: { client: Clie
                 placeholder="e.g. Main Lobby LED Wall"
               />
             </div>
-            <button onClick={createProject} disabled={!newProjectName.trim()} className="px-4 py-2 bg-[#0D1B2A] text-white rounded text-sm disabled:opacity-50">Create</button>
-            <button onClick={() => setShowProjectForm(false)} className="px-4 py-2 text-gray-500 text-sm">Cancel</button>
+            <button onClick={createProject} disabled={!newProjectName.trim()} className="px-4 py-2 bg-lux-black text-white rounded text-sm disabled:opacity-50">Create</button>
+            <button onClick={() => setShowProjectForm(false)} className="px-4 py-2 text-[var(--text-muted)] text-sm">Cancel</button>
           </div>
         </div>
       )}
 
       {projects.length === 0 ? (
-        <div className="bg-white rounded-lg border p-8 text-center text-gray-400">
+        <div className="card p-8 text-center text-[var(--text-faint)]">
           No projects yet. Add your first project for this client.
         </div>
       ) : (
