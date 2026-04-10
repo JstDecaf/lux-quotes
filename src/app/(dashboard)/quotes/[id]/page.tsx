@@ -52,6 +52,8 @@ export default async function QuoteDetailPage({
       cachedTotalGrossProfit: schema.quotes.cachedTotalGrossProfit,
       notes: schema.quotes.notes,
       validUntil: schema.quotes.validUntil,
+      sourceFileUrl: schema.quotes.sourceFileUrl,
+      sourceFilePreviewUrl: schema.quotes.sourceFilePreviewUrl,
       createdAt: schema.quotes.createdAt,
       updatedAt: schema.quotes.updatedAt,
       clientId: schema.clients.id,

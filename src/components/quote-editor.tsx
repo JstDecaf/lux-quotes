@@ -95,6 +95,8 @@ interface QuoteData {
   validUntil: string | null;
   supplierQuoteDate: string | null;
   supplierQuoteRef: string | null;
+  sourceFileUrl: string | null;
+  sourceFilePreviewUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -130,6 +132,7 @@ export function QuoteEditor({
   const [items, setItems] = useState<LineItem[]>(initialItems);
   const [installItems, setInstallItems] = useState<InstallationItem[]>(initialInstallationItems);
   const [saving, setSaving] = useState(false);
+  const [showSourcePreview, setShowSourcePreview] = useState(false);
   const saveItemsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveQuoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveInstallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -648,7 +651,64 @@ export function QuoteEditor({
             />
           </div>
         </div>
+
+        {/* Source file */}
+        {quote.sourceFileUrl && (
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3">
+            <span className="text-xs text-gray-500">Leyard Source File:</span>
+            {quote.sourceFilePreviewUrl && (
+              <button
+                onClick={() => setShowSourcePreview(true)}
+                className="text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded px-2.5 py-1 hover:bg-blue-50"
+              >
+                View Original
+              </button>
+            )}
+            <a
+              href={`/api/quotes/${quote.id}/source-file/download`}
+              className="text-xs text-gray-500 hover:text-gray-700 border rounded px-2.5 py-1 hover:bg-gray-50"
+            >
+              ↓ Download XLS
+            </a>
+          </div>
+        )}
       </div>
+
+      {/* Source file preview popup */}
+      {showSourcePreview && quote.sourceFilePreviewUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setShowSourcePreview(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-3 border-b">
+              <h3 className="text-sm font-semibold text-gray-700">Leyard Source Quote — {quote.quoteNumber}</h3>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`/api/quotes/${quote.id}/source-file/download`}
+                  className="text-xs text-gray-500 hover:text-gray-700 border rounded px-2.5 py-1 hover:bg-gray-50"
+                >
+                  ↓ Download XLS
+                </a>
+                <button
+                  onClick={() => setShowSourcePreview(false)}
+                  className="text-gray-400 hover:text-gray-600 text-lg"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <iframe
+              src={`/api/quotes/${quote.id}/source-file/preview`}
+              className="flex-1 w-full min-h-0"
+              style={{ minHeight: "500px" }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* FX Rate Tracker */}
       <FxTracker

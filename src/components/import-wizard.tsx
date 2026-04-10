@@ -589,6 +589,7 @@ export function ImportWizard() {
   // Step 1 state
   const [parsedQuotes, setParsedQuotes] = useState<ParsedQuote[]>([]);
   const [parseError, setParseError] = useState<string | null>(null);
+  const [sourceFile, setSourceFile] = useState<File | null>(null);
 
   // Step 2 state
   const [clientMode, setClientMode] = useState<"existing" | "new">("existing");
@@ -624,6 +625,7 @@ export function ImportWizard() {
 
   const handleFile = useCallback(async (file: File) => {
     setParseError(null);
+    setSourceFile(file);
     try {
       const quotes = await parseWorkbook(file);
       if (quotes.length === 0) {
@@ -805,6 +807,20 @@ export function ImportWizard() {
         setImporting(false);
         return;
       }
+
+      // Upload source file to each created quote
+      if (sourceFile && data.quoteIds?.length) {
+        for (const qId of data.quoteIds) {
+          try {
+            const fd = new FormData();
+            fd.append("file", sourceFile);
+            await fetch(`/api/quotes/${qId}/source-file`, { method: "POST", body: fd });
+          } catch {
+            // Not critical — quote was created successfully
+          }
+        }
+      }
+
       // Redirect to first quote
       router.push(`/quotes/${data.quoteIds![0]}`);
     } catch (err) {

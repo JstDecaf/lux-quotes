@@ -105,6 +105,8 @@ export const quotes = sqliteTable("quotes", {
   cachedTotalGrossProfit: real("cached_total_gross_profit").default(0),
   notes: text("notes"),
   validUntil: text("valid_until"),
+  sourceFileUrl: text("source_file_url"),
+  sourceFilePreviewUrl: text("source_file_preview_url"),
   ...timestamps,
 });
 
