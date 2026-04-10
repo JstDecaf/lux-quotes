@@ -840,12 +840,12 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0 ml-3">
                     <a
-                      href={doc.url}
+                      href={isBlob ? `/api/products/${product.id}/documents/${doc.id}/download` : doc.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
                     >
-                      {isNAS ? "Open" : "Open"} &rarr;
+                      {isBlob ? "Download" : "Open"} &rarr;
                     </a>
                     <button
                       onClick={() => startEditDoc(doc)}

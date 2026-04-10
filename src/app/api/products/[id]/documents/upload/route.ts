@@ -42,7 +42,7 @@ export async function POST(
   let blob;
   try {
     blob = await put(blobPath, file, {
-      access: "public",
+      access: "private",
       addRandomSuffix: false,
     });
   } catch (err) {
