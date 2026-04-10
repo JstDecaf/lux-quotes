@@ -69,6 +69,12 @@ export async function POST(
               return;
             }
 
+            // Skip gradients and solid fills by checking color variance
+            if (isLowVariance(pixmap)) {
+              pixmap.destroy();
+              return;
+            }
+
             const png = pixmap.asPNG();
 
             // Deduplicate by dimensions + data size
@@ -147,4 +153,51 @@ export async function POST(
     totalFound: extractedImages.length,
     savedCount: savedImages.length,
   });
+}
+
+/**
+ * Check if a pixmap is mostly a solid color or simple gradient.
+ * Samples pixels across the image and checks if color variance is very low.
+ * Real photos have high variance; gradients/fills have very low variance.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isLowVariance(pixmap: any): boolean {
+  try {
+    const pixels = pixmap.getPixels() as Uint8ClampedArray;
+    const w = pixmap.getWidth();
+    const h = pixmap.getHeight();
+    const n = pixmap.getNumberOfComponents(); // typically 3 (RGB) or 4 (RGBA)
+    const stride = w * n;
+
+    // Sample ~50 pixels spread across the image
+    const sampleCount = 50;
+    const samples: number[][] = [];
+
+    for (let i = 0; i < sampleCount; i++) {
+      const sx = Math.floor((i * 7 + 3) % w); // pseudo-random spread
+      const sy = Math.floor((i * 13 + 5) % h);
+      const offset = sy * stride + sx * n;
+      samples.push([pixels[offset], pixels[offset + 1], pixels[offset + 2]]);
+    }
+
+    // Calculate standard deviation for each channel
+    const means = [0, 0, 0];
+    for (const s of samples) {
+      means[0] += s[0]; means[1] += s[1]; means[2] += s[2];
+    }
+    means[0] /= sampleCount; means[1] /= sampleCount; means[2] /= sampleCount;
+
+    let totalVariance = 0;
+    for (const s of samples) {
+      totalVariance += (s[0] - means[0]) ** 2;
+      totalVariance += (s[1] - means[1]) ** 2;
+      totalVariance += (s[2] - means[2]) ** 2;
+    }
+    const stdDev = Math.sqrt(totalVariance / (sampleCount * 3));
+
+    // A real photo typically has stdDev > 30-40. Gradients/solids are < 15.
+    return stdDev < 15;
+  } catch {
+    return false; // If we can't check, keep the image
+  }
 }
