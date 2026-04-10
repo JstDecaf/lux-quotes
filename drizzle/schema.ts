@@ -138,6 +138,21 @@ export const productDocuments = sqliteTable("product_documents", {
   ...timestamps,
 });
 
+export const productImages = sqliteTable("product_images", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  source: text("source").notNull().default("upload"), // "upload" | "pdf-extract"
+  originalDocumentId: integer("original_document_id").references(() => productDocuments.id, { onDelete: "set null" }),
+  sortOrder: integer("sort_order").notNull().default(0),
+  fileType: text("file_type").notNull().default("png"),
+  fileSize: integer("file_size"),
+  width: integer("width"),
+  height: integer("height"),
+  ...timestamps,
+});
+
 export const quoteInstallationItems = sqliteTable("quote_installation_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   quoteId: integer("quote_id").notNull().references(() => quotes.id, { onDelete: "cascade" }),

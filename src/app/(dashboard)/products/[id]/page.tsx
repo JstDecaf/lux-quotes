@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { products, productVariants, productDocuments } from "@/../drizzle/schema";
+import { products, productVariants, productDocuments, productImages } from "@/../drizzle/schema";
 import { eq, asc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ProductDetailEditor } from "@/components/product-detail-editor";
@@ -19,6 +19,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     .where(eq(productDocuments.productId, Number(id)))
     .orderBy(asc(productDocuments.type)).all();
 
+  const imagesList = await db.select().from(productImages)
+    .where(eq(productImages.productId, Number(id)))
+    .orderBy(asc(productImages.sortOrder)).all();
+
   const apps: string[] = product.applications ? JSON.parse(product.applications) : [];
 
   return (
@@ -28,6 +32,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         applications: apps,
         variants: variantsList,
         documents: documentsList,
+        images: imagesList,
       }}
     />
   );

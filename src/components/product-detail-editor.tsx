@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ProductImageGallery, type ProductImage } from "./product-image-gallery";
 
 interface Variant {
   id: number;
@@ -45,6 +46,7 @@ interface Product {
   imageUrl: string | null;
   variants: Variant[];
   documents: Document[];
+  images: ProductImage[];
 }
 
 const CATEGORIES = [
@@ -133,6 +135,10 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
   const [addingDoc, setAddingDoc] = useState(false);
   const [newDocDraft, setNewDocDraft] = useState<Document>(emptyDoc(product.id));
   const [showDeleteDoc, setShowDeleteDoc] = useState<number | null>(null);
+
+  // Image library state
+  const [images, setImages] = useState<ProductImage[]>(initialProduct.images);
+  const [extractingDocId, setExtractingDocId] = useState<number | null>(null);
 
   // File upload state
   const [uploading, setUploading] = useState(false);
@@ -376,6 +382,32 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
     if (file.type.startsWith("image/")) return "brochure";
     return "link";
   }
+
+  // ---- PDF image extraction ----
+  const extractImagesFromPdf = async (docId: number) => {
+    setExtractingDocId(docId);
+    try {
+      const res = await fetch(`/api/products/${product.id}/documents/${docId}/extract-images`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        let msg = "Extraction failed";
+        try { const err = await res.json(); msg = err.error || msg; } catch {}
+        alert(msg);
+        return;
+      }
+      const data = await res.json();
+      if (data.images?.length) {
+        setImages((prev) => [...prev, ...data.images]);
+      } else {
+        alert("No images found in this PDF.");
+      }
+    } catch {
+      alert("Extraction failed. Please try again.");
+    } finally {
+      setExtractingDocId(null);
+    }
+  };
 
   // ---- Render helpers ----
   const renderDocRow = (doc: Document, isNew: boolean, draft: Document, setDraft: (d: Document) => void, onSave: () => void, onCancel: () => void) => (
@@ -847,6 +879,15 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
                     >
                       {isBlob ? "Download" : "Open"} &rarr;
                     </a>
+                    {isBlob && doc.fileType === "pdf" && (
+                      <button
+                        onClick={() => extractImagesFromPdf(doc.id)}
+                        disabled={extractingDocId === doc.id}
+                        className="text-xs text-emerald-600 hover:text-emerald-800 border border-emerald-200 rounded px-2 py-1 hover:bg-emerald-50 disabled:opacity-50"
+                      >
+                        {extractingDocId === doc.id ? "Extracting..." : "Extract Images"}
+                      </button>
+                    )}
                     <button
                       onClick={() => startEditDoc(doc)}
                       className="text-xs text-gray-400 hover:text-gray-600 border rounded px-2 py-1 hover:bg-gray-50"
@@ -891,6 +932,15 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
             <p className="text-xs text-gray-300 mt-2">You can also drag and drop files here</p>
           </div>
         )}
+      </div>
+
+      {/* Image Library */}
+      <div className="mt-6">
+        <ProductImageGallery
+          productId={product.id}
+          initialImages={images}
+          onImagesChanged={setImages}
+        />
       </div>
     </div>
   );
