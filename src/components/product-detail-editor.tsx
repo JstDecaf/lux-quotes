@@ -399,6 +399,7 @@ export function ProductDetailEditor({ initialProduct }: { initialProduct: Produc
       const data = await res.json();
       if (data.images?.length) {
         setImages((prev) => [...prev, ...data.images]);
+        router.refresh();
       } else {
         alert("No images found in this PDF.");
       }
