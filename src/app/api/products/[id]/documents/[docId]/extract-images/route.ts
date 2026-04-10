@@ -41,50 +41,60 @@ export async function POST(
     return NextResponse.json({ error: `Failed to fetch PDF: ${err instanceof Error ? err.message : err}` }, { status: 500 });
   }
 
-  // Extract images
+  // Extract images using StructuredText walker
   const extractedImages: ExtractedImage[] = [];
   try {
     const mupdf = await import("mupdf");
     const document = mupdf.Document.openDocument(pdfBuffer, "application/pdf");
-    const pdfDoc = document.asPDF();
     const pageCount = document.countPages();
-    const seenSizes = new Set<string>();
+    const seenFingerprints = new Set<string>();
 
-    if (pdfDoc) {
-      // Method 1: Walk all PDF objects looking for Image XObjects
-      // This catches images regardless of nesting level
-      for (let pageIdx = 0; pageIdx < pageCount && pageIdx < 50; pageIdx++) {
-        const pageObj = pdfDoc.findPage(pageIdx);
-        findImagesRecursive(pdfDoc, pageObj, mupdf, pageIdx + 1, extractedImages, seenSizes, new Set());
-      }
-    }
+    for (let pageIdx = 0; pageIdx < pageCount && pageIdx < 50; pageIdx++) {
+      const page = document.loadPage(pageIdx);
+      // Use "preserve-images" option to ensure image blocks are included
+      const stext = page.toStructuredText("preserve-images");
+      let imageIdx = 0;
 
-    // Method 2: If no embedded images found, fall back to rendering pages
-    // but at higher quality and only pages that likely have visual content
-    if (extractedImages.length === 0) {
-      const dpi = 200;
-      const scale = dpi / 72;
+      stext.walk({
+        onImageBlock(_bbox, _transform, image) {
+          try {
+            imageIdx++;
+            const pixmap = image.toPixmap();
+            const w = pixmap.getWidth();
+            const h = pixmap.getHeight();
 
-      for (let i = 0; i < pageCount && i < 30; i++) {
-        const page = document.loadPage(i);
-        const pixmap = page.toPixmap(
-          mupdf.Matrix.scale(scale, scale),
-          mupdf.ColorSpace.DeviceRGB,
-          false
-        );
+            // Skip small images (icons, logos, bullets)
+            if (w < MIN_IMAGE_WIDTH || h < MIN_IMAGE_HEIGHT) {
+              pixmap.destroy();
+              return;
+            }
 
-        // Only keep pages that are image-heavy (not mostly white/text)
-        // Simple heuristic: page render is worth keeping
-        const png = pixmap.asPNG();
-        extractedImages.push({
-          data: png,
-          width: pixmap.getWidth(),
-          height: pixmap.getHeight(),
-          label: `Page ${i + 1}`,
-        });
-        pixmap.destroy();
-        page.destroy();
-      }
+            const png = pixmap.asPNG();
+
+            // Deduplicate by dimensions + data size
+            const fingerprint = `${w}x${h}:${png.length}`;
+            if (seenFingerprints.has(fingerprint)) {
+              pixmap.destroy();
+              return;
+            }
+            seenFingerprints.add(fingerprint);
+
+            extractedImages.push({
+              data: png,
+              width: w,
+              height: h,
+              label: `Page ${pageIdx + 1}, Image ${imageIdx}`,
+            });
+
+            pixmap.destroy();
+          } catch {
+            // Skip images that can't be converted
+          }
+        },
+      });
+
+      stext.destroy();
+      page.destroy();
     }
 
     document.destroy();
@@ -137,88 +147,4 @@ export async function POST(
     totalFound: extractedImages.length,
     savedCount: savedImages.length,
   });
-}
-
-/**
- * Recursively walk PDF objects to find Image XObjects,
- * including those nested inside Form XObjects.
- */
-function findImagesRecursive(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  pdfDoc: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  obj: any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  mupdf: any,
-  pageNum: number,
-  results: ExtractedImage[],
-  seenSizes: Set<string>,
-  visited: Set<string>,
-) {
-  try {
-    // Get Resources → XObject dictionary
-    const resources = obj.get("Resources");
-    if (!resources) return;
-
-    const xobjects = resources.get("XObject");
-    if (!xobjects) return;
-
-    xobjects.forEach((xobj: { resolve: () => { get: (k: string) => { asName: () => string; asNumber: () => number } | null }; toString: () => string }, key: string | number) => {
-      try {
-        const resolved = xobj.resolve();
-        const objKey = xobj.toString();
-
-        // Avoid infinite loops
-        if (visited.has(objKey)) return;
-        visited.add(objKey);
-
-        const subtype = resolved.get("Subtype");
-        if (!subtype) return;
-
-        const subtypeName = subtype.asName();
-
-        if (subtypeName === "Image") {
-          // It's an image — extract it
-          const widthObj = resolved.get("Width");
-          const heightObj = resolved.get("Height");
-          if (!widthObj || !heightObj) return;
-
-          const imgWidth = widthObj.asNumber();
-          const imgHeight = heightObj.asNumber();
-
-          if (imgWidth < MIN_IMAGE_WIDTH || imgHeight < MIN_IMAGE_HEIGHT) return;
-
-          const fingerprint = `${imgWidth}x${imgHeight}`;
-
-          const image = pdfDoc.loadImage(resolved);
-          const pixmap = image.toPixmap();
-          const png = pixmap.asPNG();
-
-          const dataFingerprint = `${imgWidth}x${imgHeight}:${png.length}`;
-          if (seenSizes.has(dataFingerprint)) {
-            pixmap.destroy();
-            return;
-          }
-          seenSizes.add(dataFingerprint);
-          seenSizes.add(fingerprint);
-
-          results.push({
-            data: png,
-            width: pixmap.getWidth(),
-            height: pixmap.getHeight(),
-            label: `Page ${pageNum} — ${String(key)}`,
-          });
-
-          pixmap.destroy();
-        } else if (subtypeName === "Form") {
-          // It's a Form XObject — recurse into it to find nested images
-          findImagesRecursive(pdfDoc, resolved, mupdf, pageNum, results, seenSizes, visited);
-        }
-      } catch {
-        // Skip problematic objects
-      }
-    });
-  } catch {
-    // Skip pages with no parseable resources
-  }
 }
