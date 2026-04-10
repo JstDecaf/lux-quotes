@@ -1,10 +1,16 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #111827;
+  --color-background: #F9F7F4;
+  --color-foreground: #2D3748;
   --color-lux-red: #DB412B;
   --color-lux-black: #0D1B2A;
+  --color-lux-navy: #1A2F45;
+  --color-lux-charcoal: #2D3748;
+  --color-lux-steel: #4A5568;
+  --color-lux-light: #F4F5F7;
+  --color-lux-warm: #F9F7F4;
+  --color-lux-white: #FFFFFF;
   --font-sans: var(--font-inter);
   --font-archivo: var(--font-archivo);
 }
@@ -16,4 +22,33 @@ body {
 
 .font-archivo {
   font-family: var(--font-archivo), sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #DB412B; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #c23823; }
+
+/* Selection */
+::selection { background: #DB412B; color: white; }
+
+/* Smooth transitions globally */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, opacity, box-shadow, transform;
+  transition-timing-function: ease;
+  transition-duration: 150ms;
+}
+
+/* Card base utility */
+.card {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
 }

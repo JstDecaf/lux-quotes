@@ -18,9 +18,9 @@ export function DashboardFxSensitivity({ totalPipelineUsd, currentRate, avgQuote
   const baseCost = totalPipelineUsd / avgQuotedRate;
 
   return (
-    <div className="bg-white rounded-lg border p-5">
-      <h3 className="text-sm font-semibold text-gray-700 mb-1">FX Sensitivity</h3>
-      <p className="text-[10px] text-gray-400 mb-3">
+    <div className="card p-6 h-full">
+      <h3 className="text-sm font-semibold text-lux-charcoal mb-1">FX Sensitivity</h3>
+      <p className="text-[10px] text-lux-steel mb-3">
         Pipeline impact if AUD/USD moves from {currentRate.toFixed(3)}
       </p>
 
@@ -35,7 +35,7 @@ export function DashboardFxSensitivity({ totalPipelineUsd, currentRate, avgQuote
             <div
               key={pct}
               className={`flex items-center justify-between py-1.5 px-3 rounded text-xs ${
-                isNeutral ? "bg-gray-50 font-medium" : ""
+                isNeutral ? "bg-lux-light/50 font-medium" : ""
               }`}
             >
               <span className="text-gray-600">
@@ -58,7 +58,7 @@ export function DashboardFxSensitivity({ totalPipelineUsd, currentRate, avgQuote
         })}
       </div>
 
-      <p className="text-[10px] text-gray-400 mt-3">
+      <p className="text-[10px] text-lux-steel mt-3">
         Based on US${totalPipelineUsd.toLocaleString("en-AU", { maximumFractionDigits: 0 })} pipeline exposure
       </p>
     </div>

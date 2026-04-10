@@ -43,9 +43,9 @@ export function DashboardFxChart({ initialData, avgQuotedRate }: Props) {
 
   if (data.length === 0) {
     return (
-      <div className="bg-white rounded-lg border p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">AUD/USD Exchange Rate</h3>
-        <p className="text-xs text-gray-400">
+      <div className="card p-6 h-full">
+        <h3 className="text-sm font-semibold text-lux-charcoal mb-2">AUD/USD Exchange Rate</h3>
+        <p className="text-xs text-lux-steel">
           {backfilling ? "Loading rate history..." : "No FX data available yet."}
         </p>
       </div>
@@ -68,10 +68,10 @@ export function DashboardFxChart({ initialData, avgQuotedRate }: Props) {
     recent5.reduce((s, r) => s + r, 0) / recent5.length > prev5.reduce((s, r) => s + r, 0) / prev5.length;
 
   return (
-    <div className="bg-white rounded-lg border p-5">
+    <div className="card p-6 h-full">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-700">AUD/USD Exchange Rate</h3>
-        <span className="text-xs text-gray-400">{data.length} days</span>
+        <h3 className="text-sm font-semibold text-lux-charcoal">AUD/USD Exchange Rate</h3>
+        <span className="text-[10px] text-lux-steel">{data.length} days</span>
       </div>
 
       <FxAreaChart data={data} avgQuotedRate={avgQuotedRate} />
@@ -92,8 +92,8 @@ export function DashboardFxChart({ initialData, avgQuotedRate }: Props) {
 function Stat({ label, value, highlight, color }: { label: string; value: string; highlight?: boolean; color?: string }) {
   return (
     <div>
-      <p className="text-[10px] text-gray-500 uppercase tracking-wide">{label}</p>
-      <p className={`text-sm font-mono font-bold ${highlight && color ? color : "text-gray-900"}`}>{value}</p>
+      <p className="text-[10px] text-lux-steel uppercase tracking-wider">{label}</p>
+      <p className={`text-sm font-mono font-bold ${highlight && color ? color : "text-lux-black"}`}>{value}</p>
     </div>
   );
 }
