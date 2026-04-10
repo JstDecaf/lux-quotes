@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export interface ProductImage {
   id: number;
@@ -69,6 +69,28 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
 
   // Tag picker state
   const [tagPickerId, setTagPickerId] = useState<number | null>(null);
+
+  // Lightbox state
+  const [lightboxId, setLightboxId] = useState<number | null>(null);
+  const lightboxImage = lightboxId !== null ? images.find((img) => img.id === lightboxId) : null;
+
+  // Lightbox keyboard navigation
+  useEffect(() => {
+    if (lightboxId === null) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setLightboxId(null);
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        const idx = images.findIndex((img) => img.id === lightboxId);
+        setLightboxId(images[idx > 0 ? idx - 1 : images.length - 1].id);
+      }
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        const idx = images.findIndex((img) => img.id === lightboxId);
+        setLightboxId(images[idx < images.length - 1 ? idx + 1 : 0].id);
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [lightboxId, images]);
 
   const updateImages = (updated: ProductImage[]) => {
     setImages(updated);
@@ -355,33 +377,17 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
                 )}
 
                 {/* Thumbnail */}
-                {selectMode ? (
-                  <div
-                    onClick={() => toggleSelect(img.id)}
-                    className="cursor-pointer"
-                  >
-                    <img
-                      src={`/api/products/${productId}/images/${img.id}/download`}
-                      alt={img.name}
-                      className="w-full h-36 object-cover bg-gray-200"
-                      loading="lazy"
-                    />
-                  </div>
-                ) : (
-                  <a
-                    href={`/api/products/${productId}/images/${img.id}/download`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block"
-                  >
-                    <img
-                      src={`/api/products/${productId}/images/${img.id}/download`}
-                      alt={img.name}
-                      className="w-full h-36 object-cover bg-gray-200"
-                      loading="lazy"
-                    />
-                  </a>
-                )}
+                <div
+                  onClick={() => selectMode ? toggleSelect(img.id) : setLightboxId(img.id)}
+                  className="cursor-pointer"
+                >
+                  <img
+                    src={`/api/products/${productId}/images/${img.id}/download`}
+                    alt={img.name}
+                    className="w-full h-36 object-cover bg-gray-200"
+                    loading="lazy"
+                  />
+                </div>
 
                 {/* Info */}
                 <div className="p-2.5">
@@ -476,6 +482,76 @@ export function ProductImageGallery({ productId, initialImages, onImagesChanged 
           <button onClick={() => fileInputRef.current?.click()} className="text-blue-600 hover:underline">Upload images</button>
           {" "}or extract them from uploaded PDFs.
           <p className="text-xs text-gray-300 mt-2">You can also drag and drop images here</p>
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setLightboxId(null)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightboxId(null)}
+            className="absolute top-4 right-4 text-white/60 hover:text-white text-2xl z-10"
+          >
+            ✕
+          </button>
+
+          {/* Nav: previous */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const idx = images.findIndex((img) => img.id === lightboxId);
+                  const prev = idx > 0 ? images[idx - 1] : images[images.length - 1];
+                  setLightboxId(prev.id);
+                }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-3xl z-10 px-2"
+              >
+                ‹
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const idx = images.findIndex((img) => img.id === lightboxId);
+                  const next = idx < images.length - 1 ? images[idx + 1] : images[0];
+                  setLightboxId(next.id);
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-3xl z-10 px-2"
+              >
+                ›
+              </button>
+            </>
+          )}
+
+          {/* Image */}
+          <img
+            src={`/api/products/${productId}/images/${lightboxImage.id}/download`}
+            alt={lightboxImage.name}
+            className="max-w-full max-h-[85vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Caption */}
+          <div
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-white text-sm font-medium">{lightboxImage.name}</p>
+            {lightboxImage.width && lightboxImage.height && (
+              <p className="text-white/40 text-xs mt-1">{lightboxImage.width} × {lightboxImage.height}px</p>
+            )}
+            <a
+              href={`/api/products/${productId}/images/${lightboxImage.id}/download`}
+              download
+              className="text-blue-400 hover:text-blue-300 text-xs mt-1 inline-block"
+            >
+              ↓ Download
+            </a>
+          </div>
         </div>
       )}
     </div>
